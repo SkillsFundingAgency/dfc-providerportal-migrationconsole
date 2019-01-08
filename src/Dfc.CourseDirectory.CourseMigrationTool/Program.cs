@@ -37,7 +37,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             Console.WriteLine("Please enter UKPRN:");
             string UKPRN = Console.ReadLine();
             Console.WriteLine(UKPRN);
-            string nextLine = Console.ReadLine();
+            string next = Console.ReadLine();
         }
 
         //private static async Task<IResult<ICourse>> AddCourseAsync(Course course)
