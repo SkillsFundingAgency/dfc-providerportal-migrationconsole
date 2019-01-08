@@ -1,0 +1,12 @@
+D:\ESFAApps\CourseMigrationTool\src\Dfc.CourseDirectory.CourseMigrationTool\bin\Debug\netcoreapp2.1\Dfc.CourseDirectory.CourseMigrationTool.deps.json
+D:\ESFAApps\CourseMigrationTool\src\Dfc.CourseDirectory.CourseMigrationTool\bin\Debug\netcoreapp2.1\Dfc.CourseDirectory.CourseMigrationTool.runtimeconfig.json
+D:\ESFAApps\CourseMigrationTool\src\Dfc.CourseDirectory.CourseMigrationTool\bin\Debug\netcoreapp2.1\Dfc.CourseDirectory.CourseMigrationTool.runtimeconfig.dev.json
+D:\ESFAApps\CourseMigrationTool\src\Dfc.CourseDirectory.CourseMigrationTool\bin\Debug\netcoreapp2.1\Dfc.CourseDirectory.CourseMigrationTool.dll
+D:\ESFAApps\CourseMigrationTool\src\Dfc.CourseDirectory.CourseMigrationTool\bin\Debug\netcoreapp2.1\Dfc.CourseDirectory.CourseMigrationTool.pdb
+D:\ESFAApps\CourseMigrationTool\src\Dfc.CourseDirectory.CourseMigrationTool\obj\Debug\netcoreapp2.1\Dfc.CourseDirectory.CourseMigrationTool.csprojAssemblyReference.cache
+D:\ESFAApps\CourseMigrationTool\src\Dfc.CourseDirectory.CourseMigrationTool\obj\Debug\netcoreapp2.1\Dfc.CourseDirectory.CourseMigrationTool.csproj.CoreCompileInputs.cache
+D:\ESFAApps\CourseMigrationTool\src\Dfc.CourseDirectory.CourseMigrationTool\obj\Debug\netcoreapp2.1\Dfc.CourseDirectory.CourseMigrationTool.AssemblyInfoInputs.cache
+D:\ESFAApps\CourseMigrationTool\src\Dfc.CourseDirectory.CourseMigrationTool\obj\Debug\netcoreapp2.1\Dfc.CourseDirectory.CourseMigrationTool.AssemblyInfo.cs
+D:\ESFAApps\CourseMigrationTool\src\Dfc.CourseDirectory.CourseMigrationTool\obj\Debug\netcoreapp2.1\Dfc.CourseDirectory.CourseMigrationTool.dll
+D:\ESFAApps\CourseMigrationTool\src\Dfc.CourseDirectory.CourseMigrationTool\obj\Debug\netcoreapp2.1\Dfc.CourseDirectory.CourseMigrationTool.pdb
+D:\ESFAApps\CourseMigrationTool\src\Dfc.CourseDirectory.CourseMigrationTool\bin\Debug\netcoreapp2.1\appsettings.json
