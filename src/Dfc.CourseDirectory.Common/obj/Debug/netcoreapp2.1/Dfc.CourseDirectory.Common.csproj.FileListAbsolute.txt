@@ -1,8 +1,0 @@
-D:\FindACourse\dfc-coursedirectory\src\Dfc.CourseDirectory.Common\bin\Debug\netcoreapp2.1\Dfc.CourseDirectory.Common.deps.json
-D:\FindACourse\dfc-coursedirectory\src\Dfc.CourseDirectory.Common\bin\Debug\netcoreapp2.1\Dfc.CourseDirectory.Common.dll
-D:\FindACourse\dfc-coursedirectory\src\Dfc.CourseDirectory.Common\bin\Debug\netcoreapp2.1\Dfc.CourseDirectory.Common.pdb
-D:\FindACourse\dfc-coursedirectory\src\Dfc.CourseDirectory.Common\obj\Debug\netcoreapp2.1\Dfc.CourseDirectory.Common.csproj.CoreCompileInputs.cache
-D:\FindACourse\dfc-coursedirectory\src\Dfc.CourseDirectory.Common\obj\Debug\netcoreapp2.1\Dfc.CourseDirectory.Common.AssemblyInfoInputs.cache
-D:\FindACourse\dfc-coursedirectory\src\Dfc.CourseDirectory.Common\obj\Debug\netcoreapp2.1\Dfc.CourseDirectory.Common.AssemblyInfo.cs
-D:\FindACourse\dfc-coursedirectory\src\Dfc.CourseDirectory.Common\obj\Debug\netcoreapp2.1\Dfc.CourseDirectory.Common.dll
-D:\FindACourse\dfc-coursedirectory\src\Dfc.CourseDirectory.Common\obj\Debug\netcoreapp2.1\Dfc.CourseDirectory.Common.pdb
