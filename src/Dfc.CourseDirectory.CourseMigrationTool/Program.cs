@@ -34,9 +34,10 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             //Console.WriteLine(configuration.GetValue[""].("DefaultConnection"));
 
             //Console.WriteLine($"Hello { config["name"] }!");
-            Console.WriteLine("Hello World!");
-            string UKPRN = Console.ReadLine(); 
-            //Console.ReadLine.;
+            Console.WriteLine("Please enter UKPRN:");
+            string UKPRN = Console.ReadLine();
+            Console.WriteLine(UKPRN);
+            string next = Console.ReadLine();
         }
 
         //private static async Task<IResult<ICourse>> AddCourseAsync(Course course)
