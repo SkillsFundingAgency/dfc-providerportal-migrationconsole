@@ -31,13 +31,14 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             IConfigurationRoot configuration = builder.Build();
 
             Console.WriteLine(configuration.GetConnectionString("DefaultConnection"));
-            //Console.WriteLine(configuration.GetValue[""].("DefaultConnection"));
+            //var ss = configuration.GetSection("CourseServiceSettings");
+            Console.WriteLine(configuration.GetValue<string>("name"));
 
             //Console.WriteLine($"Hello { config["name"] }!");
             Console.WriteLine("Please enter UKPRN:");
             string UKPRN = Console.ReadLine();
             Console.WriteLine(UKPRN);
-            string next = Console.ReadLine();
+            string nextLine2 = Console.ReadLine();
         }
 
         //private static async Task<IResult<ICourse>> AddCourseAsync(Course course)
