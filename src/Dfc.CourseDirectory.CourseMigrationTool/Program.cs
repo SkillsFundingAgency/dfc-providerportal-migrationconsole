@@ -1,13 +1,20 @@
 ﻿using Dfc.CourseDirectory.Common.Interfaces;
+using Dfc.CourseDirectory.CourseMigrationTool.Helpers;
 using Dfc.CourseDirectory.Models.Interfaces.Courses;
 using Dfc.CourseDirectory.Models.Models.Courses;
 using Dfc.CourseDirectory.Services.CourseService;
+using Dfc.CourseDirectory.Services.Interfaces.CourseService;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+//using Microsoft.Extensions.Logging.Console;
+//using Microsoft.Extensions.Options.ConfigurationExtensions;
 
 namespace Dfc.CourseDirectory.CourseMigrationTool
 {
@@ -24,22 +31,131 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             //    .AddJsonFile("appsettings.json", true, true)
             //    .Build();
 
+            /* // That is working */
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
             IConfigurationRoot configuration = builder.Build();
 
-            Console.WriteLine(configuration.GetConnectionString("DefaultConnection"));
-            //var ss = configuration.GetSection("CourseServiceSettings");
-            Console.WriteLine(configuration.GetValue<string>("name"));
 
-            //Console.WriteLine($"Hello { config["name"] }!");
+            /*
+            var serviceProvider = new ServiceCollection()
+            .AddLogging()
+            .AddSingleton<ICourseService, CourseService>()
+            .BuildServiceProvider();
+
+            //configure console logging
+            serviceProvider
+                .GetService<ILoggerFactory>()
+                .AddConsole(LogLevel.Debug);
+
+            var logger = serviceProvider.GetService<ILoggerFactory>()
+                .CreateLogger<Program>();
+            logger.LogDebug("Starting application");
+
+            //do the actual work here
+            var bar = serviceProvider.GetService<ICourseService>();
+
+            Course course = new Course();
+            bar.AddCourseAsync(course);
+
+            logger.LogDebug("All done!");
+            */
+
+
+            // Console.WriteLine(configuration.GetConnectionString("DefaultConnection"));         
+            //Console.WriteLine(configuration.GetValue<string>("name"));
+
+            /*
+            var services = new ServiceCollection();
+            ConfigureServices(services);
+            var serviceProvider = services.BuildServiceProvider();
+            var app = serviceProvider.GetService<Application>();
+            Task.Run(() => app.Run()).Wait();
+            */
+
+            string connectionString = configuration.GetConnectionString("DefaultConnection");
             Console.WriteLine("Please enter UKPRN:");
             string UKPRN = Console.ReadLine();
-            Console.WriteLine(UKPRN);
+
+            if (!CheckForValidUKPRN(UKPRN))
+            {
+                Console.WriteLine("UKPRN must be 8 digit number starting with a 1 e.g. 10000364");
+                UKPRN = Console.ReadLine();
+            }
+
+            int providerUKPRN = Convert.ToInt32(UKPRN);
+
+            string providerName = string.Empty;
+            var tribalCourses = DataHelper.GetCoursesByProviderUKPRN(providerUKPRN, connectionString, out providerName);
+
+            Console.WriteLine(providerName);
             string nextLine = Console.ReadLine();
+
         }
+
+        internal static bool CheckForValidUKPRN(string ukprn)
+        {
+            string regex = "^[1][0-9]{7}$";
+            var validUKPRN = Regex.Match(ukprn, regex, RegexOptions.IgnoreCase);
+
+            return validUKPRN.Success;
+        }
+        /*
+        private static void ConfigureServices(IServiceCollection services)
+        {
+            ILoggerFactory loggerFactory = new LoggerFactory()
+                .AddConsole() // Error!
+                .AddDebug();
+
+            services.AddSingleton(loggerFactory); // Add first my already configured instance
+            services.AddLogging(); // Allow ILogger<T>
+
+            IConfigurationRoot configuration = GetConfiguration();
+            services.AddSingleton<IConfigurationRoot>(configuration);
+
+            // Support typed Options
+            services.AddOptions();
+            services.Configure<MyOptions>(configuration.GetSection("MyOptions")); // Error!
+
+            services.AddTransient<Application>();
+        }
+
+        private static IConfigurationRoot GetConfiguration()
+        {
+            return new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
+        }
+
+        public class MyOptions
+        {
+            public string Name { get; set; }
+        }
+
+        public class Application
+        {
+            ILogger _logger;
+            MyOptions _settings;
+
+            public Application(ILogger<Application> logger, IOptions<MyOptions> settings)
+            {
+                _logger = logger;
+                _settings = settings.Value;
+            }
+
+            public async Task Run()
+            {
+                try
+                {
+                    _logger.LogInformation($"This is a console application for {_settings.Name}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex.ToString());
+                }
+            }
+        }
+        */
 
         //private static async Task<IResult<ICourse>> AddCourseAsync(Course course)
         //{
