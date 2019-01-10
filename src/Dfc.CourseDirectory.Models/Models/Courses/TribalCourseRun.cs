@@ -15,6 +15,32 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
     //    [Description("Work based")]
     //    WorkBased = 3
     //}
+
+    public enum AttendanceType
+    {
+        [Description("Undefined")]
+        Undefined = 0,
+        [Description("Location / campus")]
+        Location = 1,
+        [Description("Face-to-face (non-campus)")]
+        FaceToFaceNonCampus = 2,
+        [Description("Work-based")]
+        WorkBased = 3,
+        [Description("Mixed mode")]
+        MixedMode = 4,
+        [Description("Distance with attendance")]
+        DistanceWithAttendance = 5,
+        [Description("Distance without attendance")]
+        DistanceWithoutAttendance = 6,
+        [Description("Online without attendance")]
+        OnlineWithoutAttendance = 7,
+        [Description("Online with attendance")]
+        OnlineWithAttendance = 8,
+        [Description("Not known")]
+        NotKnown = 9
+    }
+
+
     //public enum DurationUnit
     //{
     //    [Description("Undefined")]
@@ -61,18 +87,23 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
     //    FlexibleStartDate = 2,
     //}
 
-    public class TribalCourseRun : ITribalCourseRun 
+    public class TribalCourseRun : ITribalCourseRun
     {
-        public Guid id { get; set; }
-        public Guid VenueId { get; set; }
-        public string CourseName { get; set; }
-        public string ProviderCourseID { get; set; }
-        public DeliveryMode DeliveryMode { get; set; }
-        public bool FlexibleStartDate { get; set; }
-        public DateTime StartDate { get; set; }
-        public string CourseURL { get; set; }
-        public decimal Cost { get; set; }
-        public string CostDescription { get; set; }       
+        //public Guid id { get; set; }
+        public int VenueId { get; set; } //=>  Call VenueService to get [VenueId](GUID) using [VenueLocationId] => TODO
+
+        // public string CourseName { get; set; } => it will use CourseTitle from Course properties
+        public int CourseInstanceId { get; set; } //=> ProviderCourseID ??? [ProviderOwnCourseInstanceRef] instead of CourseInstanceId
+        public AttendanceType AttendanceType { get; set; } //=> DeliveryMode DeliveryMode
+        public string StartDateDescription { get; set; } //=> FlexibleStartDate
+        // Flexible start date - please just contact the programme to sign up
+        // Flexible start dates throughout the year to suit the client / individual 
+        // 5488 distinct values (358 of which contain the word 'Flexible')
+        // => public bool FlexibleStartDate { get; set; }  // The course starts on 19/9/18
+        public DateTime? StartDate { get; set; } //=> StartDate
+        public string Url { get; set; } // => CourseURL
+        public decimal Cost { get; set; } 
+        public string CostDescription { get; set; }
         public DurationUnit DurationUnit { get; set; }
         public int DurationValue { get; set; }
         public StudyMode StudyMode { get; set; }

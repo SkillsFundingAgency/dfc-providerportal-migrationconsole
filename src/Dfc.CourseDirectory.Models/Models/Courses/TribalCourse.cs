@@ -8,10 +8,10 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
     {
         public int CourseId { get; set; } // Used to get TribalCourseRuns
         public string CourseTitle  { get; set; } // QualificationCourseTitle
-        public string LearningAimRefId  { get; set; } // LearnAimRef => LARS => check 54007 = NULL empty ???
+        public string LearningAimRefId  { get; set; } // LearnAimRef => LARS => check 54007 = NULL empty ??? (Cleansing for duplicate course - for location
         public int QualificationLevelId { get; set; } // NotionalNVQLevelv2
         public string LearningAimAwardOrgCode { get; set; } // AwardOrgCode
-        public string Qualification { get; set; } // QualificationType => ??? some of them empty NULL
+        public string Qualification { get; set; } // QualificationType => ??? many of them empty NULL shall we add "Other"
 
         public int Ukprn { get; set; } // ProviderUKPRN
 

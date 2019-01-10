@@ -90,6 +90,18 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             string providerName = string.Empty;
             var tribalCourses = DataHelper.GetCoursesByProviderUKPRN(providerUKPRN, connectionString, out providerName);
 
+            foreach(var tribalCourse in tribalCourses)
+            {
+                var tribalCourseRuns = DataHelper.GetCourseInstancesByCourseId(tribalCourse.CourseId, connectionString);
+
+                if (tribalCourseRuns != null)
+                    tribalCourse.TribalCourseRuns = tribalCourseRuns;
+
+                // Do the mapping
+
+                // Send course via CourseService
+            }
+
             Console.WriteLine(providerName);
             string nextLine = Console.ReadLine();
 

@@ -13,6 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfc.CourseDirectory.Common"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQL", "SQL", "{84C1F5AF-3719-4E01-9E21-8E546B5D2174}"
 	ProjectSection(SolutionItems) = preProject
+		sql\CREATE_PROCEDURE_dfc_GetCourseInstancesByCourseId .sql = sql\CREATE_PROCEDURE_dfc_GetCourseInstancesByCourseId .sql
 		sql\CREATE_PROCEDURE_dfc_GetCoursesByProviderUKPRN.sql = sql\CREATE_PROCEDURE_dfc_GetCoursesByProviderUKPRN.sql
 	EndProjectSection
 EndProject
