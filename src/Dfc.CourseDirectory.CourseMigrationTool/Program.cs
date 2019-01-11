@@ -95,9 +95,18 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 var tribalCourseRuns = DataHelper.GetCourseInstancesByCourseId(tribalCourse.CourseId, connectionString);
 
                 if (tribalCourseRuns != null)
+                {
                     tribalCourse.TribalCourseRuns = tribalCourseRuns;
+                    foreach(var tribalCourseRun in tribalCourse.TribalCourseRuns)
+                    {
+                        tribalCourseRun.CourseName = tribalCourse.CourseTitle;
+                        // Call VenueService and for each tribalCourseRun.VenueId get tribalCourseRun.VenueGuidId
+                    }
 
+                }
+                    
                 // Do the mapping
+                var course = MappingHelper.MapTribalCourseToCourse(tribalCourse);
 
                 // Send course via CourseService
             }

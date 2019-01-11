@@ -1,36 +1,45 @@
--- ================================================
--- Template generated from Template Explorer using:
--- Create Procedure (New Menu).SQL
---
--- Use the Specify Values for Template Parameters 
--- command (Ctrl-Shift-M) to fill in the parameter 
--- values below.
---
--- This block of comments will not be included in
--- the definition of the procedure.
--- ================================================
+USE [SFA_CourseDirectory]
+GO
+
+/****** Object:  StoredProcedure [dbo].[dfc_GetCourseInstancesByCourseId]    Script Date: 11/01/2019 14:33:25 ******/
 SET ANSI_NULLS ON
 GO
+
 SET QUOTED_IDENTIFIER ON
 GO
+
 -- =============================================
 -- Author:		<Author,,Name>
 -- Create date: <Create Date,,>
 -- Description:	<Description,,>
 -- =============================================
-CREATE PROCEDURE dfc_GetCourseInstancesByCourseId 
+CREATE PROCEDURE [dbo].[dfc_GetCourseInstancesByCourseId] 
 (
 	@CourseId int
 )
 AS
 BEGIN
 
-	SELECT [CourseId], 
-			[CourseInstanceId], 
-			[AttendanceTypeId], 
-			[Url]
-	FROM [CourseInstance]
-	WHERE [CourseId] = @CourseId AND [RecordStatusId] = 2
+	SELECT [CourseId] 
+			,civ.[VenueId] 
+			,ci.[CourseInstanceId]
+			,[ProviderOwnCourseInstanceRef]
+			,[AttendanceTypeId]
+			,[StartDateDescription]
+			,cisd.[StartDate]
+			,[Url]
+			,[Price]
+			,[PriceAsText]
+			,[DurationUnitId]
+			,[DurationUnit]
+			,[StudyModeId]
+			,[AttendanceTypeId]
+	  FROM [CourseInstance] ci
+	  LEFT OUTER JOIN [CourseInstanceVenue] civ ON ci.CourseInstanceId = civ.CourseInstanceId
+	  LEFT OUTER JOIN [CourseInstanceStartDate] cisd ON ci.CourseInstanceId = cisd.CourseInstanceId  
+	  WHERE [CourseId] = @CourseId AND [RecordStatusId] = 2
 
 END
 GO
+
+

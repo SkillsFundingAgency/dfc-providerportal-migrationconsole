@@ -74,10 +74,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             tribalCourse.Qualification = (string)CheckForDbNull(reader["Qualification"], string.Empty);
             tribalCourse.CourseSummary = (string)CheckForDbNull(reader["CourseSummary"], string.Empty);
             tribalCourse.EntryRequirements = (string)CheckForDbNull(reader["EntryRequirements"], string.Empty);
-            ////
             tribalCourse.AssessmentMethod = (string)CheckForDbNull(reader["AssessmentMethod"], string.Empty);
             ////
-
+            //tribalCourse.AdvancedLearnerLoan = // TODO:
             return tribalCourse;
         }
 
@@ -130,19 +129,20 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
         {
             TribalCourseRun tribalCourseRun = new TribalCourseRun();
 
-            tribalCourseRun.VenueId = (int)CheckForDbNull(reader["VenueId"], 0);
+            tribalCourseRun.CourseId = (int)CheckForDbNull(reader["CourseId"], 0);
+            tribalCourseRun.VenueId = (int?)reader["VenueId"];
             tribalCourseRun.CourseInstanceId = (int)CheckForDbNull(reader["CourseInstanceId"], 0);
-            //tribalCourseRun.CourseId = (int)CheckForDbNull(reader["CourseId"], 0);
+            tribalCourseRun.ProviderOwnCourseInstanceRef = (string)CheckForDbNull(reader["ProviderOwnCourseInstanceRef"], string.Empty);
             tribalCourseRun.AttendanceType = (AttendanceType)CheckForDbNull(reader["AttendanceTypeId"], AttendanceType.Undefined);
             tribalCourseRun.StartDateDescription = (string)CheckForDbNull(reader["StartDateDescription"], string.Empty);
             tribalCourseRun.StartDate = (DateTime?)reader["StartDate"];
             tribalCourseRun.Url = (string)CheckForDbNull(reader["Url"], string.Empty);
-            //tribalCourseRun.Qualification = (string)CheckForDbNull(reader["Qualification"], string.Empty);
-            //tribalCourseRun.CourseSummary = (string)CheckForDbNull(reader["CourseSummary"], string.Empty);
-            //tribalCourseRun.EntryRequirements = (string)CheckForDbNull(reader["EntryRequirements"], string.Empty);
-            //////
-            //tribalCourseRun.AssessmentMethod = (string)CheckForDbNull(reader["AssessmentMethod"], string.Empty);
-            //////
+            tribalCourseRun.Price = (decimal?)reader["Price"];
+            tribalCourseRun.PriceAsText = (string)CheckForDbNull(reader["PriceAsText"], string.Empty);
+            tribalCourseRun.DurationUnit = (TribalDurationUnit)CheckForDbNull(reader["DurationUnitId"], TribalDurationUnit.Undefined);
+            tribalCourseRun.DurationValue = (int)CheckForDbNull(reader["DurationUnit"], 0);
+            tribalCourseRun.StudyMode = (TribalStudyMode)CheckForDbNull(reader["StudyModeId"], TribalStudyMode.Undefined);
+            tribalCourseRun.AttendancePattern = (TribalAttendancePattern)CheckForDbNull(reader["AttendanceTypeId"], TribalAttendancePattern.Undefined);
 
             return tribalCourseRun;
         }

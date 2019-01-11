@@ -19,9 +19,9 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
         public string EntryRequirements { get; set; } // EntryRequirments
         public string WhatYoullLearn { get; set; } // ??? TBC
         public string HowYoullLearn { get; set; } // ??? TBC
-        public string WhatYoullNeed { get; set; } // ??? TBC
+        public string EquipmentRequired  { get; set; } // ???  WhatYoullNeed
         public string AssessmentMethod  { get; set; } // HowYoullBeAssessed
-        public string EquipmentRequired  { get; set; } // WhereNext ??? That can NOT be true ???
+        public string WhereNext { get; set; } // ???  TBC 
 
         public bool AdvancedLearnerLoan { get; set; } // ??? NOT done
       
