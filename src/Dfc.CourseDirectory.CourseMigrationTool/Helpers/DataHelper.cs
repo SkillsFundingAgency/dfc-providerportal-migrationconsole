@@ -130,14 +130,14 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             TribalCourseRun tribalCourseRun = new TribalCourseRun();
 
             tribalCourseRun.CourseId = (int)CheckForDbNull(reader["CourseId"], 0);
-            tribalCourseRun.VenueId = (int?)reader["VenueId"];
+            tribalCourseRun.VenueId = (int?)CheckForDbNull(reader["VenueId"], null);
             tribalCourseRun.CourseInstanceId = (int)CheckForDbNull(reader["CourseInstanceId"], 0);
             tribalCourseRun.ProviderOwnCourseInstanceRef = (string)CheckForDbNull(reader["ProviderOwnCourseInstanceRef"], string.Empty);
             tribalCourseRun.AttendanceType = (AttendanceType)CheckForDbNull(reader["AttendanceTypeId"], AttendanceType.Undefined);
             tribalCourseRun.StartDateDescription = (string)CheckForDbNull(reader["StartDateDescription"], string.Empty);
             tribalCourseRun.StartDate = (DateTime?)reader["StartDate"];
             tribalCourseRun.Url = (string)CheckForDbNull(reader["Url"], string.Empty);
-            tribalCourseRun.Price = (decimal?)reader["Price"];
+            tribalCourseRun.Price = (decimal?)CheckForDbNull(reader["Price"], null);
             tribalCourseRun.PriceAsText = (string)CheckForDbNull(reader["PriceAsText"], string.Empty);
             tribalCourseRun.DurationUnit = (TribalDurationUnit)CheckForDbNull(reader["DurationUnitId"], TribalDurationUnit.Undefined);
             tribalCourseRun.DurationValue = (int)CheckForDbNull(reader["DurationUnit"], 0);

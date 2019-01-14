@@ -16,6 +16,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             {
                 var courseRun = new CourseRun();
                 courseRun.id = Guid.NewGuid();
+                courseRun.CourseInstanceId = tribalCourseRun.CourseInstanceId;
                 courseRun.VenueId = tribalCourseRun.VenueGuidId;
                 courseRun.CourseName = tribalCourseRun.CourseName;
                 courseRun.ProviderCourseID = tribalCourseRun.ProviderOwnCourseInstanceRef;
@@ -60,7 +61,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             }
 
             course.id = Guid.NewGuid();
-
+            course.CourseId = tribalCourse.CourseId;
             course.QualificationCourseTitle = tribalCourse.CourseTitle;
             course.LearnAimRef = tribalCourse.LearningAimRefId;
             course.NotionalNVQLevelv2 = tribalCourse.QualificationLevelId.ToString();
@@ -74,9 +75,12 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             course.WhatYoullNeed = tribalCourse.EquipmentRequired;
             course.HowYoullBeAssessed = tribalCourse.AssessmentMethod;
             course.WhereNext = tribalCourse.WhereNext;
-            course.AdvancedLearnerLoan = tribalCourse.AdvancedLearnerLoan;
+            course.AdvancedLearnerLoan = tribalCourse.AdvancedLearnerLoan; // TODO: otherwise always false.
 
             course.CourseRuns = courseRuns;
+
+            course.CreatedDate = DateTime.Now;
+            course.CreatedBy = "DFC – Course Migration Tool";
 
             return course;
         }

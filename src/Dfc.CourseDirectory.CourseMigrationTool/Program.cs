@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -76,6 +77,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             */
 
             string connectionString = configuration.GetConnectionString("DefaultConnection");
+            bool generateFilesLocally = configuration.GetValue<bool>("GenerateFilesLocally");
+            string jsonCourseFilesPath = configuration.GetValue<string>("JsonCourseFilesPath");
+
             Console.WriteLine("Please enter UKPRN:");
             string UKPRN = Console.ReadLine();
 
@@ -109,6 +113,16 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 var course = MappingHelper.MapTribalCourseToCourse(tribalCourse);
 
                 // Send course via CourseService
+                if (generateFilesLocally)
+                {
+                    var courseJson = JsonConvert.SerializeObject(course);
+                    string jsonFileName = string.Format("{0}-{1}-{2}-{3}-{4}.json", DateTime.Now.ToString("yyMMdd-HHmmss"), course.ProviderUKPRN, course.LearnAimRef, course.CourseId, tribalCourseRuns.Count.ToString());
+                    File.WriteAllText(string.Format(@"{0}\{1}", jsonCourseFilesPath, jsonFileName), courseJson);
+                }
+                else
+                {
+                    // Call the service
+                }
             }
 
             Console.WriteLine(providerName);

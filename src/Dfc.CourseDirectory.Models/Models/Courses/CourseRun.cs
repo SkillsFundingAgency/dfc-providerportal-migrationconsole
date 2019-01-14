@@ -64,6 +64,7 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
     public class CourseRun : ICourseRun 
     {
         public Guid id { get; set; }
+        public int? CourseInstanceId { get; set; }
         public Guid? VenueId { get; set; }
         public string CourseName { get; set; }
         public string ProviderCourseID { get; set; }
