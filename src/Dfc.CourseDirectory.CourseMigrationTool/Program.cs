@@ -43,7 +43,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             var serviceProvider = new ServiceCollection()
                 .AddLogging()
                 .AddTransient((provider) => new HttpClient())
-                .AddSingleton<IVenueService, VenueService>()
+                //.AddSingleton<IVenueService, VenueService>()
                 //.Configure<VenueServiceSettings>(configuration.GetSection(nameof(VenueServiceSettings))) // Not Working
                 .Configure<VenueServiceSettings>(venueServiceSettingsOptions =>
                     {
@@ -51,7 +51,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                         venueServiceSettingsOptions.ApiKey = configuration.GetValue<string>("VenueServiceSettings:ApiKey");
                     }
                 )
-                .AddSingleton<ICourseService, CourseService>()
+                .AddScoped<IVenueService, VenueService>()
                  .Configure<LarsSearchSettings>(larsSearchSettingsOptions =>
                  {
                      larsSearchSettingsOptions.ApiUrl = configuration.GetValue<string>("LarsSearchSettings:ApiUrl");
@@ -62,7 +62,14 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                      larsSearchSettingsOptions.PageParamName = configuration.GetValue<string>("LarsSearchSettings:PageParamName");
                  }
                 )
-                .AddSingleton<ILarsSearchService, LarsSearchService>()
+                .AddScoped<ILarsSearchService, LarsSearchService>()
+                .Configure<CourseServiceSettings>(courseServiceSettingsOptions =>
+                {
+                    courseServiceSettingsOptions.ApiUrl = configuration.GetValue<string>("CourseServiceSettings:ApiUrl");
+                    courseServiceSettingsOptions.ApiKey = configuration.GetValue<string>("CourseServiceSettings:ApiKey");
+                }
+                )
+                .AddScoped<ICourseService, CourseService>()
                 .BuildServiceProvider();
 
             // Configure console logging
@@ -77,6 +84,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             // Initialise the services
             var venueService = serviceProvider.GetService<IVenueService>();
             var larsSearchService = serviceProvider.GetService<ILarsSearchService>();
+            var courseService = serviceProvider.GetService<ICourseService>();
 
             logger.LogDebug("Log test.");
 
@@ -112,37 +120,41 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 else
                 {
                     // IF QualificationType is missing, get it from LarsSearchService
-                    //if (string.IsNullOrEmpty(tribalCourse.Qualification))
-                    //{
-                    LarsSearchCriteria criteria = new LarsSearchCriteria(tribalCourse.LearningAimRefId, 10, 0, string.Empty, null);
-                    var larsResult = Task.Run(async () => await larsSearchService.SearchAsync(criteria)).Result;
-
-                    if (larsResult.IsSuccess && larsResult.HasValue)
+                    if (string.IsNullOrEmpty(tribalCourse.Qualification))
                     {
-                        var qualifications = new List<string>();
-                        foreach (var item in larsResult.Value.Value)
-                        {
-                            qualifications.Add(item.LearnAimRefTypeDesc);
-                        }
+                        LarsSearchCriteria criteria = new LarsSearchCriteria(tribalCourse.LearningAimRefId, 10, 0, string.Empty, null);
+                        var larsResult = Task.Run(async () => await larsSearchService.SearchAsync(criteria)).Result;
 
-                        if (qualifications.Count.Equals(0))
+                        if (larsResult.IsSuccess && larsResult.HasValue)
                         {
-                            string logNoQual = "N ????? - ";
-                        }
-                        else if (qualifications.Count.Equals(1))
-                        {
-                            tribalCourse.Qualification = qualifications[0];
+                            var qualifications = new List<string>();
+                            foreach (var item in larsResult.Value.Value)
+                            {
+                                qualifications.Add(item.LearnAimRefTypeDesc);
+                            }
+
+                            if (qualifications.Count.Equals(0))
+                            {
+                                string logNoQual = "N ????? - ";
+                            }
+                            else if (qualifications.Count.Equals(1))
+                            {
+                                tribalCourse.Qualification = qualifications[0];
+                            }
+                            else
+                            {
+                                string logMoreQuals = "N ????? - ";
+                                foreach (var qualification in qualifications)
+                                {
+                                    logMoreQuals += "and .." + qualification;
+                                }
+                            }
                         }
                         else
                         {
-                            string logMoreQuals = "N ????? - ";
+                            string logQualService = "Np Venue with this ????? - " + "" + ", Error: " + larsResult?.Error;
                         }
                     }
-                    else
-                    {
-                        string logQualService = "Np Venue with this ????? - " + "" + ", Error: " + larsResult?.Error;
-                    }
-                    //}
 
                     tribalCourse.AdvancedLearnerLoan = advancedLearnerLoan;
 
@@ -157,7 +169,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                             // Call VenueService and for each tribalCourseRun.VenueId get tribalCourseRun.VenueGuidId
                             if (tribalCourseRun.VenueId != null)
                             {
-                                GetVenueByVenueIdCriteria venueId = new GetVenueByVenueIdCriteria(tribalCourseRun.VenueId ?? 0); //{ venueId = tribalCourseRun.VenueId ?? 0 };
+                                GetVenueByVenueIdCriteria venueId = new GetVenueByVenueIdCriteria(tribalCourseRun.VenueId?.ToString()); //tribalCourseRun.VenueId ?? 0); 
                                 var venueResult = Task.Run(async () => await venueService.GetVenueByVenueIdAsync(venueId)).Result;
 
                                 //string Id = "cfb5fac2-867b-48d9-91fc-679a9b019bd1";
@@ -194,13 +206,22 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                     else
                     {
                         // Call the service
+                        var courseResult = Task.Run(async () => await courseService.AddCourseAsync(course)).Result;
+
+                        if (courseResult.IsSuccess && courseResult.HasValue)
+                        {
+                            // success
+                        }
+                        else
+                        {
+                            // No
+                        }
                     }
                 }
             }
 
             Console.WriteLine(providerName);
             string nextLine = Console.ReadLine();
-
         }
 
         internal static bool CheckForValidUKPRN(string ukprn)
