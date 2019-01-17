@@ -9,10 +9,11 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 {
     public static class DataHelper
     {
-        public static List<TribalCourse> GetCoursesByProviderUKPRN(int ProviderUKPRN, string connectionString, out string ProviderName)
+        public static List<TribalCourse> GetCoursesByProviderUKPRN(int ProviderUKPRN, string connectionString, out string ProviderName, out bool AdvancedLearnerLoan)
         {
             var tribalCourses = new List<TribalCourse>();
             ProviderName = string.Empty;
+            AdvancedLearnerLoan = false;
 
             using (var sqlConnection = new SqlConnection(connectionString))
             {
@@ -26,6 +27,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 
                     command.Parameters.Add(new SqlParameter("@ProviderName", SqlDbType.NVarChar, 200));
                     command.Parameters["@ProviderName"].Direction = ParameterDirection.Output;
+
+                    command.Parameters.Add(new SqlParameter("@AdvancedLearnerLoan", SqlDbType.Bit));
+                    command.Parameters["@AdvancedLearnerLoan"].Direction = ParameterDirection.Output;
 
                     try
                     {
@@ -46,6 +50,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 
                         // Get the Provider Name
                         ProviderName = (string)command.Parameters["@ProviderName"].Value;
+                        // Get the AdvancedLearnerLoan
+                        AdvancedLearnerLoan = (bool)command.Parameters["@AdvancedLearnerLoan"].Value;
                     }
                     catch(Exception ex)
                     {

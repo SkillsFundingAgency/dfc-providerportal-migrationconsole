@@ -21,8 +21,26 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 courseRun.CourseName = tribalCourseRun.CourseName;
                 courseRun.ProviderCourseID = tribalCourseRun.ProviderOwnCourseInstanceRef;
                 //courseRun.DeliveryMode = tribalCourseRun.DeliveryMode,
+                
                 //courseRun.FlexibleStartDate = tribalCourseRun.flexibleStartDate,
                 //courseRun.StartDate = tribalCourseRun.specifiedStartDate,
+                if(tribalCourseRun.StartDate != null && tribalCourseRun.StartDate > DateTime.MinValue)
+                {
+                    courseRun.StartDate = tribalCourseRun.StartDate;
+                    courseRun.FlexibleStartDate = false;
+                }
+                //else if (tribalCourseRun.StartDateDescription.Contains("Flexible", StringComparison.InvariantCultureIgnoreCase))
+                //{
+                //    courseRun.StartDate = null;
+                //    courseRun.FlexibleStartDate = true;
+                //}
+                else
+                {
+                    courseRun.StartDate = null;
+                    courseRun.FlexibleStartDate = true;
+                }
+
+
                 courseRun.CourseURL = tribalCourseRun.Url;
                 courseRun.Cost = tribalCourseRun.Price;
                 courseRun.CostDescription = tribalCourseRun.PriceAsText;
@@ -75,7 +93,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             course.WhatYoullNeed = tribalCourse.EquipmentRequired;
             course.HowYoullBeAssessed = tribalCourse.AssessmentMethod;
             course.WhereNext = tribalCourse.WhereNext;
-            course.AdvancedLearnerLoan = tribalCourse.AdvancedLearnerLoan; // TODO: otherwise always false.
+            course.AdvancedLearnerLoan = tribalCourse.AdvancedLearnerLoan; 
 
             course.CourseRuns = courseRuns;
 

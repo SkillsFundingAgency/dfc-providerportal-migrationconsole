@@ -1,11 +1,14 @@
-﻿using System.Collections.Generic;
-using Dfc.CourseDirectory.Common;
-using Dfc.CourseDirectory.Services.Interfaces;
+﻿using Dfc.CourseDirectory.Common;
+using Dfc.CourseDirectory.CourseMigrationTool.Interfaces;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace Dfc.CourseDirectory.Services
+namespace Dfc.CourseDirectory.CourseMigrationTool.Models
 {
-    public class LarsSearchResultItem : ValueObject<LarsSearchResultItem>, ILarsSearchResultItem
+    public class LarsSearchResultItemModel : ValueObject<LarsSearchResultItemModel>, IViewComponentModel
     {
+        public bool HasErrors => Errors.Count() > 0;
+        public IEnumerable<string> Errors { get; }
         public decimal SearchScore { get; }
         public string LearnAimRef { get; }
         public string LearnAimRefTitle { get; }
@@ -19,9 +22,10 @@ namespace Dfc.CourseDirectory.Services
         public string AwardOrgName { get; }
         public string LearnAimRefTypeDesc { get; }
 
-        public LarsSearchResultItem(
+        public LarsSearchResultItemModel(
             decimal searchScore,
             string learnAimRef,
+            string learnAimRefTitle,
             string notionalNVQLevelv2,
             string awardOrgCode,
             string learnDirectClassSystemCode1,
@@ -32,18 +36,10 @@ namespace Dfc.CourseDirectory.Services
             string awardOrgName,
             string learnAimRefTypeDesc)
         {
-            Throw.IfLessThan(0, searchScore, nameof(searchScore));
-            Throw.IfNullOrWhiteSpace(learnAimRef, nameof(learnAimRef));
-            Throw.IfNullOrWhiteSpace(notionalNVQLevelv2, nameof(notionalNVQLevelv2));
-            Throw.IfNullOrWhiteSpace(awardOrgCode, nameof(awardOrgCode));
-            Throw.IfNullOrWhiteSpace(learnDirectClassSystemCode1, nameof(learnDirectClassSystemCode1));
-            Throw.IfNullOrWhiteSpace(learnDirectClassSystemCode2, nameof(learnDirectClassSystemCode2));
-            Throw.IfNullOrWhiteSpace(unitType, nameof(unitType));
-            Throw.IfNullOrWhiteSpace(awardOrgName, nameof(awardOrgName));
-            Throw.IfNullOrWhiteSpace(learnAimRefTypeDesc, nameof(learnAimRefTypeDesc));
-
+            Errors = new string[] { };
             SearchScore = searchScore;
             LearnAimRef = learnAimRef;
+            LearnAimRefTitle = learnAimRefTitle;
             NotionalNVQLevelv2 = notionalNVQLevelv2;
             AwardOrgCode = awardOrgCode;
             LearnDirectClassSystemCode1 = learnDirectClassSystemCode1;
@@ -55,10 +51,23 @@ namespace Dfc.CourseDirectory.Services
             LearnAimRefTypeDesc = learnAimRefTypeDesc;
         }
 
+        public LarsSearchResultItemModel()
+        {
+            Errors = new string[] { };
+        }
+
+        public LarsSearchResultItemModel(string error)
+        {
+            Errors = new string[] { error };
+        }
+
         protected override IEnumerable<object> GetEqualityComponents()
         {
+            yield return HasErrors;
+            yield return Errors;
             yield return SearchScore;
             yield return LearnAimRef;
+            yield return LearnAimRefTitle;
             yield return NotionalNVQLevelv2;
             yield return AwardOrgCode;
             yield return LearnDirectClassSystemCode1;
