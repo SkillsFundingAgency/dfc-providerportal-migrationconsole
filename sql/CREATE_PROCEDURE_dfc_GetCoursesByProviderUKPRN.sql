@@ -10,7 +10,7 @@ GO
 -- Create date: <Create Date,,>
 -- Description:	<Description,,>
 -- =============================================
-ALTER PROCEDURE [dbo].[dfc_GetCoursesByProviderUKPRN] 
+CREATE PROCEDURE [dbo].[dfc_GetCoursesByProviderUKPRN] 
 (
 	@ProviderUKPRN INT,
 	@ProviderName NVARCHAR (200) OUTPUT,

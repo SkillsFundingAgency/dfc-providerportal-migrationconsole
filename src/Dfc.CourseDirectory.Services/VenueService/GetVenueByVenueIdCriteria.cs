@@ -8,12 +8,11 @@ namespace Dfc.CourseDirectory.Services.VenueService
 {
     public class GetVenueByVenueIdCriteria : ValueObject<GetVenueByVenueIdCriteria>, IGetVenueByVenueIdCriteria
     {
-        public string venueId { get; set; }
+        public int venueId { get; set; }
 
-        public GetVenueByVenueIdCriteria(string venueid)
+        public GetVenueByVenueIdCriteria(int venueid)
         {
-            //Throw.IfNull(venueid, nameof(venueid));
-            Throw.IfNullOrEmpty(venueid, nameof(venueid));
+            Throw.IfNull(venueid, nameof(venueid));
 
             venueId = venueid;
         }

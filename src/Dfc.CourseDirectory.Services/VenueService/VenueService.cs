@@ -391,7 +391,7 @@ namespace Dfc.CourseDirectory.Services.VenueService
 
     internal class GetVenueByVenueIdJson
     {
-        public string venueId { get; set; }
+        public int venueId { get; set; }
     }
 
 

@@ -6,6 +6,6 @@ namespace Dfc.CourseDirectory.Services.Interfaces.VenueService
 {
     public interface IGetVenueByVenueIdCriteria
     {
-        string venueId { get; set; }
+        int venueId { get; set; }
     }
 }
