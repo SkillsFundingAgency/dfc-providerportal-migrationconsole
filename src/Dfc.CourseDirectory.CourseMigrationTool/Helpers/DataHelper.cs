@@ -141,7 +141,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             tribalCourseRun.ProviderOwnCourseInstanceRef = (string)CheckForDbNull(reader["ProviderOwnCourseInstanceRef"], string.Empty);
             tribalCourseRun.AttendanceType = (AttendanceType)CheckForDbNull(reader["AttendanceTypeId"], AttendanceType.Undefined);
             tribalCourseRun.StartDateDescription = (string)CheckForDbNull(reader["StartDateDescription"], string.Empty);
-            tribalCourseRun.StartDate = (DateTime?)reader["StartDate"];
+            tribalCourseRun.StartDate = (DateTime?)CheckForDbNull(reader["StartDate"], null);
             tribalCourseRun.Url = (string)CheckForDbNull(reader["Url"], string.Empty);
             tribalCourseRun.Price = (decimal?)CheckForDbNull(reader["Price"], null);
             tribalCourseRun.PriceAsText = (string)CheckForDbNull(reader["PriceAsText"], string.Empty);

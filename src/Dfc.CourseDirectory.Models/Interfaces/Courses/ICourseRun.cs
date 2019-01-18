@@ -4,7 +4,7 @@ using Dfc.CourseDirectory.Models.Models.Courses;
 using Dfc.CourseDirectory.Models.Interfaces.Providers;
 using Dfc.CourseDirectory.Models.Interfaces.Qualifications;
 using Dfc.CourseDirectory.Models.Interfaces.Venues;
-
+using Dfc.CourseDirectory.Models.Enums;
 
 namespace Dfc.CourseDirectory.Models.Interfaces.Courses
 {
@@ -24,8 +24,8 @@ namespace Dfc.CourseDirectory.Models.Interfaces.Courses
         DurationUnit DurationUnit { get; set; }
         int? DurationValue { get; set; }
         StudyMode StudyMode { get; set; } 
-        AttendancePattern AttendancePattern { get; set; } 
-
+        AttendancePattern AttendancePattern { get; set; }
+        RecordStatus RecordStatus { get; set; }
         DateTime CreatedDate { get; set; }
         string CreatedBy { get; set; }
         DateTime? UpdatedDate { get; set; }

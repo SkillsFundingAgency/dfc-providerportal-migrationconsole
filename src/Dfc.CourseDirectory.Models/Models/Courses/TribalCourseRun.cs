@@ -1,6 +1,7 @@
 ﻿using System;
 using Dfc.CourseDirectory.Models.Interfaces.Courses;
 using System.ComponentModel;
+using Dfc.CourseDirectory.Models.Enums;
 
 namespace Dfc.CourseDirectory.Models.Models.Courses
 {
@@ -164,6 +165,8 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
         public int? DurationValue { get; set; }
         public TribalStudyMode StudyMode { get; set; }
         public TribalAttendancePattern AttendancePattern { get; set; }
+
+        public RecordStatus RecordStatus { get; set; }
 
         //public DateTime CreatedDate { get; set; }
         //public string CreatedBy { get; set; }

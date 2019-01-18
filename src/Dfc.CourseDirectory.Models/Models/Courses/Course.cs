@@ -1,4 +1,5 @@
-﻿using Dfc.CourseDirectory.Models.Interfaces.Courses;
+﻿using Dfc.CourseDirectory.Models.Enums;
+using Dfc.CourseDirectory.Models.Interfaces.Courses;
 using System;
 using System.Collections.Generic;
 
@@ -8,15 +9,12 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
     {
         public Guid id { get; set; }
         public int? CourseId { get; set; }
-
         public string QualificationCourseTitle { get; set; } 
         public string LearnAimRef { get; set; } 
         public string NotionalNVQLevelv2 { get; set; } 
         public string AwardOrgCode { get; set; } 
         public string QualificationType { get; set; } 
-
         public int ProviderUKPRN { get; set; } 
-
         public string CourseDescription { get; set; }
         public string EntryRequirments { get; set; }
         public string WhatYoullLearn { get; set; }
@@ -24,11 +22,9 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
         public string WhatYoullNeed { get; set; }
         public string HowYoullBeAssessed { get; set; }
         public string WhereNext { get; set; }
-
-        public bool AdvancedLearnerLoan { get; set; }
-      
+        public bool AdvancedLearnerLoan { get; set; }    
         public IEnumerable<CourseRun> CourseRuns { get; set; }
-
+        public RecordStatus RecordStatus { get; set; }
         public DateTime CreatedDate { get; set; }
         public string CreatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
