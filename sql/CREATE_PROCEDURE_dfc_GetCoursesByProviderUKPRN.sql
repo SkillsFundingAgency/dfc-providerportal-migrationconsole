@@ -1,10 +1,13 @@
 USE [SFA_CourseDirectory]
 GO
-/****** Object:  StoredProcedure [dbo].[dfc_GetCoursesByProviderUKPRN]    Script Date: 17/01/2019 09:36:33 ******/
+
+/****** Object:  StoredProcedure [dbo].[dfc_GetCoursesByProviderUKPRN]    Script Date: 21/01/2019 11:57:31 ******/
 SET ANSI_NULLS ON
 GO
+
 SET QUOTED_IDENTIFIER ON
 GO
+
 -- =============================================
 -- Author:		<Author,,Name>
 -- Create date: <Create Date,,>
@@ -21,7 +24,7 @@ BEGIN
 
 SELECT  [Ukprn] 
 		,CourseId 
-		,CourseTitle 
+		,la.[LearningAimTitle] 
 		,c.LearningAimRefId 
 		,c.QualificationLevelId 
 		,la.LearningAimAwardOrgCode 
@@ -44,4 +47,8 @@ FROM [Provider]
 WHERE [Ukprn] =  @ProviderUKPRN AND RecordStatusId = 2
 
 END
+
+
+GO
+
 

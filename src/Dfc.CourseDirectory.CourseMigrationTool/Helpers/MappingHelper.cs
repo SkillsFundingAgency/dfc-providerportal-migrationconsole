@@ -18,10 +18,10 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 var courseRun = new CourseRun();
 
                 // JUST FOR TESTING - DO NOT UNCOMMENT
-                //tribalCourseRun.AttendanceType = AttendanceType.DistanceWithAttendance;
-                //tribalCourseRun.DurationUnit = TribalDurationUnit.Hours;
-                //tribalCourseRun.StudyMode = TribalStudyMode.PartOfAFulltimeProgram;
-                //tribalCourseRun.AttendancePattern = TribalAttendancePattern.Customised;
+                tribalCourseRun.AttendanceType = AttendanceType.DistanceWithAttendance;
+                tribalCourseRun.DurationUnit = TribalDurationUnit.Hours;
+                tribalCourseRun.StudyMode = TribalStudyMode.PartOfAFulltimeProgram;
+                tribalCourseRun.AttendancePattern = TribalAttendancePattern.Customised;
 
                 // It's need it, because of the VenueId Check
                 if (tribalCourseRun.RecordStatus.Equals(RecordStatus.Pending))
@@ -89,8 +89,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 courseRun.Cost = tribalCourseRun.Price;
                 courseRun.CostDescription = tribalCourseRun.PriceAsText;
 
-                //courseRun.DurationUnit = tribalCourseRun.Id,
-                //courseRun.DurationValue = tribalCourseRun.DurationLength,
+                // DurationUnit & DurationValue
                 switch (tribalCourseRun.DurationUnit)
                 {
                     case TribalDurationUnit.Hours:
@@ -99,7 +98,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         // Alternativly calculation // TODO 
                         courseRun.RecordStatus = RecordStatus.Pending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
-                                            $"because your DurationUnit is set to { tribalCourseRun.StudyMode } and we don't have it" +
+                                            $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" +
                                             $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
                         break;
                     case TribalDurationUnit.Days:
@@ -120,7 +119,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         // Alternativly 3 x Months or X x Weeks // TODO 
                         courseRun.RecordStatus = RecordStatus.Pending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
-                                            $"because your DurationUnit is set to { tribalCourseRun.StudyMode } and we don't have it" +
+                                            $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" +
                                             $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
                         break;
                     case TribalDurationUnit.Semesters:
@@ -129,7 +128,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         // Alternativly 3 x Months or X x Weeks // TODO 
                         courseRun.RecordStatus = RecordStatus.Pending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
-                                            $"because your DurationUnit is set to { tribalCourseRun.StudyMode } and we don't have it" +
+                                            $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" +
                                             $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
                         break;
                     case TribalDurationUnit.Years:
@@ -141,7 +140,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         courseRun.DurationUnit = DurationUnit.Undefined;
                         courseRun.RecordStatus = RecordStatus.Pending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
-                                            $"because your StudyMode is set to { tribalCourseRun.StudyMode } and we don't have it" + Environment.NewLine);
+                                            $"because your StudyMode is set to { tribalCourseRun.DurationUnit } and we don't have it" + Environment.NewLine);
                         break;
                 }
 

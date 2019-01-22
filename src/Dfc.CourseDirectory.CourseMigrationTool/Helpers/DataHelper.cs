@@ -9,11 +9,12 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 {
     public static class DataHelper
     {
-        public static List<TribalCourse> GetCoursesByProviderUKPRN(int ProviderUKPRN, string connectionString, out string ProviderName, out bool AdvancedLearnerLoan)
+        public static List<TribalCourse> GetCoursesByProviderUKPRN(int ProviderUKPRN, string connectionString, out string ProviderName, out bool AdvancedLearnerLoan, out string errorMessageGetCourses)
         {
             var tribalCourses = new List<TribalCourse>();
             ProviderName = string.Empty;
             AdvancedLearnerLoan = false;
+            errorMessageGetCourses = string.Empty;
 
             using (var sqlConnection = new SqlConnection(connectionString))
             {
@@ -55,7 +56,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     }
                     catch(Exception ex)
                     {
-                        string errorMessage = ex.Message;
+                        errorMessageGetCourses = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
                     }
                     finally
                     {
@@ -73,7 +74,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 
             tribalCourse.Ukprn = (int)CheckForDbNull(reader["Ukprn"], 0);
             tribalCourse.CourseId = (int)CheckForDbNull(reader["CourseId"], 0);
-            tribalCourse.CourseTitle = (string)CheckForDbNull(reader["CourseTitle"], string.Empty);
+            tribalCourse.CourseTitle = (string)CheckForDbNull(reader["LearningAimTitle"], string.Empty);
             tribalCourse.LearningAimRefId = (string)CheckForDbNull(reader["LearningAimRefId"], string.Empty);
             tribalCourse.QualificationLevelId = (int)CheckForDbNull(reader["QualificationLevelId"], 0);
             tribalCourse.LearningAimAwardOrgCode = (string)CheckForDbNull(reader["LearningAimAwardOrgCode"], string.Empty);
@@ -86,8 +87,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             return tribalCourse;
         }
 
-        public static List<TribalCourseRun> GetCourseInstancesByCourseId(int CourseId, string connectionString)
+        public static List<TribalCourseRun> GetCourseInstancesByCourseId(int CourseId, string connectionString, out string errorMessageGetCourseRuns)
         {
+            errorMessageGetCourseRuns = string.Empty;
             var tribalCourseRuns = new List<TribalCourseRun>();
 
             using (var sqlConnection = new SqlConnection(connectionString))
@@ -119,7 +121,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     }
                     catch (Exception ex)
                     {
-                        string errorMessage = ex.Message;
+                        errorMessageGetCourseRuns = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
                     }
                     finally
                     {

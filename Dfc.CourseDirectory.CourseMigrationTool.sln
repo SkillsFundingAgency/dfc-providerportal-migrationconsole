@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQL", "SQL", "{84C1F5AF-371
 		sql\CREATE_PROCEDURE_dfc_GetCoursesByProviderUKPRN.sql = sql\CREATE_PROCEDURE_dfc_GetCoursesByProviderUKPRN.sql
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfc.CourseDirectory.CourseMigrationTool.Tests", "src\Dfc.CourseDirectory.CourseMigrationTool.Tests\Dfc.CourseDirectory.CourseMigrationTool.Tests.csproj", "{C1F0B4F7-E9B4-49F5-94D8-7A0F784B94B0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{2B22625C-56F5-4D91-AC23-B05DED97DD72}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B22625C-56F5-4D91-AC23-B05DED97DD72}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B22625C-56F5-4D91-AC23-B05DED97DD72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1F0B4F7-E9B4-49F5-94D8-7A0F784B94B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1F0B4F7-E9B4-49F5-94D8-7A0F784B94B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1F0B4F7-E9B4-49F5-94D8-7A0F784B94B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1F0B4F7-E9B4-49F5-94D8-7A0F784B94B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

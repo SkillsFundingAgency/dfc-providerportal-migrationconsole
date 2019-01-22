@@ -95,192 +95,274 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             string connectionString = configuration.GetConnectionString("DefaultConnection");
             bool generateFilesLocally = configuration.GetValue<bool>("GenerateFilesLocally");
             string jsonCourseFilesPath = configuration.GetValue<string>("JsonCourseFilesPath");
+            string selectionOfProvidersFileName = configuration.GetValue<string>("SelectionOfProvidersFileName");
 
             #endregion 
 
-            string providerReport = "            Migration Report " + Environment.NewLine;
-            int CountCourseFailures = 0;
+            #region Get User Input and Set Variables
 
-            string adminReport = " Admin Report " + Environment.NewLine + Environment.NewLine;
-            int CountProviders = 0;
+            string adminReport = "                         Admin Report " + Environment.NewLine;
+            adminReport += "________________________________________________________________________________" + Environment.NewLine + Environment.NewLine;
 
-            Console.WriteLine("Please enter UKPRN:");
-            string UKPRN = Console.ReadLine();
+            var providerUKPRNList = new List<int>();
 
-            if (!CheckForValidUKPRN(UKPRN))
+            Console.WriteLine("Please enter valid UKPRN to migrate courses for a single Provider" + Environment.NewLine + "or \"s\" to migrate courses for a selection of Providers:");
+            string providerInput = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(providerInput))
             {
-                Console.WriteLine("UKPRN must be 8 digit number starting with a 1 e.g. 10000364");
-                UKPRN = Console.ReadLine();
+                Console.WriteLine("Please next time enter a value.");
             }
-
-            int providerUKPRN = Convert.ToInt32(UKPRN);
+            else if (providerInput.Equals("s", StringComparison.InvariantCultureIgnoreCase))
+            {
+                // Migrate selection of Providers from .CSV file
+                string selectionOfProviderFile = string.Format(@"{0}\ProviderSelections\{1}", jsonCourseFilesPath, selectionOfProvidersFileName);
+                using (StreamReader reader = new StreamReader(selectionOfProviderFile))
+                {
+                    string line = null;
+                    while (null != (line = reader.ReadLine()))
+                    {
+                        string[] providers = line.Split(',');
+                        foreach(var provider in providers)
+                        {
+                            if (CheckForValidUKPRN(provider))
+                            {
+                                providerUKPRNList.Add(Convert.ToInt32(provider));
+                            }
+                            else
+                            {
+                                // Log invalid providers
+                                adminReport += $">>> The following ( { provider } ) is not valid UKPRN." + Environment.NewLine + Environment.NewLine;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (CheckForValidUKPRN(providerInput))
+            {
+                // Migrate single Provider
+                providerUKPRNList.Add(Convert.ToInt32(providerInput));
+            }
+            else
+            {
+                Console.WriteLine("You have to enter either valid UKPRN (which must be 8 digit number starting with a 1 e.g. 10000364) or \"s\" for selection of Providers");
+            }
 
             Stopwatch adminStopWatch = new Stopwatch();
             adminStopWatch.Start();
 
-            CountProviders = 1;
+            int CountProviders = 0;
 
-            Stopwatch providerStopWatch = new Stopwatch();
-            providerStopWatch.Start();
+            int CountCourseMigrationSuccess = 0;
+            int CountCourseMigrationFailure = 0;
+            int CountAllCourses = 0;
+            int CountAllCoursesGoodToMigrate = 0;
+            int CountAllCoursesNotGoodToMigrate = 0;
+            int CountAllCoursesPending = 0;
+            int CountAllCoursesLive = 0;
+            int CountAllCoursesMigrated = 0;
+            int CountAllCoursesNotMigrated = 0;
 
-            string providerName = string.Empty;
-            bool advancedLearnerLoan = false;
-            var tribalCourses = DataHelper.GetCoursesByProviderUKPRN(providerUKPRN, connectionString, out providerName, out advancedLearnerLoan);
+            #endregion
 
-            string reportForProvider = $"for Provider '{ providerName }' with UKPRN  ( { UKPRN } )";
-            providerReport += reportForProvider + Environment.NewLine + Environment.NewLine;
-            providerReport += $"Courses {tribalCourses.Count } to be migrated "  + Environment.NewLine;
-
-            foreach (var tribalCourse in tribalCourses)
+            foreach (var providerUKPRN in providerUKPRNList)
             {
-                providerReport += Environment.NewLine + $">>> Course { tribalCourse.CourseId } LARS: { tribalCourse.LearningAimRefId } to be migrated " + Environment.NewLine;
-                // DO NOT MIGRATE COURSES WITHOUT A LARS REFERENCE. WE WILL LOOK TO AUGMENT THIS DATA WITH AN ILR EXTRACT
-                if (string.IsNullOrEmpty(tribalCourse.LearningAimRefId))
+                CountProviders++;
+                int CountCoursePending = 0;
+                int CountCourseLive = 0;
+                int CountCourseGoodToMigrate = 0;
+                int CountCourseNotGoodToMigrate = 0;
+                string providerReport = "                         Migration Report " + Environment.NewLine;
+
+                Stopwatch providerStopWatch = new Stopwatch();
+                providerStopWatch.Start();
+
+                string providerName = string.Empty;
+                bool advancedLearnerLoan = false;
+                string errorMessageGetCourses = string.Empty;
+                var tribalCourses = DataHelper.GetCoursesByProviderUKPRN(providerUKPRN, connectionString, out providerName, out advancedLearnerLoan, out errorMessageGetCourses);
+                if (!string.IsNullOrEmpty(errorMessageGetCourses)) adminReport += errorMessageGetCourses + Environment.NewLine;
+
+                string reportForProvider = $"for Provider '{ providerName }' with UKPRN  ( { providerUKPRN } )";
+                providerReport += reportForProvider + Environment.NewLine + Environment.NewLine;
+                providerReport += "________________________________________________________________________________" + Environment.NewLine + Environment.NewLine;
+                
+                foreach (var tribalCourse in tribalCourses)
                 {
-                    providerReport += $"ATTENTION - Course does NOT have LARS and will NOT be migrated - ATTENTION" + Environment.NewLine;
-                }
-                else
-                {
-                    // IF QualificationType is missing, get it from LarsSearchService - ??? IF not found
-                    if (string.IsNullOrEmpty(tribalCourse.Qualification))
+                    providerReport += Environment.NewLine + $">>> Course { tribalCourse.CourseId } LARS: { tribalCourse.LearningAimRefId } to be migrated " + Environment.NewLine;
+                    // DO NOT MIGRATE COURSES WITHOUT A LARS REFERENCE. WE WILL LOOK TO AUGMENT THIS DATA WITH AN ILR EXTRACT
+                    if (string.IsNullOrEmpty(tribalCourse.LearningAimRefId))
                     {
-                        LarsSearchCriteria criteria = new LarsSearchCriteria(tribalCourse.LearningAimRefId, 10, 0, string.Empty, null);
-                        var larsResult = Task.Run(async () => await larsSearchService.SearchAsync(criteria)).Result;
-
-                        if (larsResult.IsSuccess && larsResult.HasValue)
+                        providerReport += $"ATTENTION - Course does NOT have LARS and will NOT be migrated - ATTENTION" + Environment.NewLine;
+                        CountCourseNotGoodToMigrate++;
+                    }
+                    else
+                    {
+                        CountCourseGoodToMigrate++;
+                        // IF QualificationType is missing, get it from LarsSearchService - ??? IF not found
+                        if (string.IsNullOrEmpty(tribalCourse.Qualification))
                         {
-                            var qualifications = new List<string>();
-                            foreach (var item in larsResult.Value.Value)
-                            {
-                                qualifications.Add(item.LearnAimRefTypeDesc);
-                            }
+                            LarsSearchCriteria criteria = new LarsSearchCriteria(tribalCourse.LearningAimRefId, 10, 0, string.Empty, null);
+                            var larsResult = Task.Run(async () => await larsSearchService.SearchAsync(criteria)).Result;
 
-                            if (qualifications.Count.Equals(0))
+                            if (larsResult.IsSuccess && larsResult.HasValue)
                             {
-                                providerReport += $"Course does NOT have QualificationType and we couldn't obtain it for LARS { tribalCourse.LearningAimRefId } " + Environment.NewLine;
-                            }
-                            else if (qualifications.Count.Equals(1))
-                            {
-                                tribalCourse.Qualification = qualifications[0];
-                                providerReport += $"Your course did NOT have QualificationType, but we retrieve  the following '{ qualifications[0] }' for the LARS { tribalCourse.LearningAimRefId } " + Environment.NewLine;
+                                var qualifications = new List<string>();
+                                foreach (var item in larsResult.Value.Value)
+                                {
+                                    qualifications.Add(item.LearnAimRefTypeDesc);
+                                }
+
+                                if (qualifications.Count.Equals(0))
+                                {
+                                    providerReport += $"Course does NOT have QualificationType and we couldn't obtain it for LARS: { tribalCourse.LearningAimRefId } " + Environment.NewLine;
+                                }
+                                else if (qualifications.Count.Equals(1))
+                                {
+                                    tribalCourse.Qualification = qualifications[0];
+                                    providerReport += $"Your course did NOT have QualificationType, but we retrieve  the following '{ qualifications[0] }' for the LARS { tribalCourse.LearningAimRefId } " + Environment.NewLine;
+                                }
+                                else
+                                {
+                                    string logMoreQualifications = string.Empty;
+                                    foreach (var qualification in qualifications)
+                                    {
+                                        logMoreQualifications += "'" + qualification + "' ";
+                                    }
+
+                                    providerReport += $"Your course did NOT have QualificationType and we retrieve { qualifications.Count.ToString() } qualifications for the LARS { tribalCourse.LearningAimRefId }, which are { logMoreQualifications } " + Environment.NewLine;
+                                }
                             }
                             else
                             {
-                                string logMoreQualifications = string.Empty;
-                                foreach (var qualification in qualifications)
-                                {
-                                    logMoreQualifications += "'" + qualification + "' ";
-                                }
-
-                                providerReport += $"Your course did NOT have QualificationType, but we retrieve { qualifications.Count.ToString() } qualifications for the LARS { tribalCourse.LearningAimRefId }, which are { logMoreQualifications } " + Environment.NewLine;
+                                providerReport += $"We couldn't retreive QualificationType for LARS { tribalCourse.LearningAimRefId }, because of technical reasons, Error: " + larsResult?.Error;
                             }
                         }
-                        else
+
+                        tribalCourse.AdvancedLearnerLoan = advancedLearnerLoan;
+
+                        string errorMessageGetCourseRuns = string.Empty;
+                        var tribalCourseRuns = DataHelper.GetCourseInstancesByCourseId(tribalCourse.CourseId, connectionString, out errorMessageGetCourseRuns);
+                        if (!string.IsNullOrEmpty(errorMessageGetCourseRuns)) adminReport += errorMessageGetCourseRuns + Environment.NewLine;
+
+                        if (tribalCourseRuns != null)
                         {
-                            string logQualService = "Np Venue with this ????? - " + "" + ", Error: " + larsResult?.Error;
-                        }
-                    }
-
-                    tribalCourse.AdvancedLearnerLoan = advancedLearnerLoan;
-
-                    var tribalCourseRuns = DataHelper.GetCourseInstancesByCourseId(tribalCourse.CourseId, connectionString);
-
-                    if (tribalCourseRuns != null)
-                    {
-                        tribalCourse.TribalCourseRuns = tribalCourseRuns;
-                        foreach (var tribalCourseRun in tribalCourse.TribalCourseRuns)
-                        {
-                            tribalCourseRun.CourseName = tribalCourse.CourseTitle;
-                            
-                            // Call VenueService and for each tribalCourseRun.VenueId get tribalCourseRun.VenueGuidId (Only for type Location
-                            if (tribalCourseRun.AttendanceType.Equals(AttendanceType.Location))
+                            tribalCourse.TribalCourseRuns = tribalCourseRuns;
+                            foreach (var tribalCourseRun in tribalCourse.TribalCourseRuns)
                             {
-                                // DO NOT UNCOMMENT FOR TESTING ONLY
-                                //tribalCourseRun.VenueId = 3497921;
+                                tribalCourseRun.CourseName = tribalCourse.CourseTitle;
 
-                                if (tribalCourseRun.VenueId != null)
+                                // Call VenueService and for each tribalCourseRun.VenueId get tribalCourseRun.VenueGuidId (Applicable only for type Location/Classroom)
+                                if (tribalCourseRun.AttendanceType.Equals(AttendanceType.Location))
                                 {
-                                    GetVenueByVenueIdCriteria venueId = new GetVenueByVenueIdCriteria(tribalCourseRun.VenueId ?? 0);
-                                    var venueResult = Task.Run(async () => await venueService.GetVenueByVenueIdAsync(venueId)).Result;
-
-                                    if (venueResult.IsSuccess && venueResult.HasValue)
+                                    if (tribalCourseRun.VenueId != null)
                                     {
-                                        tribalCourseRun.VenueGuidId = new Guid(((Venue)venueResult.Value).ID);
-                                        // Uncomment only in Development
-                                        //providerReport += $"Venue Id '{ tribalCourseRun.VenueGuidId }' for GOOD " + Environment.NewLine;
+                                        GetVenueByVenueIdCriteria venueId = new GetVenueByVenueIdCriteria(tribalCourseRun.VenueId ?? 0);
+                                        var venueResult = Task.Run(async () => await venueService.GetVenueByVenueIdAsync(venueId)).Result;
+
+                                        if (venueResult.IsSuccess && venueResult.HasValue)
+                                        {
+                                            tribalCourseRun.VenueGuidId = new Guid(((Venue)venueResult.Value).ID);
+                                        }
+                                        else
+                                        {
+                                            tribalCourseRun.RecordStatus = RecordStatus.Pending;
+                                            providerReport += $"ATTENTION - CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' - Venue with VenueId -  '{ tribalCourseRun.VenueId }' could not obtain VenueIdGuid , Error:  { venueResult?.Error } for BAD " + Environment.NewLine;
+                                        }
                                     }
                                     else
                                     {
                                         tribalCourseRun.RecordStatus = RecordStatus.Pending;
-                                        providerReport += $"ATTENTION - CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' - Venue with VenueId -  '{ tribalCourseRun.VenueId }' could not obtain VenueIdGuid , Error:  { venueResult?.Error } for BAD " + Environment.NewLine;
+                                        providerReport += $"ATTENTION - NO Venue Id for CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' , although it's of  AttendanceType.Location" + Environment.NewLine;
                                     }
                                 }
-                                else
-                                {
-                                    tribalCourseRun.RecordStatus = RecordStatus.Pending;
-                                    providerReport += $"ATTENTION - NO Venue Id for CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' , although it's of  AttendanceType.Location" + Environment.NewLine;
-                                }
-                            }                         
+                            }
                         }
-                    }
 
-                    // Do the mapping
-                    var mappingMessages = new List<string>();
-                    var course = MappingHelper.MapTribalCourseToCourse(tribalCourse, out mappingMessages);
+                        // Do the mapping
+                        var mappingMessages = new List<string>();
+                        var course = MappingHelper.MapTribalCourseToCourse(tribalCourse, out mappingMessages);
 
-                    foreach(var courseRun in course.CourseRuns)
-                    {
-                        providerReport += Environment.NewLine + $"- - - -  CourseRun { courseRun.CourseInstanceId } Ref: '{ courseRun.ProviderCourseID }' is migrated and has a RecordStatus: { courseRun.RecordStatus } " + Environment.NewLine;
-                    }
-
-                    foreach(var mappingMessage in mappingMessages)
-                    {
-                        providerReport += mappingMessage;
-                    }
-
-                    providerReport += Environment.NewLine + $"The Course has RecordStatus:  { course.RecordStatus } " + Environment.NewLine; ;
-
-                    // Send course via CourseService
-                    if (generateFilesLocally)
-                    {
-                        var courseJson = JsonConvert.SerializeObject(course);
-                        string jsonFileName = string.Format("{0}-{1}-{2}-{3}-{4}.json", DateTime.Now.ToString("yyMMdd-HHmmss"), course.ProviderUKPRN, course.LearnAimRef, course.CourseId, tribalCourseRuns.Count.ToString());
-                        File.WriteAllText(string.Format(@"{0}\{1}", jsonCourseFilesPath, jsonFileName), courseJson);
-                    }
-                    else
-                    {
-                        // Call the service
-                        var courseResult = Task.Run(async () => await courseService.AddCourseAsync(course)).Result;
-
-                        if (courseResult.IsSuccess && courseResult.HasValue)
+                        foreach (var courseRun in course.CourseRuns)
                         {
-                            providerReport += $"The course is migarted  " + Environment.NewLine;
+                            providerReport += Environment.NewLine + $"- - - CourseRun { courseRun.CourseInstanceId } Ref: '{ courseRun.ProviderCourseID }' is migrated and has a RecordStatus: { courseRun.RecordStatus } " + Environment.NewLine;
+                        }
+
+                        foreach (var mappingMessage in mappingMessages)
+                        {
+                            providerReport += mappingMessage;
+                        }
+
+                        providerReport += Environment.NewLine + $"The Course has RecordStatus:  { course.RecordStatus } " + Environment.NewLine; ;
+
+                        if (course.RecordStatus.Equals(RecordStatus.Live)) CountCourseLive++;
+                        if (course.RecordStatus.Equals(RecordStatus.Pending)) CountCoursePending++;
+                        
+                        // Migrate Course 
+                        if (generateFilesLocally)
+                        {
+                            var courseJson = JsonConvert.SerializeObject(course);
+                            string jsonFileName = string.Format("{0}-{1}-{2}-{3}-{4}.json", DateTime.Now.ToString("yyMMdd-HHmmss"), course.ProviderUKPRN, course.LearnAimRef, course.CourseId, tribalCourseRuns.Count.ToString());
+                            File.WriteAllText(string.Format(@"{0}\{1}", jsonCourseFilesPath, jsonFileName), courseJson);
                         }
                         else
                         {
-                            // No
-                            CountCourseFailures++;
-                            providerReport += $"The course is NOT migrated.  " + Environment.NewLine;
+                            // Call the service
+                            var courseResult = Task.Run(async () => await courseService.AddCourseAsync(course)).Result;
+
+                            if (courseResult.IsSuccess && courseResult.HasValue)
+                            {
+                                CountCourseMigrationSuccess++;
+                                providerReport += $"The course is migarted  " + Environment.NewLine;
+                            }
+                            else
+                            {
+                                // No
+                                CountCourseMigrationFailure++;
+                                providerReport += $"The course is NOT migrated.  " + Environment.NewLine;
+                            }
                         }
                     }
                 }
+
+                providerReport += Environment.NewLine + "________________________________________________________________________________" + Environment.NewLine + Environment.NewLine;
+                providerReport += $"( { tribalCourses.Count } ) Courses to be migrated " + Environment.NewLine;
+                providerReport += $"Number of good to migrate Courses ( { CountCourseGoodToMigrate } ) - Pending ( { CountCoursePending} ) and Live ( { CountCourseLive } )" + Environment.NewLine;
+                providerReport += $"Number of NOT good to migrate Courses ( { CountCourseNotGoodToMigrate } )" + Environment.NewLine;
+                providerReport += $"Courses Migration Successes ( { CountCourseMigrationSuccess } ) and Failures ( { CountCourseMigrationFailure } )" + Environment.NewLine;
+                string providerReportFileName = string.Format("{0}-MigrationReport-{1}-{2}.txt", DateTime.Now.ToString("yyMMdd-HHmmss"), providerUKPRN, tribalCourses.Count.ToString());
+                File.WriteAllText(string.Format(@"{0}\ProviderReports\{1}", jsonCourseFilesPath, providerReportFileName), providerReport);
+
+                providerStopWatch.Stop();
+                adminReport += $">>> Report { reportForProvider } - { providerReportFileName } - Time taken: { providerStopWatch.Elapsed } " + Environment.NewLine;
+                adminReport += $"( { tribalCourses.Count } ) Courses to be migrated " + Environment.NewLine;
+                adminReport += $"Number of good to migrate Courses ( { CountCourseGoodToMigrate } ) - Pending ( { CountCoursePending} ) and Live ( { CountCourseLive } )" + Environment.NewLine;
+                adminReport += $"Number of NOT good to migrate Courses ( { CountCourseNotGoodToMigrate } )" + Environment.NewLine;                
+                adminReport += $"Courses Migration Successes ( { CountCourseMigrationSuccess } ) and Failures ( { CountCourseMigrationFailure } )" + Environment.NewLine + Environment.NewLine;
+
+                CountAllCourses = CountAllCourses + tribalCourses.Count;
+                CountAllCoursesGoodToMigrate = CountAllCoursesGoodToMigrate + CountCourseGoodToMigrate;
+                CountAllCoursesNotGoodToMigrate = CountAllCoursesNotGoodToMigrate + (tribalCourses.Count - CountCourseGoodToMigrate);
+                CountAllCoursesPending = CountAllCoursesPending + CountCoursePending;
+                CountAllCoursesLive = CountAllCoursesLive + CountCourseLive;
+                CountAllCoursesMigrated = CountAllCoursesMigrated + CountCourseMigrationSuccess;
+                CountAllCoursesNotMigrated = CountAllCoursesNotMigrated + CountCourseMigrationFailure;
+
             }
 
-            providerReport += $"Courses { CountCourseFailures } Failures  " + Environment.NewLine;
-            string providerReportFileName = string.Format("{0}-MigrationReport-{1}-{2}.txt", DateTime.Now.ToString("yyMMdd-HHmmss"), UKPRN, tribalCourses.Count.ToString());
-            File.WriteAllText(string.Format(@"{0}\ProviderReports\{1}", jsonCourseFilesPath, providerReportFileName), providerReport);
-
-            providerStopWatch.Stop();
-            adminReport += $"Report { reportForProvider } - { providerReportFileName } - Time taken: { providerStopWatch.Elapsed } " + Environment.NewLine;
-            adminReport += $"Number of Courses { tribalCourses.Count } ? Pending ? Live ?" + Environment.NewLine;
-
+            // Finish Admin Report
+            adminReport += "________________________________________________________________________________" + Environment.NewLine + Environment.NewLine;
             adminStopWatch.Stop();
             //string formatedStopWatchElapsedTime = string.Format("{0:D2}:{1:D2}:{2:D2}:{3:D2}:{4:D3}", stopWatch.Elapsed.Days, stopWatch.Elapsed.Hours, stopWatch.Elapsed.Minutes, stopWatch.Elapsed.Seconds, stopWatch.Elapsed.Milliseconds);
-            adminReport += Environment.NewLine + $"Total time taken: { adminStopWatch.Elapsed } " + Environment.NewLine;
+            adminReport += $"Number of Providers migrated ( { CountProviders } ). Total time taken: { adminStopWatch.Elapsed } " + Environment.NewLine;
+            adminReport += $"Total number of courses processed ( { CountAllCourses } )." + Environment.NewLine;
+            adminReport += $"Total number of GOOD to migrate courses ( { CountAllCoursesGoodToMigrate} ) and total number of NOT good to migrate courses ( { CountAllCoursesNotGoodToMigrate } )" + Environment.NewLine;
+            adminReport += $"Total number of GOOD to migrate courses with Pending status  ( { CountAllCoursesPending} ) and Live status ( { CountAllCoursesLive } )" + Environment.NewLine;
+            adminReport += $"Total number of courses migrated ( { CountAllCoursesMigrated} ) and total number of NOT migrated courses ( { CountAllCoursesNotMigrated } )" + Environment.NewLine;
             string adminReportFileName = string.Format("{0}-AdminReport-{1}.txt", DateTime.Now.ToString("yyMMdd-HHmmss"), CountProviders.ToString());
             File.WriteAllText(string.Format(@"{0}\AdminReports\{1}", jsonCourseFilesPath, adminReportFileName), adminReport);
 
-            Console.WriteLine(providerName);
+            Console.WriteLine("Migration completed");
             string nextLine = Console.ReadLine();
         }
 
