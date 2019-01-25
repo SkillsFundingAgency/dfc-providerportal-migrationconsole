@@ -20,14 +20,16 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
     {
         [Description("Undefined")]
         Undefined = 0,
+        [Description("Hours")]
+        Hours = 1,
         [Description("Days")]
-        Days = 1,
+        Days = 2,
         [Description("Weeks")]
-        Weeks = 2,
+        Weeks = 3,
         [Description("Months")]
-        Months = 3,
+        Months = 4,
         [Description("Years")]
-        Years = 4
+        Years = 5
     }
     public enum StudyMode
     {

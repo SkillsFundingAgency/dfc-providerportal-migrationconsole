@@ -7,21 +7,23 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 {
     public static class MappingHelper
     {
-        public static Course MapTribalCourseToCourse(TribalCourse tribalCourse, out List<string> mappingMessages)
+        public static Course MapTribalCourseToCourse(TribalCourse tribalCourse, out List<string> mappingMessages, out bool courseTooOldDoNotMigrate)
         {
             var course = new Course();
             var courseRuns = new List<CourseRun>();
             mappingMessages = new List<string>();
+            courseTooOldDoNotMigrate = false;
+            var courseRunsToBeRemovedAsTooOld = new List<CourseRun>();
 
             foreach (var tribalCourseRun in tribalCourse.TribalCourseRuns)
             {
                 var courseRun = new CourseRun();
 
                 // JUST FOR TESTING - DO NOT UNCOMMENT
-                tribalCourseRun.AttendanceType = AttendanceType.DistanceWithAttendance;
-                tribalCourseRun.DurationUnit = TribalDurationUnit.Hours;
-                tribalCourseRun.StudyMode = TribalStudyMode.PartOfAFulltimeProgram;
-                tribalCourseRun.AttendancePattern = TribalAttendancePattern.Customised;
+                //tribalCourseRun.AttendanceType = AttendanceType.DistanceWithAttendance;
+                //tribalCourseRun.DurationUnit = TribalDurationUnit.Terms;
+                //tribalCourseRun.StudyMode = TribalStudyMode.PartOfAFulltimeProgram;
+                //tribalCourseRun.AttendancePattern = TribalAttendancePattern.Customised;
 
                 // It's need it, because of the VenueId Check
                 if (tribalCourseRun.RecordStatus.Equals(RecordStatus.Pending))
@@ -69,12 +71,24 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 }
 
                 // StartDate & FlexibleStartDate
+                // Uncomment for testing only
+                //tribalCourseRun.StartDate = DateTime.Now.AddMonths(-5);
                 if (tribalCourseRun.StartDate != null && tribalCourseRun.StartDate > DateTime.MinValue)
                 {
-                    courseRun.StartDate = tribalCourseRun.StartDate;
-                    courseRun.FlexibleStartDate = false;
+                    if(tribalCourseRun.StartDate >= (DateTime.Now.AddMonths(-3)))
+                    {
+                        courseRun.StartDate = tribalCourseRun.StartDate;
+                        courseRun.FlexibleStartDate = false;
+                    }
+                    else
+                    {
+                        //courseRunsIsTooOld.Add(true);
+                        courseRunsToBeRemovedAsTooOld.Add(courseRun);
+                        mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was REMOVED " +
+                                            $"because the CourseRun StartDate ( { tribalCourseRun.StartDate.Value.ToShortDateString() } ) was more than 3 months ago and we didn't migrate it" + Environment.NewLine);
+                    }
                 }
-                //else if (tribalCourseRun.StartDateDescription.Contains("Flexible", StringComparison.InvariantCultureIgnoreCase))
+                //else if (tribalCourseRun.StartDateDescription.Contains("Flexible", StringComparison.InvariantCultureIgnoreCase)) // Considering Data in StartDateDescription field
                 //{
                 //    courseRun.StartDate = null;
                 //    courseRun.FlexibleStartDate = true;
@@ -94,12 +108,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 {
                     case TribalDurationUnit.Hours:
                         courseRun.DurationValue = tribalCourseRun.DurationValue;
-                        courseRun.DurationUnit = DurationUnit.Undefined;
-                        // Alternativly calculation // TODO 
-                        courseRun.RecordStatus = RecordStatus.Pending;
-                        mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
-                                            $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" +
-                                            $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
+                        courseRun.DurationUnit = DurationUnit.Hours;
                         break;
                     case TribalDurationUnit.Days:
                         courseRun.DurationValue = tribalCourseRun.DurationValue;
@@ -114,23 +123,42 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         courseRun.DurationUnit = DurationUnit.Months;
                         break;
                     case TribalDurationUnit.Terms:
-                        courseRun.DurationValue = tribalCourseRun.DurationValue;
-                        courseRun.DurationUnit = DurationUnit.Undefined;
-                        // Alternativly 3 x Months or X x Weeks // TODO 
-                        courseRun.RecordStatus = RecordStatus.Pending;
-                        mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
-                                            $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" +
-                                            $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
-                        break;
                     case TribalDurationUnit.Semesters:
-                        courseRun.DurationValue = tribalCourseRun.DurationValue;
-                        courseRun.DurationUnit = DurationUnit.Undefined;
-                        // Alternativly 3 x Months or X x Weeks // TODO 
-                        courseRun.RecordStatus = RecordStatus.Pending;
-                        mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
-                                            $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" +
-                                            $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
+                        if (tribalCourseRun.DurationValue == null)
+                            courseRun.DurationValue = null;
+                        else
+                            courseRun.DurationValue = (tribalCourseRun.DurationValue ?? 0) * 3;
+                        courseRun.DurationUnit = DurationUnit.Months;
+                        mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was set to DurationUnit = { tribalCourseRun.DurationUnit } " +
+                                            $"and  DurationValue = { tribalCourseRun.DurationValue }. We needed to convert it to  DurationUnit = { courseRun.DurationUnit } and DurationValue = { courseRun.DurationValue }." + Environment.NewLine);                      
+                        //courseRun.DurationValue = tribalCourseRun.DurationValue;
+                        //courseRun.DurationUnit = DurationUnit.Undefined;
+                        //// Alternativly 3 x Months or X x Weeks // TODO 
+                        //courseRun.RecordStatus = RecordStatus.Pending;
+                        //mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
+                        //                    $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" +
+                        //                    $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
                         break;
+/*
+                    case TribalDurationUnit.Semesters:
+                        if (tribalCourseRun.DurationValue == null)
+                            courseRun.DurationValue = null;
+                        else
+                            courseRun.DurationValue = (tribalCourseRun.DurationValue ?? 0) * 3;
+                        courseRun.DurationUnit = DurationUnit.Months;
+                        mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was set to DurationUnit = { tribalCourseRun.DurationUnit } " +
+                                            $"and  DurationValue = { tribalCourseRun.DurationValue }. We needed to convert it to  DurationUnit = { courseRun.DurationUnit } and DurationValue = { courseRun.DurationValue }." + Environment.NewLine);
+
+
+                        //courseRun.DurationValue = tribalCourseRun.DurationValue;
+                        //courseRun.DurationUnit = DurationUnit.Undefined;
+                        //// Alternativly 3 x Months or X x Weeks // TODO 
+                        //courseRun.RecordStatus = RecordStatus.Pending;
+                        //mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
+                        //                    $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" +
+                        //                    $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
+                        break;
+*/
                     case TribalDurationUnit.Years:
                         courseRun.DurationValue = tribalCourseRun.DurationValue;
                         courseRun.DurationUnit = DurationUnit.Years;
@@ -204,33 +232,47 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             course.CourseId = tribalCourse.CourseId;
             course.QualificationCourseTitle = tribalCourse.CourseTitle;
             course.LearnAimRef = tribalCourse.LearningAimRefId;
-            course.NotionalNVQLevelv2 = tribalCourse.QualificationLevelId.ToString();
+            //course.NotionalNVQLevelv2 = tribalCourse.QualificationLevelId.Equals(0) ? string.Empty : tribalCourse.QualificationLevelId.ToString();
+            course.NotionalNVQLevelv2 = tribalCourse.QualificationLevelIdString;
             course.AwardOrgCode = tribalCourse.LearningAimAwardOrgCode;
             course.QualificationType = tribalCourse.Qualification;
             course.ProviderUKPRN = tribalCourse.Ukprn;
             course.CourseDescription = tribalCourse.CourseSummary;
-            course.EntryRequirments = tribalCourse.EntryRequirements;
+            course.EntryRequirements = tribalCourse.EntryRequirements;
             course.WhatYoullLearn = tribalCourse.WhatYoullLearn;
             course.HowYoullLearn = tribalCourse.HowYoullLearn;
             course.WhatYoullNeed = tribalCourse.EquipmentRequired;
             course.HowYoullBeAssessed = tribalCourse.AssessmentMethod;
             course.WhereNext = tribalCourse.WhereNext;
-            course.AdvancedLearnerLoan = tribalCourse.AdvancedLearnerLoan; 
+            course.AdvancedLearnerLoan = tribalCourse.AdvancedLearnerLoan;
 
-            course.CourseRuns = courseRuns;
-
-            // At least One CourseRun must be LIVE in order Course to be LIVE.
-            if (courseRuns.Find(cr => cr.RecordStatus == RecordStatus.Live) != null)
+            // Removing CourseRuns, which are older than 3 months
+            foreach(var courseRunToBeRemovedAsTooOld in courseRunsToBeRemovedAsTooOld)
             {
-                course.RecordStatus = RecordStatus.Live;
+                courseRuns.Remove(courseRunToBeRemovedAsTooOld);
+            }
+            
+            if (courseRuns != null && courseRuns.Count > 0)
+            {
+                course.CourseRuns = courseRuns;
+
+                // If any of the CourseRuns is set to Pending state, the Course must be set to Pending as well.
+                if (courseRuns == null || courseRuns.Find(cr => cr.RecordStatus == RecordStatus.Pending) != null)
+                {
+                    course.RecordStatus = RecordStatus.Pending;
+                }
+                else
+                {
+                    course.RecordStatus = RecordStatus.Live;
+                }
+                course.CreatedDate = DateTime.Now;
+                course.CreatedBy = "DFC – Course Migration Tool";
             }
             else
             {
-                course.RecordStatus = RecordStatus.Pending;
+                courseTooOldDoNotMigrate = true;
             }
-            course.CreatedDate = DateTime.Now;
-            course.CreatedBy = "DFC – Course Migration Tool";
-
+           
             return course;
         }
     }

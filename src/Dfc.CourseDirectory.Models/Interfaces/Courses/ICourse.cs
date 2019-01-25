@@ -17,7 +17,7 @@ namespace Dfc.CourseDirectory.Models.Interfaces.Courses
         string QualificationType { get; set; } 
         int ProviderUKPRN { get; set; } 
         string CourseDescription { get; set; }
-        string EntryRequirments { get; set; } 
+        string EntryRequirements { get; set; } 
         string WhatYoullLearn { get; set; }
         string HowYoullLearn { get; set; }
         string WhatYoullNeed { get; set; }
