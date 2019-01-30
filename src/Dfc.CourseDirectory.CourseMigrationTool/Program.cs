@@ -93,9 +93,11 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
 
             string connectionString = configuration.GetConnectionString("DefaultConnection");
+            bool automatedMode = configuration.GetValue<bool>("AutomatedMode");
             bool generateFilesLocally = configuration.GetValue<bool>("GenerateFilesLocally");
             string jsonCourseFilesPath = configuration.GetValue<string>("JsonCourseFilesPath");
             string selectionOfProvidersFileName = configuration.GetValue<string>("SelectionOfProvidersFileName");
+            DeploymentEnvironment deploymentEnvironment = configuration.GetValue<DeploymentEnvironment>("DeploymentEnvironment");
 
             #endregion 
 
@@ -106,52 +108,68 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
             var providerUKPRNList = new List<int>();
 
-            Console.WriteLine("Please enter valid UKPRN to migrate courses for a single Provider" + Environment.NewLine + "or \"s\" to migrate courses for a selection of Providers:");
-            string providerInput = Console.ReadLine();
-
-            if (string.IsNullOrEmpty(providerInput))
+            if (automatedMode)
             {
-                Console.WriteLine("Please next time enter a value.");
+                int lastBatchNumber = -1;
+                string errorMessageGetCourses = string.Empty;
+                providerUKPRNList = DataHelper.GetProviderUKPRNs(connectionString, out errorMessageGetCourses, out lastBatchNumber);
+                if (!string.IsNullOrEmpty(errorMessageGetCourses)) adminReport += errorMessageGetCourses + Environment.NewLine;
             }
-            else if (providerInput.Equals("s", StringComparison.InvariantCultureIgnoreCase))
+            else
             {
-                // Migrate selection of Providers from .CSV file
-                string selectionOfProviderFile = string.Format(@"{0}\ProviderSelections\{1}", jsonCourseFilesPath, selectionOfProvidersFileName);
-                using (StreamReader reader = new StreamReader(selectionOfProviderFile))
+                Console.WriteLine("Please enter valid UKPRN to migrate courses for a single Provider" + Environment.NewLine + "or \"s\" to migrate courses for a selection of Providers:");
+                string providerInput = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(providerInput))
                 {
-                    string line = null;
-                    while (null != (line = reader.ReadLine()))
+                    Console.WriteLine("Please next time enter a value.");
+                }
+                else if (providerInput.Equals("s", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    // Migrate selection of Providers from .CSV file
+                    string selectionOfProviderFile = string.Format(@"{0}\ProviderSelections\{1}", jsonCourseFilesPath, selectionOfProvidersFileName);
+                    using (StreamReader reader = new StreamReader(selectionOfProviderFile))
                     {
-                        string[] providers = line.Split(',');
-                        foreach (var provider in providers)
+                        string line = null;
+                        while (null != (line = reader.ReadLine()))
                         {
-                            if (CheckForValidUKPRN(provider))
+                            string[] providers = line.Split(',');
+                            foreach (var provider in providers)
                             {
-                                providerUKPRNList.Add(Convert.ToInt32(provider));
-                            }
-                            else
-                            {
-                                // Log invalid providers
-                                adminReport += $">>> The following ( { provider } ) is not valid UKPRN." + Environment.NewLine + Environment.NewLine;
+                                if (CheckForValidUKPRN(provider))
+                                {
+                                    providerUKPRNList.Add(Convert.ToInt32(provider));
+                                }
+                                else if (string.IsNullOrEmpty(provider))
+                                {
+                                    // We don't want to know about the empty spaces on splitting
+                                }
+                                else
+                                {
+                                    // Log invalid providers
+                                    adminReport += $">>> The following ( { provider } ) is not valid UKPRN." + Environment.NewLine + Environment.NewLine;
+                                }
                             }
                         }
                     }
                 }
-            }
-            else if (CheckForValidUKPRN(providerInput))
-            {
-                // Migrate single Provider
-                providerUKPRNList.Add(Convert.ToInt32(providerInput));
-            }
-            else
-            {
-                Console.WriteLine("You have to enter either valid UKPRN (which must be 8 digit number starting with a 1 e.g. 10000364) or \"s\" for selection of Providers");
+                else if (CheckForValidUKPRN(providerInput))
+                {
+                    // Migrate single Provider
+                    providerUKPRNList.Add(Convert.ToInt32(providerInput));
+                }
+                else
+                {
+                    Console.WriteLine("You have to enter either valid UKPRN (which must be 8 digit number starting with a 1 e.g. 10000364) or \"s\" for selection of Providers");
+                }
             }
 
             Stopwatch adminStopWatch = new Stopwatch();
             adminStopWatch.Start();
 
             int CountProviders = 0;
+            //int CountProvidersGoodToMigrate = 0;
+            int CountProvidersNotGoodToMigrate = 0;
 
             int CountCourseMigrationSuccess = 0;
             int CountCourseMigrationFailure = 0;
@@ -353,7 +371,15 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
                 CountCourseGoodToMigrate = tribalCourses.Count - CountCourseNotGoodToMigrate;
                 providerReport += Environment.NewLine + "________________________________________________________________________________" + Environment.NewLine + Environment.NewLine;
-                providerReport += $"( { tribalCourses.Count } ) Courses to be migrated " + Environment.NewLine;
+
+                string coursesToBeMigrated = $"( { tribalCourses.Count } ) Courses to be migrated ";
+                if (tribalCourses.Count.Equals(0))
+                {
+                    CountProvidersNotGoodToMigrate++;
+                    coursesToBeMigrated = $"Number of Courses to be migrated is ( { tribalCourses.Count }), which means that either the Provider is NOT Live or is Live, but does not have any live courses. In either case we don't have courses to be migrated";
+                }
+
+                providerReport += coursesToBeMigrated + Environment.NewLine;
                 providerReport += $"Number of good to migrate Courses ( { CountCourseGoodToMigrate } ) - Pending ( { CountCoursePending} ) and Live ( { CountCourseLive } )" + Environment.NewLine;
                 providerReport += $"Number of NOT good to migrate Courses ( { CountCourseNotGoodToMigrate } )" + Environment.NewLine;
                 providerReport += $"Courses Migration Successes ( { CountCourseMigrationSuccess } ) and Failures ( { CountCourseMigrationFailure } )" + Environment.NewLine;
@@ -362,7 +388,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
                 providerStopWatch.Stop();
                 adminReport += $">>> Report { reportForProvider } - { providerReportFileName } - Time taken: { providerStopWatch.Elapsed } " + Environment.NewLine;
-                adminReport += $"( { tribalCourses.Count } ) Courses to be migrated " + Environment.NewLine;
+                adminReport += coursesToBeMigrated + Environment.NewLine;
                 adminReport += $"Number of good to migrate Courses ( { CountCourseGoodToMigrate } ) - Pending ( { CountCoursePending} ) and Live ( { CountCourseLive } )" + Environment.NewLine;
                 adminReport += $"Number of NOT good to migrate Courses ( { CountCourseNotGoodToMigrate } )" + Environment.NewLine;
                 adminReport += $"Courses Migration Successes ( { CountCourseMigrationSuccess } ) and Failures ( { CountCourseMigrationFailure } )" + Environment.NewLine + Environment.NewLine;
@@ -381,7 +407,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             adminReport += "________________________________________________________________________________" + Environment.NewLine + Environment.NewLine;
             adminStopWatch.Stop();
             //string formatedStopWatchElapsedTime = string.Format("{0:D2}:{1:D2}:{2:D2}:{3:D2}:{4:D3}", stopWatch.Elapsed.Days, stopWatch.Elapsed.Hours, stopWatch.Elapsed.Minutes, stopWatch.Elapsed.Seconds, stopWatch.Elapsed.Milliseconds);
-            adminReport += $"Number of Providers migrated ( { CountProviders } ). Total time taken: { adminStopWatch.Elapsed } " + Environment.NewLine;
+            adminReport += $"Number of Providers to be migrated ( { CountProviders } ). Total time taken: { adminStopWatch.Elapsed } " + Environment.NewLine;
+            adminReport += $"Number of migrated Providers ( { CountProviders - CountProvidersNotGoodToMigrate } ). Number of Providers which are not active or not have any courses ( { CountProvidersNotGoodToMigrate } )" + Environment.NewLine;
             adminReport += $"Total number of courses processed ( { CountAllCourses } )." + Environment.NewLine;
             adminReport += $"Total number of GOOD to migrate courses ( { CountAllCoursesGoodToMigrate} ) and total number of NOT good to migrate courses ( { CountAllCoursesNotGoodToMigrate } )" + Environment.NewLine;
             adminReport += $"Total number of GOOD to migrate courses with Pending status  ( { CountAllCoursesPending} ) and Live status ( { CountAllCoursesLive } )" + Environment.NewLine;

@@ -9,6 +9,56 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 {
     public static class DataHelper
     {
+        public static List<int> GetProviderUKPRNs(string connectionString, out string errorMessageGetCourses, out int lastBatchNumber)
+        {
+            var ukprnList = new List<int>();
+            lastBatchNumber = 0;
+            errorMessageGetCourses = string.Empty;
+
+            using (var sqlConnection = new SqlConnection(connectionString))
+            {
+                using (var command = sqlConnection.CreateCommand())
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "dfc_GetProviderUKPRNs";
+
+                    command.Parameters.Add(new SqlParameter("@LastBatchNumber", SqlDbType.Int));
+                    command.Parameters["@LastBatchNumber"].Direction = ParameterDirection.Output;
+
+                    try
+                    {
+                        //Open connection.
+                        sqlConnection.Open();
+
+                        using (SqlDataReader dataReader = command.ExecuteReader())
+                        {
+                            while (dataReader.Read())
+                            {
+                                int ukprn = (int)CheckForDbNull(dataReader["Ukprn"], 0); 
+                                if (ukprn != 0)
+                                    ukprnList.Add(ukprn);
+                            }
+                            // Close the SqlDataReader.
+                            dataReader.Close();
+                        }
+
+                        // Get the Provider Name
+                        lastBatchNumber = (int)CheckForDbNull(command.Parameters["@LastBatchNumber"].Value, -1);
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMessageGetCourses = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
+                    }
+                    finally
+                    {
+                        sqlConnection.Close();
+                    }
+                }
+            }
+            return ukprnList;
+        }
+
+
         public static List<TribalCourse> GetCoursesByProviderUKPRN(int ProviderUKPRN, string connectionString, out string ProviderName, out bool AdvancedLearnerLoan, out string errorMessageGetCourses)
         {
             var tribalCourses = new List<TribalCourse>();
@@ -50,9 +100,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         }
 
                         // Get the Provider Name
-                        ProviderName = (string)command.Parameters["@ProviderName"].Value;
+                        ProviderName = (string)CheckForDbNull(command.Parameters["@ProviderName"].Value, string.Empty);
                         // Get the AdvancedLearnerLoan
-                        AdvancedLearnerLoan = (bool)command.Parameters["@AdvancedLearnerLoan"].Value;
+                        AdvancedLearnerLoan = (bool)CheckForDbNull(command.Parameters["@AdvancedLearnerLoan"].Value, false);
                     }
                     catch(Exception ex)
                     {
