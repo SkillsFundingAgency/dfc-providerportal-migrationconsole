@@ -19,6 +19,48 @@ namespace Dfc.CourseDirectory.Models.Enums
         Deleted = 4
     }
 
+    public enum TransferMethod
+    {
+        [Description("Undefined")]
+        Undefined = 0,
+        [Description("BulkUpload")]
+        BulkUpload = 1,
+        [Description("API")]
+        API = 2,
+        [Description("CourseMigrationTool")]
+        CourseMigrationTool = 3,
+        [Description("CourseMigrationToolCsvFile")]
+        CourseMigrationToolCsvFile = 4,
+        [Description("CourseMigrationToolSingleUkprn")]
+        CourseMigrationToolSingleUkprn = 5
+    }
+
+    public enum MigrationSuccess
+    {
+        [Description("Undefined")]
+        Undefined = 0,
+        [Description("Success")]
+        Success = 1,
+        [Description("Failure")]
+        Failure = 2
+    }
+
+    public enum DeploymentEnvironment
+    {
+        [Description("Undefined")]
+        Undefined = 0,
+        [Description("Local")]
+        Local = 1,
+        [Description("Dev")]
+        Dev = 2,
+        [Description("Sit")]
+        Sit = 3,
+        [Description("PreProd")]
+        PreProd = 4,
+        [Description("Prod")]
+        Prod = 5
+    }
+
     public class Enums
     {
     }

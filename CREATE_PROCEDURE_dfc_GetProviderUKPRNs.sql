@@ -21,11 +21,11 @@ AS
 BEGIN
 
 	SELECT [Ukprn]
-	FROM [UkprnCourseMigration]
+	FROM [CourseMigration]
 	WHERE [ReadyToMigrate] = 1
 
 	SELECT @LastBatchNumber = ISNULL(MAX([BatchNumber]), 0)
-	FROM [UkprnCourseMigration_ProviderAudit]
+	FROM [CourseTransfer_CourseAudit]
 
 END
 GO
