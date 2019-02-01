@@ -5,6 +5,7 @@ using Dfc.CourseDirectory.Models.Interfaces.Providers;
 using Dfc.CourseDirectory.Models.Interfaces.Qualifications;
 using Dfc.CourseDirectory.Models.Interfaces.Venues;
 using Dfc.CourseDirectory.Models.Enums;
+using System.Collections.Generic;
 
 namespace Dfc.CourseDirectory.Models.Interfaces.Courses
 {
@@ -25,6 +26,7 @@ namespace Dfc.CourseDirectory.Models.Interfaces.Courses
         int? DurationValue { get; set; }
         StudyMode StudyMode { get; set; } 
         AttendancePattern AttendancePattern { get; set; }
+        IEnumerable<string> Regions { get; set; }
         RecordStatus RecordStatus { get; set; }
         DateTime CreatedDate { get; set; }
         string CreatedBy { get; set; }

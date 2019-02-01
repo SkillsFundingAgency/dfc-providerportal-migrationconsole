@@ -100,7 +100,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             string jsonCourseFilesPath = configuration.GetValue<string>("JsonCourseFilesPath");
             string selectionOfProvidersFileName = configuration.GetValue<string>("SelectionOfProvidersFileName");
             DeploymentEnvironment deploymentEnvironment = configuration.GetValue<DeploymentEnvironment>("DeploymentEnvironment");
-            TransferMethod transferMethod = configuration.GetValue<TransferMethod>("TransferMethod");
+            //TransferMethod transferMethod = configuration.GetValue<TransferMethod>("TransferMethod");
 
             #endregion 
 
@@ -110,23 +110,24 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             adminReport += "________________________________________________________________________________" + Environment.NewLine + Environment.NewLine;
 
             var providerUKPRNList = new List<int>();
-            int batchNumber = 0;
+            int courseTransferId = 0;
+            bool goodToTransfer = false;
+            TransferMethod transferMethod = TransferMethod.Undefined;
+            int? singleProviderUKPRN = null;
 
             if (automatedMode)
             {
-                int lastBatchNumber = -1;
                 string errorMessageGetCourses = string.Empty;
-                providerUKPRNList = DataHelper.GetProviderUKPRNs(connectionString, out errorMessageGetCourses, out lastBatchNumber);
-                if (!string.IsNullOrEmpty(errorMessageGetCourses)) adminReport += errorMessageGetCourses + Environment.NewLine;
-                if (lastBatchNumber.Equals(-1))
+                providerUKPRNList = DataHelper.GetProviderUKPRNs(connectionString, out errorMessageGetCourses);
+                if (!string.IsNullOrEmpty(errorMessageGetCourses))
                 {
-                    adminReport += $"We cannot get the BatchNumber, so migration will be terminated" + Environment.NewLine;
-                    providerUKPRNList = null;
+                    adminReport += errorMessageGetCourses + Environment.NewLine;
                 }
                 else
                 {
-                    batchNumber = lastBatchNumber + 1;
-                }
+                    goodToTransfer = true;
+                    transferMethod = TransferMethod.CourseMigrationTool;
+                }              
             }
             else
             {
@@ -170,11 +171,42 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 {
                     // Migrate single Provider
                     providerUKPRNList.Add(Convert.ToInt32(providerInput));
+                    goodToTransfer = true;
+                    transferMethod = TransferMethod.CourseMigrationToolSingleUkprn;
+                    singleProviderUKPRN = Convert.ToInt32(providerInput); 
                 }
                 else
                 {
                     Console.WriteLine("You have to enter either valid UKPRN (which must be 8 digit number starting with a 1 e.g. 10000364) or \"s\" for selection of Providers");
                 }
+            }
+
+            if (goodToTransfer)
+            {
+                string errorMessageCourseTransferAdd = string.Empty;
+                if (providerUKPRNList != null && providerUKPRNList.Count > 0)
+                {
+                    DataHelper.CourseTransferAdd(connectionString,
+                                                    DateTime.Now,
+                                                    (int)transferMethod,
+                                                    (int)deploymentEnvironment,
+                                                    string.Empty,
+                                                    "DFC – Course Migration Tool",
+                                                    singleProviderUKPRN,
+                                                    out errorMessageCourseTransferAdd,
+                                                    out courseTransferId);
+                }
+                if (!string.IsNullOrEmpty(errorMessageCourseTransferAdd)) adminReport += errorMessageCourseTransferAdd + Environment.NewLine;
+
+                if (courseTransferId.Equals(-1))
+                {
+                    adminReport += $"We cannot get the BatchNumber (CourseTransferId), so migration will be terminated. Number of UKPRNs ( { providerUKPRNList?.Count } )" + Environment.NewLine;
+                    providerUKPRNList = null;
+                }
+            }
+            else
+            {
+                // Do something
             }
 
             Stopwatch adminStopWatch = new Stopwatch();
@@ -380,7 +412,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                     if (courseResult.IsSuccess && courseResult.HasValue)
                                     {
                                         CountCourseMigrationSuccess++;
-                                        providerReport += $"The course is migarted  " + Environment.NewLine;
+                                        //providerReport += $"The course is migarted  " + Environment.NewLine;
                                         courseReport += $"The course is migarted  " + Environment.NewLine;
                                         migrationSuccess = MigrationSuccess.Success;
                                     }
@@ -388,8 +420,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                     {
                                         // No
                                         CountCourseMigrationFailure++;
-                                        providerReport += $"The course is NOT migrated.  " + Environment.NewLine;
-                                        courseReport += $"The course is NOT migrated.  " + Environment.NewLine;
+                                        //providerReport += $"The course is NOT migrated.  " + Environment.NewLine;
+                                        courseReport += $"The course is NOT migrated. Error -  { courseResult.Error }  " + Environment.NewLine;
                                         migrationSuccess = MigrationSuccess.Failure;
                                     }
                                 }
@@ -415,10 +447,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
                     string errorMessageCourseAuditAdd = string.Empty;
                     DataHelper.CourseTransferCourseAuditAdd(connectionString,
+                                               courseTransferId,
                                                providerUKPRN,
-                                               (int)transferMethod,
-                                               batchNumber,
-                                               DateTime.Now,
                                                course?.CourseId ?? 0,
                                                course?.LearnAimRef,
                                                (int)course?.RecordStatus,
@@ -467,11 +497,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 // Provider Auditing 
                 string errorMessageProviderAuditAdd = string.Empty;
                 DataHelper.CourseTransferProviderAuditAdd(connectionString,
+                                                           courseTransferId,
                                                            providerUKPRN,
-                                                           (int)transferMethod,
-                                                           batchNumber,
-                                                           (int)deploymentEnvironment,
-                                                           DateTime.Now,
                                                            tribalCourses.Count,
                                                            CountCourseGoodToMigrate,
                                                            CountCoursePending,
@@ -504,7 +531,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             adminReport += $"Total number of courses processed ( { CountAllCourses } )." + Environment.NewLine;
             adminReport += $"Total number of GOOD to migrate courses ( { CountAllCoursesGoodToMigrate} ) and total number of NOT good to migrate courses ( { CountAllCoursesNotGoodToMigrate } )" + Environment.NewLine;
             adminReport += $"Total number of GOOD to migrate courses with Pending status  ( { CountAllCoursesPending} ) and Live status ( { CountAllCoursesLive } )" + Environment.NewLine;
-            adminReport += $"Total number of courses migrated ( { CountAllCoursesMigrated} ) and total number of NOT migrated courses ( { CountAllCoursesNotMigrated } )" + Environment.NewLine;
+            adminReport += $"Total number of courses migrated ( { CountAllCoursesMigrated } ) and total number of NOT migrated courses ( { CountAllCoursesNotMigrated } )" + Environment.NewLine;
 
             string adminReportFileName = string.Empty;
             if (generateReportFilesLocally)
@@ -513,8 +540,29 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 File.WriteAllText(string.Format(@"{0}\AdminReports\{1}", jsonCourseFilesPath, adminReportFileName), adminReport);
             }
 
+            // Transfer Auditing 
+            string errorMessageCourseTransferUpdate = string.Empty;
+            DataHelper.CourseTransferUpdate(connectionString,
+                                                courseTransferId,
+                                                CountProviders,
+                                                CountProviders - CountProvidersNotGoodToMigrate,
+                                                CountProvidersNotGoodToMigrate,
+                                                CountAllCourses,
+                                                CountAllCoursesGoodToMigrate,
+                                                CountAllCoursesNotGoodToMigrate,
+                                                CountAllCoursesLive,
+                                                CountAllCoursesPending,
+                                                CountAllCoursesMigrated,
+                                                CountAllCoursesNotMigrated,
+                                                DateTime.Now,
+                                                adminStopWatch.Elapsed.ToString(),
+                                                adminReportFileName,
+                                                adminReport,
+                                                out errorMessageCourseTransferUpdate);
+            if (!string.IsNullOrEmpty(errorMessageCourseTransferUpdate)) Console.WriteLine("Error on CourseTransferUpdate" + errorMessageCourseTransferUpdate); 
+
             Console.WriteLine("Migration completed");
-            string nextLine = Console.ReadLine();
+            string nextLine = Console.ReadLine(); 
         }
 
         internal static bool CheckForValidUKPRN(string ukprn)

@@ -9,10 +9,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 {
     public static class DataHelper
     {
-        public static List<int> GetProviderUKPRNs(string connectionString, out string errorMessageGetCourses, out int lastBatchNumber)
+        public static List<int> GetProviderUKPRNs(string connectionString, out string errorMessageGetCourses)
         {
             var ukprnList = new List<int>();
-            lastBatchNumber = 0;
             errorMessageGetCourses = string.Empty;
 
             using (var sqlConnection = new SqlConnection(connectionString))
@@ -21,9 +20,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 {
                     command.CommandType = CommandType.StoredProcedure;
                     command.CommandText = "dfc_GetProviderUKPRNs";
-
-                    command.Parameters.Add(new SqlParameter("@LastBatchNumber", SqlDbType.Int));
-                    command.Parameters["@LastBatchNumber"].Direction = ParameterDirection.Output;
 
                     try
                     {
@@ -41,9 +37,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                             // Close the SqlDataReader.
                             dataReader.Close();
                         }
-
-                        // Get the Provider Name
-                        lastBatchNumber = (int)CheckForDbNull(command.Parameters["@LastBatchNumber"].Value, -1);
                     }
                     catch (Exception ex)
                     {
@@ -59,18 +52,18 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
         }
 
         public static void CourseTransferAdd(string connectionString,
-            DateTime startTransferDateTime,
-            int transferMethod,
-            int deploymentEnvironment,
-            string createdById,
-            string createdByName,
-            string ukprn, 
-            out string errorMessageGetCourses, 
-            out int courseTransferId)
+                                                DateTime startTransferDateTime,
+                                                int transferMethod,
+                                                int deploymentEnvironment,
+                                                string createdById,
+                                                string createdByName,
+                                                int? ukprn, 
+                                                out string errorMessageCourseTransferAdd, 
+                                                out int courseTransferId)
         {
             var ukprnList = new List<int>();
             courseTransferId = 0;
-            errorMessageGetCourses = string.Empty;
+            errorMessageCourseTransferAdd = string.Empty;
 
             using (var sqlConnection = new SqlConnection(connectionString))
             {
@@ -95,7 +88,11 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     command.Parameters["@CreatedByName"].Value = createdByName;
 
                     command.Parameters.Add(new SqlParameter("@Ukprn", SqlDbType.Int));
-                    command.Parameters["@Ukprn"].Value = ukprn;
+
+                    if (ukprn == null) command.Parameters["@Ukprn"].Value = DBNull.Value;
+                    else command.Parameters["@Ukprn"].Value = ukprn;
+                    //command.Parameters["@Ukprn"].Value = ukprn == null ? DBNull.Value : ukprn;
+                    //command.Parameters["@Ukprn"].Value = ukprn ?? DBNull.Value;
 
                     command.Parameters.Add(new SqlParameter("@CourseTransferId", SqlDbType.Int));
                     command.Parameters["@CourseTransferId"].Direction = ParameterDirection.Output;
@@ -104,25 +101,104 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     {
                         //Open connection.
                         sqlConnection.Open();
-
-                        using (SqlDataReader dataReader = command.ExecuteReader())
-                        {
-                            while (dataReader.Read())
-                            {
-                                int ukprn = (int)CheckForDbNull(dataReader["Ukprn"], 0);
-                                if (ukprn != 0)
-                                    ukprnList.Add(ukprn);
-                            }
-                            // Close the SqlDataReader.
-                            dataReader.Close();
-                        }
-
-                        // Get the Provider Name
+                        command.ExecuteNonQuery();
+                        // Get the CourseTransferId (Batch Number)
                         courseTransferId = (int)CheckForDbNull(command.Parameters["@CourseTransferId"].Value, -1);
                     }
                     catch (Exception ex)
                     {
-                        errorMessageGetCourses = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
+                        errorMessageCourseTransferAdd = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
+                    }
+                    finally
+                    {
+                        sqlConnection.Close();
+                    }
+                }
+            }
+        }
+
+        public static void CourseTransferUpdate(string connectionString,
+                                                int courseTransferId,
+                                                int countProvidersToBeMigrated,
+                                                int countProvidersMigrated,
+                                                int countProvidersNotMigrated,
+                                                int countAllCoursesToBeMigrated,
+                                                int countCoursesGoodToBeMigrated,
+                                                int countCoursesNotGoodToBeMigrated,
+                                                int countCoursesGoodToBeMigratedLive,
+                                                int countCoursesGoodToBeMigratedPending,
+                                                int countAllCoursesMigrated,
+                                                int countAllCoursesNotMigrated,
+                                                DateTime completeTransferDateTime,
+                                                string timeTaken,
+                                                string adminReportFileName,
+                                                string transferNote,
+                                                out string errorMessageCourseTransferUpdate)
+        {
+            var ukprnList = new List<int>();
+            errorMessageCourseTransferUpdate = string.Empty;
+
+            using (var sqlConnection = new SqlConnection(connectionString))
+            {
+                using (var command = sqlConnection.CreateCommand())
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "dfc_CourseTransferUpdate";
+
+                    command.Parameters.Add(new SqlParameter("@CourseTransferId", SqlDbType.Int));
+                    command.Parameters["@CourseTransferId"].Value = courseTransferId;
+
+                    command.Parameters.Add(new SqlParameter("@CountProvidersToBeMigrated", SqlDbType.Int));
+                    command.Parameters["@CountProvidersToBeMigrated"].Value = countProvidersToBeMigrated;
+
+                    command.Parameters.Add(new SqlParameter("@CountProvidersMigrated", SqlDbType.Int));
+                    command.Parameters["@CountProvidersMigrated"].Value = countProvidersMigrated;
+
+                    command.Parameters.Add(new SqlParameter("@CountProvidersNotMigrated", SqlDbType.Int));
+                    command.Parameters["@CountProvidersNotMigrated"].Value = countProvidersNotMigrated;
+
+                    command.Parameters.Add(new SqlParameter("@CountAllCoursesToBeMigrated", SqlDbType.Int));
+                    command.Parameters["@CountAllCoursesToBeMigrated"].Value = countAllCoursesToBeMigrated;
+
+                    command.Parameters.Add(new SqlParameter("@CountCoursesGoodToBeMigrated", SqlDbType.Int));
+                    command.Parameters["@CountCoursesGoodToBeMigrated"].Value = countCoursesGoodToBeMigrated;
+
+                    command.Parameters.Add(new SqlParameter("@CountCoursesNotGoodToBeMigrated", SqlDbType.Int));
+                    command.Parameters["@CountCoursesNotGoodToBeMigrated"].Value = countCoursesNotGoodToBeMigrated;
+
+                    command.Parameters.Add(new SqlParameter("@CountCoursesGoodToBeMigratedLive", SqlDbType.Int));
+                    command.Parameters["@CountCoursesGoodToBeMigratedLive"].Value = countCoursesGoodToBeMigratedLive;
+
+                    command.Parameters.Add(new SqlParameter("@CountCoursesGoodToBeMigratedPending", SqlDbType.Int));
+                    command.Parameters["@CountCoursesGoodToBeMigratedPending"].Value = countCoursesGoodToBeMigratedPending;
+
+                    command.Parameters.Add(new SqlParameter("@CountAllCoursesMigrated", SqlDbType.Int));
+                    command.Parameters["@CountAllCoursesMigrated"].Value = countAllCoursesMigrated;
+
+                    command.Parameters.Add(new SqlParameter("@CountAllCoursesNotMigrated", SqlDbType.Int));
+                    command.Parameters["@CountAllCoursesNotMigrated"].Value = countAllCoursesNotMigrated;
+
+                    command.Parameters.Add(new SqlParameter("@CompleteTransferDateTime", SqlDbType.DateTime));
+                    command.Parameters["@CompleteTransferDateTime"].Value = completeTransferDateTime;
+
+                    command.Parameters.Add(new SqlParameter("@TimeTaken", SqlDbType.VarChar, 50));
+                    command.Parameters["@TimeTaken"].Value = timeTaken;
+
+                    command.Parameters.Add(new SqlParameter("@AdminReportFileName", SqlDbType.VarChar, 255));
+                    command.Parameters["@AdminReportFileName"].Value = adminReportFileName;
+
+                    command.Parameters.Add(new SqlParameter("@TransferNote", SqlDbType.NVarChar));
+                    command.Parameters["@TransferNote"].Value = transferNote;
+
+                    try
+                    {
+                        //Open connection.
+                        sqlConnection.Open();
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMessageCourseTransferUpdate = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
                     }
                     finally
                     {
@@ -133,13 +209,11 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
         }
 
         public static void CourseTransferCourseAuditAdd(string connectionString,
+                                                           int courseTransferId,
                                                            int ukprn,
-                                                           int transferMethod, 
-                                                           int batchNumber,
-                                                           DateTime migrationDate,
                                                            int courseId,
                                                            string  lars,
-                                                           int recordStatus,
+                                                           int courseRecordStatus,
                                                            int courseRuns,
                                                            int courseRunsLive,
                                                            int courseRunsPending,
@@ -156,17 +230,11 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     command.CommandType = CommandType.StoredProcedure;
                     command.CommandText = "dfc_CourseTransferCourseAuditAdd";
 
+                    command.Parameters.Add(new SqlParameter("@CourseTransferId", SqlDbType.Int));
+                    command.Parameters["@CourseTransferId"].Value = courseTransferId;
+
                     command.Parameters.Add(new SqlParameter("@Ukprn", SqlDbType.Int));
                     command.Parameters["@Ukprn"].Value = ukprn;
-
-                    command.Parameters.Add(new SqlParameter("@TransferMethod", SqlDbType.Int));
-                    command.Parameters["@TransferMethod"].Value = transferMethod;
-
-                    command.Parameters.Add(new SqlParameter("@BatchNumber", SqlDbType.Int));
-                    command.Parameters["@BatchNumber"].Value = batchNumber;
-
-                    command.Parameters.Add(new SqlParameter("@MigrationDate", SqlDbType.DateTime));
-                    command.Parameters["@MigrationDate"].Value = migrationDate;
 
                     command.Parameters.Add(new SqlParameter("@CourseId", SqlDbType.Int));
                     command.Parameters["@CourseId"].Value = courseId;
@@ -174,8 +242,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     command.Parameters.Add(new SqlParameter("@LARS", SqlDbType.VarChar, 10));
                     command.Parameters["@LARS"].Value = lars ?? string.Empty;
 
-                    command.Parameters.Add(new SqlParameter("@RecordStatus", SqlDbType.Int));
-                    command.Parameters["@RecordStatus"].Value = recordStatus;
+                    command.Parameters.Add(new SqlParameter("@CourseRecordStatus", SqlDbType.Int));
+                    command.Parameters["@CourseRecordStatus"].Value = courseRecordStatus;
 
                     command.Parameters.Add(new SqlParameter("@CourseRuns", SqlDbType.Int));
                     command.Parameters["@CourseRuns"].Value = courseRuns;
@@ -212,11 +280,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
         }
 
         public static void CourseTransferProviderAuditAdd(string connectionString,
+                                                           int courseTransferId,
                                                            int ukprn,
-                                                           int transferMethod,
-                                                           int batchNumber,
-                                                           int deploymentEnvironment,
-                                                           DateTime migrationDate,
                                                            int coursesToBeMigrated,
                                                            int coursesGoodToBeMigrated,
                                                            int coursesGoodToBeMigratedPending,
@@ -224,7 +289,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                                                            int coursesNotGoodToBeMigrated,
                                                            int migrationSuccesses,
                                                            int migrationFailures,
-                                                           string migrationReportFileName,
+                                                           string providerReportFileName,
                                                            string timeTaken,
                                                            string migrationNote,
                                                            out string errorMessageProviderAuditAdd)
@@ -238,20 +303,11 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     command.CommandType = CommandType.StoredProcedure;
                     command.CommandText = "dfc_CourseTransferProviderAuditAdd";
 
+                    command.Parameters.Add(new SqlParameter("@CourseTransferId", SqlDbType.Int));
+                    command.Parameters["@CourseTransferId"].Value = courseTransferId;
+
                     command.Parameters.Add(new SqlParameter("@Ukprn", SqlDbType.Int));
                     command.Parameters["@Ukprn"].Value = ukprn;
-
-                    command.Parameters.Add(new SqlParameter("@TransferMethod", SqlDbType.Int));
-                    command.Parameters["@TransferMethod"].Value = transferMethod;
-
-                    command.Parameters.Add(new SqlParameter("@BatchNumber", SqlDbType.Int));
-                    command.Parameters["@BatchNumber"].Value = batchNumber;
-
-                    command.Parameters.Add(new SqlParameter("@DeploymentEnvironment", SqlDbType.Int));
-                    command.Parameters["@DeploymentEnvironment"].Value = deploymentEnvironment;
-
-                    command.Parameters.Add(new SqlParameter("@MigrationDate", SqlDbType.DateTime));
-                    command.Parameters["@MigrationDate"].Value = migrationDate;
 
                     command.Parameters.Add(new SqlParameter("@CoursesToBeMigrated", SqlDbType.Int));
                     command.Parameters["@CoursesToBeMigrated"].Value = coursesToBeMigrated;
@@ -274,8 +330,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     command.Parameters.Add(new SqlParameter("@MigrationFailures", SqlDbType.Int));
                     command.Parameters["@MigrationFailures"].Value = migrationFailures;
 
-                    command.Parameters.Add(new SqlParameter("@MigrationReportFileName", SqlDbType.VarChar, 255));
-                    command.Parameters["@MigrationReportFileName"].Value = migrationReportFileName;
+                    command.Parameters.Add(new SqlParameter("@ProviderReportFileName", SqlDbType.VarChar, 255));
+                    command.Parameters["@ProviderReportFileName"].Value = providerReportFileName;
 
                     command.Parameters.Add(new SqlParameter("@TimeTaken", SqlDbType.VarChar, 50));
                     command.Parameters["@TimeTaken"].Value = timeTaken;

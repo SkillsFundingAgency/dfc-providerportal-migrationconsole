@@ -47,19 +47,17 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case AttendanceType.Location:
                         courseRun.DeliveryMode = DeliveryMode.ClassroomBased;
                         break;
+                    case AttendanceType.WorkBased:
                     case AttendanceType.FaceToFaceNonCampus:
                         courseRun.DeliveryMode = DeliveryMode.WorkBased;
                         break;
-                    case AttendanceType.WorkBased:
-                        courseRun.DeliveryMode = DeliveryMode.WorkBased; 
-                        break;
                     case AttendanceType.OnlineWithoutAttendance:
+                    case AttendanceType.OnlineWithAttendance:
                         courseRun.DeliveryMode = DeliveryMode.Online;
                         break;
                     case AttendanceType.MixedMode:
                     case AttendanceType.DistanceWithAttendance:
-                    case AttendanceType.DistanceWithoutAttendance:                  
-                    case AttendanceType.OnlineWithAttendance:
+                    case AttendanceType.DistanceWithoutAttendance:                                     
                     case AttendanceType.NotKnown:
                     case AttendanceType.Undefined:
                     default:
