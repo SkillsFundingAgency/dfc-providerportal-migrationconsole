@@ -13,12 +13,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfc.CourseDirectory.Common"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQL", "SQL", "{84C1F5AF-3719-4E01-9E21-8E546B5D2174}"
 	ProjectSection(SolutionItems) = preProject
+		CREATE_PROCEDURE_dfc_CourseTransferAdd.sql = CREATE_PROCEDURE_dfc_CourseTransferAdd.sql
 		CREATE_PROCEDURE_dfc_CourseTransferCourseAuditAdd.sql = CREATE_PROCEDURE_dfc_CourseTransferCourseAuditAdd.sql
 		CREATE_PROCEDURE_dfc_CourseTransferProviderAuditAdd.sql = CREATE_PROCEDURE_dfc_CourseTransferProviderAuditAdd.sql
+		CREATE_PROCEDURE_dfc_CourseTransferUpdate.sql = CREATE_PROCEDURE_dfc_CourseTransferUpdate.sql
 		sql\CREATE_PROCEDURE_dfc_GetCourseInstancesByCourseId.sql = sql\CREATE_PROCEDURE_dfc_GetCourseInstancesByCourseId.sql
 		sql\CREATE_PROCEDURE_dfc_GetCoursesByProviderUKPRN.sql = sql\CREATE_PROCEDURE_dfc_GetCoursesByProviderUKPRN.sql
 		CREATE_PROCEDURE_dfc_GetProviderUKPRNs.sql = CREATE_PROCEDURE_dfc_GetProviderUKPRNs.sql
 		CREATE_TABLE_CourseMigration.sql = CREATE_TABLE_CourseMigration.sql
+		CREATE_TABLE_CourseTransfer.sql = CREATE_TABLE_CourseTransfer.sql
 		CREATE_TABLE_CourseTransfer_CourseAudit.sql = CREATE_TABLE_CourseTransfer_CourseAudit.sql
 		CREATE_TABLE_CourseTransfer_ProviderAudit.sql = CREATE_TABLE_CourseTransfer_ProviderAudit.sql
 		sql\INSERT_4867_LiveProviders_Ukprns.sql = sql\INSERT_4867_LiveProviders_Ukprns.sql

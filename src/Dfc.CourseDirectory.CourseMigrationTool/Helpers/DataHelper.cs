@@ -131,6 +131,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                                                 int countAllCoursesNotMigrated,
                                                 DateTime completeTransferDateTime,
                                                 string timeTaken,
+                                                string bulkUploadFileName,
                                                 string adminReportFileName,
                                                 string transferNote,
                                                 out string errorMessageCourseTransferUpdate)
@@ -184,10 +185,13 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     command.Parameters.Add(new SqlParameter("@TimeTaken", SqlDbType.VarChar, 50));
                     command.Parameters["@TimeTaken"].Value = timeTaken;
 
+                    command.Parameters.Add(new SqlParameter("@BulkUploadFileName", SqlDbType.NVarChar, 1000));
+                    command.Parameters["@BulkUploadFileName"].Value = bulkUploadFileName;
+
                     command.Parameters.Add(new SqlParameter("@AdminReportFileName", SqlDbType.VarChar, 255));
                     command.Parameters["@AdminReportFileName"].Value = adminReportFileName;
 
-                    command.Parameters.Add(new SqlParameter("@TransferNote", SqlDbType.NVarChar));
+                    command.Parameters.Add(new SqlParameter("@TransferNote", SqlDbType.NVarChar, -1));
                     command.Parameters["@TransferNote"].Value = transferNote;
 
                     try
@@ -257,7 +261,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     command.Parameters.Add(new SqlParameter("@MigrationSuccess", SqlDbType.Int));
                     command.Parameters["@MigrationSuccess"].Value = migrationSuccess;
 
-                    command.Parameters.Add(new SqlParameter("@CourseMigrationNote", SqlDbType.NVarChar));
+                    command.Parameters.Add(new SqlParameter("@CourseMigrationNote", SqlDbType.NVarChar, -1));
                     command.Parameters["@CourseMigrationNote"].Value = courseMigrationNote;
 
 
@@ -336,8 +340,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     command.Parameters.Add(new SqlParameter("@TimeTaken", SqlDbType.VarChar, 50));
                     command.Parameters["@TimeTaken"].Value = timeTaken;
 
-                    command.Parameters.Add(new SqlParameter("@MigrationNote", SqlDbType.NVarChar));
+                    command.Parameters.Add(new SqlParameter("@MigrationNote", SqlDbType.NVarChar, -1));
                     command.Parameters["@MigrationNote"].Value = migrationNote;
+
 
 
                     try
@@ -380,7 +385,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 
                     command.Parameters.Add(new SqlParameter("@AdvancedLearnerLoan", SqlDbType.Bit));
                     command.Parameters["@AdvancedLearnerLoan"].Direction = ParameterDirection.Output;
-
+                  
                     try
                     {
                         //Open connection.
@@ -402,6 +407,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         ProviderName = (string)CheckForDbNull(command.Parameters["@ProviderName"].Value, string.Empty);
                         // Get the AdvancedLearnerLoan
                         AdvancedLearnerLoan = (bool)CheckForDbNull(command.Parameters["@AdvancedLearnerLoan"].Value, false);
+
+
                     }
                     catch(Exception ex)
                     {

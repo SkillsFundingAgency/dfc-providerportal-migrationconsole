@@ -114,6 +114,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             bool goodToTransfer = false;
             TransferMethod transferMethod = TransferMethod.Undefined;
             int? singleProviderUKPRN = null;
+            string bulkUploadFileName = string.Empty;
 
             if (automatedMode)
             {
@@ -153,6 +154,10 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                 if (CheckForValidUKPRN(provider))
                                 {
                                     providerUKPRNList.Add(Convert.ToInt32(provider));
+
+                                    goodToTransfer = true;
+                                    bulkUploadFileName = selectionOfProvidersFileName;
+                                    transferMethod = TransferMethod.CourseMigrationToolCsvFile;
                                 }
                                 else if (string.IsNullOrEmpty(provider))
                                 {
@@ -166,6 +171,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                             }
                         }
                     }
+
+                    
                 }
                 else if (CheckForValidUKPRN(providerInput))
                 {
@@ -556,6 +563,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                                 CountAllCoursesNotMigrated,
                                                 DateTime.Now,
                                                 adminStopWatch.Elapsed.ToString(),
+                                                bulkUploadFileName,
                                                 adminReportFileName,
                                                 adminReport,
                                                 out errorMessageCourseTransferUpdate);

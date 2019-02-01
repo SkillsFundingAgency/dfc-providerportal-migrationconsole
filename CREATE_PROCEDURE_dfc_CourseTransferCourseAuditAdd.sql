@@ -1,7 +1,7 @@
 ﻿USE [SFA_CourseDirectory]
 GO
 
-/****** Object:  StoredProcedure [dbo].[dfc_CourseTransferCourseAuditAdd]    Script Date: 30/01/2019 14:02:20 ******/
+/****** Object:  StoredProcedure [dbo].[dfc_CourseTransferCourseAuditAdd]    Script Date: 01/02/2019 15:28:17 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -15,13 +15,11 @@ GO
 -- =============================================
 CREATE PROCEDURE [dbo].[dfc_CourseTransferCourseAuditAdd]
 (
-			@Ukprn int
-           ,@TransferMethod int
-           ,@BatchNumber int
-           ,@MigrationDate datetime
+		    @CourseTransferId int
+		   ,@Ukprn int
            ,@CourseId int
            ,@LARS varchar(10)
-           ,@RecordStatus int
+           ,@CourseRecordStatus int
            ,@CourseRuns int
            ,@CourseRunsLive int
            ,@CourseRunsPending int
@@ -32,26 +30,22 @@ AS
 BEGIN
 
 INSERT INTO [CourseTransfer_CourseAudit]
-           ([Ukprn]
-           ,[TransferMethod]
-           ,[BatchNumber]
-           ,[MigrationDate]
+           ([CourseTransferId]
+		   ,[Ukprn]
            ,[CourseId]
            ,[LARS]
-           ,[RecordStatus]
+           ,[CourseRecordStatus]
            ,[CourseRuns]
            ,[CourseRunsLive]
            ,[CourseRunsPending]
            ,[MigrationSuccess]
            ,[CourseMigrationNote])
      VALUES
-           (@Ukprn
-           ,@TransferMethod
-           ,@BatchNumber
-           ,@MigrationDate
+           (@CourseTransferId
+		   ,@Ukprn
            ,@CourseId
            ,@LARS
-           ,@RecordStatus
+           ,@CourseRecordStatus
            ,@CourseRuns
            ,@CourseRunsLive
            ,@CourseRunsPending

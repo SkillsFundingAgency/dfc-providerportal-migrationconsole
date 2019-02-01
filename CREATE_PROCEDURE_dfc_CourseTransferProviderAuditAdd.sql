@@ -1,7 +1,7 @@
 ﻿USE [SFA_CourseDirectory]
 GO
 
-/****** Object:  StoredProcedure [dbo].[dfc_CourseTransferProviderAuditAdd]    Script Date: 30/01/2019 14:15:11 ******/
+/****** Object:  StoredProcedure [dbo].[dfc_CourseTransferProviderAuditAdd]    Script Date: 01/02/2019 15:28:57 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -15,11 +15,8 @@ GO
 -- =============================================
 CREATE PROCEDURE [dbo].[dfc_CourseTransferProviderAuditAdd]
 (
-            @Ukprn int
-           ,@TransferMethod int
-           ,@BatchNumber int
-           ,@DeploymentEnvironment int
-           ,@MigrationDate datetime
+			@CourseTransferId int
+           ,@Ukprn int
            ,@CoursesToBeMigrated int
            ,@CoursesGoodToBeMigrated int
            ,@CoursesGoodToBeMigratedPending int
@@ -27,7 +24,7 @@ CREATE PROCEDURE [dbo].[dfc_CourseTransferProviderAuditAdd]
            ,@CoursesNotGoodToBeMigrated int
            ,@MigrationSuccesses int
            ,@MigrationFailures int
-           ,@MigrationReportFileName varchar(255)
+           ,@ProviderReportFileName varchar(255)
            ,@TimeTaken varchar(50)
            ,@MigrationNote nvarchar(max)
 )
@@ -35,11 +32,8 @@ AS
 BEGIN
 
 	INSERT INTO [CourseTransfer_ProviderAudit]
-           ([Ukprn]
-           ,[TransferMethod]
-           ,[BatchNumber]
-           ,[DeploymentEnvironment]
-           ,[MigrationDate]
+           ([CourseTransferId]
+		   ,[Ukprn]
            ,[CoursesToBeMigrated]
            ,[CoursesGoodToBeMigrated]
            ,[CoursesGoodToBeMigratedPending]
@@ -47,15 +41,12 @@ BEGIN
            ,[CoursesNotGoodToBeMigrated]
            ,[MigrationSuccesses]
            ,[MigrationFailures]
-           ,[MigrationReportFileName]
+           ,[ProviderReportFileName]
            ,[TimeTaken]
            ,[MigrationNote])
      VALUES
-           (@Ukprn
-           ,@TransferMethod
-           ,@BatchNumber
-           ,@DeploymentEnvironment
-           ,@MigrationDate
+           (@CourseTransferId
+		   ,@Ukprn
            ,@CoursesToBeMigrated
            ,@CoursesGoodToBeMigrated
            ,@CoursesGoodToBeMigratedPending
@@ -63,7 +54,7 @@ BEGIN
            ,@CoursesNotGoodToBeMigrated
            ,@MigrationSuccesses
            ,@MigrationFailures
-           ,@MigrationReportFileName
+           ,@ProviderReportFileName
            ,@TimeTaken
            ,@MigrationNote)
 

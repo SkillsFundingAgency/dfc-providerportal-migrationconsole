@@ -1,7 +1,7 @@
 USE [SFA_CourseDirectory]
 GO
 
-/****** Object:  StoredProcedure [dbo].[dfc_GetCourseInstancesByCourseId]    Script Date: 11/01/2019 14:33:25 ******/
+/****** Object:  StoredProcedure [dbo].[dfc_GetCourseInstancesByCourseId]    Script Date: 01/02/2019 15:31:04 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -23,7 +23,7 @@ BEGIN
 	SELECT [CourseId] 
 			,civ.[VenueId] 
 			,ci.[CourseInstanceId]
-			,[ProviderOwnCourseInstanceRef]
+			,[ProviderOwnCourseInstanceRef]  
 			,[AttendanceTypeId]
 			,[StartDateDescription]
 			,cisd.[StartDate]

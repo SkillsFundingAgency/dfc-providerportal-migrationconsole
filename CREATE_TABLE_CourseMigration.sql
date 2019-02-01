@@ -1,7 +1,7 @@
 ﻿USE [SFA_CourseDirectory]
 GO
 
-/****** Object:  Table [dbo].[CourseMigration]    Script Date: 30/01/2019 14:17:27 ******/
+/****** Object:  Table [dbo].[CourseMigration]    Script Date: 01/02/2019 15:18:24 ******/
 SET ANSI_NULLS ON
 GO
 

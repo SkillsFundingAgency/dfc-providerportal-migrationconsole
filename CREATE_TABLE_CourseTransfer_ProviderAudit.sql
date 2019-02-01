@@ -1,7 +1,7 @@
 ﻿USE [SFA_CourseDirectory]
 GO
 
-/****** Object:  Table [dbo].[CourseTransfer_ProviderAudit]    Script Date: 30/01/2019 14:20:10 ******/
+/****** Object:  Table [dbo].[CourseTransfer_ProviderAudit]    Script Date: 01/02/2019 15:21:51 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -10,11 +10,8 @@ GO
 
 CREATE TABLE [dbo].[CourseTransfer_ProviderAudit](
 	[CourseMigrationProviderAuditId] [int] IDENTITY(1,1) NOT NULL,
+	[CourseTransferId] [int] NULL,
 	[Ukprn] [int] NULL,
-	[TransferMethod] [int] NULL,
-	[BatchNumber] [int] NULL,
-	[DeploymentEnvironment] [int] NULL,
-	[MigrationDate] [datetime] NULL,
 	[CoursesToBeMigrated] [int] NULL,
 	[CoursesGoodToBeMigrated] [int] NULL,
 	[CoursesGoodToBeMigratedPending] [int] NULL,
@@ -22,8 +19,8 @@ CREATE TABLE [dbo].[CourseTransfer_ProviderAudit](
 	[CoursesNotGoodToBeMigrated] [int] NULL,
 	[MigrationSuccesses] [int] NULL,
 	[MigrationFailures] [int] NULL,
-	[MigrationReportFileName] [varchar](255) NULL,
 	[TimeTaken] [varchar](50) NULL,
+	[ProviderReportFileName] [varchar](255) NULL,
 	[MigrationNote] [nvarchar](max) NULL,
  CONSTRAINT [PK_UkprnCourseMigration_Audit] PRIMARY KEY CLUSTERED 
 (
@@ -32,11 +29,11 @@ CREATE TABLE [dbo].[CourseTransfer_ProviderAudit](
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[CourseTransfer_ProviderAudit]  WITH CHECK ADD  CONSTRAINT [FK_UkprnCourseMigration_Audit_UkprnCourseMigration_Audit] FOREIGN KEY([Ukprn])
-REFERENCES [dbo].[CourseMigration] ([Ukprn])
+ALTER TABLE [dbo].[CourseTransfer_ProviderAudit]  WITH CHECK ADD  CONSTRAINT [FK_CourseTransfer_ProviderAudit_CourseTransfer] FOREIGN KEY([CourseTransferId])
+REFERENCES [dbo].[CourseTransfer] ([CourseTransferId])
 GO
 
-ALTER TABLE [dbo].[CourseTransfer_ProviderAudit] CHECK CONSTRAINT [FK_UkprnCourseMigration_Audit_UkprnCourseMigration_Audit]
+ALTER TABLE [dbo].[CourseTransfer_ProviderAudit] CHECK CONSTRAINT [FK_CourseTransfer_ProviderAudit_CourseTransfer]
 GO
 
 
