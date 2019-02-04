@@ -25,6 +25,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQL", "SQL", "{84C1F5AF-371
 		sql\CREATE_TABLE_CourseTransfer_CourseAudit.sql = sql\CREATE_TABLE_CourseTransfer_CourseAudit.sql
 		sql\CREATE_TABLE_CourseTransfer_ProviderAudit.sql = sql\CREATE_TABLE_CourseTransfer_ProviderAudit.sql
 		sql\INSERT_4839_LiveProviders_Ukprns.sql = sql\INSERT_4839_LiveProviders_Ukprns.sql
+		sql\Tribal_CREATE_TABLE_Course.sql = sql\Tribal_CREATE_TABLE_Course.sql
+		sql\Tribal_CREATE_TABLE_CourseInstance.sql = sql\Tribal_CREATE_TABLE_CourseInstance.sql
+		sql\Tribal_CREATE_TABLE_CourseInstanceStartDate.sql = sql\Tribal_CREATE_TABLE_CourseInstanceStartDate.sql
+		sql\Tribal_CREATE_TABLE_CourseInstanceVenue.sql = sql\Tribal_CREATE_TABLE_CourseInstanceVenue.sql
+		sql\Tribal_CREATE_TABLE_LearningAim.sql = sql\Tribal_CREATE_TABLE_LearningAim.sql
+		sql\Tribal_CREATE_TABLE_Provider.sql = sql\Tribal_CREATE_TABLE_Provider.sql
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfc.CourseDirectory.CourseMigrationTool.Tests", "src\Dfc.CourseDirectory.CourseMigrationTool.Tests\Dfc.CourseDirectory.CourseMigrationTool.Tests.csproj", "{C1F0B4F7-E9B4-49F5-94D8-7A0F784B94B0}"
