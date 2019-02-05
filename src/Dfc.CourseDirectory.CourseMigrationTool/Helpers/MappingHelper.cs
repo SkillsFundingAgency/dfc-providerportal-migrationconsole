@@ -93,8 +93,10 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 //}
                 else
                 {
+                    // latest decision Imran & Mark C. 
                     courseRun.StartDate = null;
-                    courseRun.FlexibleStartDate = true;
+                    courseRun.FlexibleStartDate = false;
+                    courseRun.RecordStatus = RecordStatus.Pending;
                 }
 
                 courseRun.CourseURL = tribalCourseRun.Url;
@@ -121,7 +123,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         courseRun.DurationUnit = DurationUnit.Months;
                         break;
                     case TribalDurationUnit.Terms:
-                    case TribalDurationUnit.Semesters:
+                    
                         if (tribalCourseRun.DurationValue == null)
                             courseRun.DurationValue = null;
                         else
@@ -137,26 +139,31 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         //                    $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" +
                         //                    $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
                         break;
-/*
                     case TribalDurationUnit.Semesters:
-                        if (tribalCourseRun.DurationValue == null)
-                            courseRun.DurationValue = null;
-                        else
-                            courseRun.DurationValue = (tribalCourseRun.DurationValue ?? 0) * 3;
-                        courseRun.DurationUnit = DurationUnit.Months;
-                        mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was set to DurationUnit = { tribalCourseRun.DurationUnit } " +
-                                            $"and  DurationValue = { tribalCourseRun.DurationValue }. We needed to convert it to  DurationUnit = { courseRun.DurationUnit } and DurationValue = { courseRun.DurationValue }." + Environment.NewLine);
-
-
-                        //courseRun.DurationValue = tribalCourseRun.DurationValue;
-                        //courseRun.DurationUnit = DurationUnit.Undefined;
-                        //// Alternativly 3 x Months or X x Weeks // TODO 
-                        //courseRun.RecordStatus = RecordStatus.Pending;
-                        //mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
-                        //                    $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" +
-                        //                    $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
+                        courseRun.DurationValue = tribalCourseRun.DurationValue;
+                        courseRun.DurationUnit = DurationUnit.Undefined;
+                        courseRun.RecordStatus = RecordStatus.Pending;
                         break;
-*/
+                    /*
+                                        case TribalDurationUnit.Semesters:
+                                            if (tribalCourseRun.DurationValue == null)
+                                                courseRun.DurationValue = null;
+                                            else
+                                                courseRun.DurationValue = (tribalCourseRun.DurationValue ?? 0) * 3;
+                                            courseRun.DurationUnit = DurationUnit.Months;
+                                            mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was set to DurationUnit = { tribalCourseRun.DurationUnit } " +
+                                                                $"and  DurationValue = { tribalCourseRun.DurationValue }. We needed to convert it to  DurationUnit = { courseRun.DurationUnit } and DurationValue = { courseRun.DurationValue }." + Environment.NewLine);
+
+
+                                            //courseRun.DurationValue = tribalCourseRun.DurationValue;
+                                            //courseRun.DurationUnit = DurationUnit.Undefined;
+                                            //// Alternativly 3 x Months or X x Weeks // TODO 
+                                            //courseRun.RecordStatus = RecordStatus.Pending;
+                                            //mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
+                                            //                    $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" +
+                                            //                    $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
+                                            break;
+                    */
                     case TribalDurationUnit.Years:
                         courseRun.DurationValue = tribalCourseRun.DurationValue;
                         courseRun.DurationUnit = DurationUnit.Years;
