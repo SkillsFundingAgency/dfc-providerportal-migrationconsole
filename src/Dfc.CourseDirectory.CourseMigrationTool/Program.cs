@@ -394,7 +394,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
                                 foreach (var mappingMessage in mappingMessages)
                                 {
-                                    providerReport += mappingMessage;
+                                    //providerReport += mappingMessage;
                                     courseReport += mappingMessage;
                                 }
 

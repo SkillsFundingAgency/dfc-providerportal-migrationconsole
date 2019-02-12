@@ -35,6 +35,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQL", "SQL", "{84C1F5AF-371
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfc.CourseDirectory.CourseMigrationTool.Tests", "src\Dfc.CourseDirectory.CourseMigrationTool.Tests\Dfc.CourseDirectory.CourseMigrationTool.Tests.csproj", "{C1F0B4F7-E9B4-49F5-94D8-7A0F784B94B0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UsersRolesUKPRNs", "UsersRolesUKPRNs", "{0C865450-C651-49CF-8D79-18C9E2566F58}"
+	ProjectSection(SolutionItems) = preProject
+		sql\UsersRolesUKPRNs\CREATE_PROCEDURE_dfc_GetUserAuthorisationDetailsByEmail.sql = sql\UsersRolesUKPRNs\CREATE_PROCEDURE_dfc_GetUserAuthorisationDetailsByEmail.sql
+		sql\UsersRolesUKPRNs\CREATE_TABLE_AspNetRoles.sql = sql\UsersRolesUKPRNs\CREATE_TABLE_AspNetRoles.sql
+		sql\UsersRolesUKPRNs\CREATE_TABLE_AspNetUserRoles.sql = sql\UsersRolesUKPRNs\CREATE_TABLE_AspNetUserRoles.sql
+		sql\UsersRolesUKPRNs\CREATE_TABLE_AspNetUsers.sql = sql\UsersRolesUKPRNs\CREATE_TABLE_AspNetUsers.sql
+		sql\UsersRolesUKPRNs\CREATE_TABLE_ProviderUser.sql = sql\UsersRolesUKPRNs\CREATE_TABLE_ProviderUser.sql
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,6 +73,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0C865450-C651-49CF-8D79-18C9E2566F58} = {84C1F5AF-3719-4E01-9E21-8E546B5D2174}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {39CDC23F-858E-4296-8FE4-FDC7F22FE61C}
