@@ -223,15 +223,19 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             //int CountProvidersGoodToMigrate = 0;
             int CountProvidersNotGoodToMigrate = 0;
 
-            int CountCourseMigrationSuccess = 0;
-            int CountCourseMigrationFailure = 0;
+
             int CountAllCourses = 0;
             int CountAllCoursesGoodToMigrate = 0;
             int CountAllCoursesNotGoodToMigrate = 0;
             int CountAllCoursesPending = 0;
             int CountAllCoursesLive = 0;
-            int CountAllCoursesMigrated = 0;
-            int CountAllCoursesNotMigrated = 0;
+            int CountCourseMigrationSuccess = 0;
+            int CountCourseMigrationFailure = 0;
+            //int CountAllCoursesMigrated = 0;
+            //int CountAllCoursesNotMigrated = 0;
+            int CountAllCourseRuns = 0;
+            int CountAllCourseRunsLive = 0;
+            int CountAllCourseRunsPending = 0;
 
             #endregion
 
@@ -242,6 +246,14 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 int CountCourseLive = 0;
                 int CountCourseGoodToMigrate = 0;
                 int CountCourseNotGoodToMigrate = 0;
+                int CountProviderCourseMigrationSuccess = 0;
+                int CountProviderCourseMigrationFailure = 0;
+
+                int CountProviderCourseRuns = 0;
+                int CountProviderCourseRunsLive = 0;
+                int CountProviderCourseRunsPending = 0;
+
+
                 string providerReport = "                         Migration Report " + Environment.NewLine;
 
                 Stopwatch providerStopWatch = new Stopwatch();
@@ -418,7 +430,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
                                     if (courseResult.IsSuccess && courseResult.HasValue)
                                     {
-                                        CountCourseMigrationSuccess++;
+                                        CountProviderCourseMigrationSuccess++;
                                         //providerReport += $"The course is migarted  " + Environment.NewLine;
                                         courseReport += $"The course is migarted  " + Environment.NewLine;
                                         migrationSuccess = MigrationSuccess.Success;
@@ -426,7 +438,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                     else
                                     {
                                         // No
-                                        CountCourseMigrationFailure++;
+                                        CountProviderCourseMigrationFailure++;
                                         //providerReport += $"The course is NOT migrated.  " + Environment.NewLine;
                                         courseReport += $"The course is NOT migrated. Error -  { courseResult.Error }  " + Environment.NewLine;
                                         migrationSuccess = MigrationSuccess.Failure;
@@ -451,6 +463,10 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                         if (courseRun.RecordStatus.Equals(RecordStatus.Live)) courseRunsLive++;
                         if (courseRun.RecordStatus.Equals(RecordStatus.Pending)) courseRunsPending++;
                     }
+
+                    CountProviderCourseRuns = CountProviderCourseRuns + GetCourseRunsCount(course?.CourseRuns);
+                    CountProviderCourseRunsLive = CountProviderCourseRunsLive + courseRunsLive;
+                    CountProviderCourseRunsPending = CountProviderCourseRunsPending + courseRunsPending;
 
                     string errorMessageCourseAuditAdd = string.Empty;
                     DataHelper.CourseTransferCourseAuditAdd(connectionString,
@@ -485,7 +501,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 providerReport += coursesToBeMigrated + Environment.NewLine;
                 providerReport += $"Number of good to migrate Courses ( { CountCourseGoodToMigrate } ) - Pending ( { CountCoursePending} ) and Live ( { CountCourseLive } )" + Environment.NewLine;
                 providerReport += $"Number of NOT good to migrate Courses ( { CountCourseNotGoodToMigrate } )" + Environment.NewLine;
-                providerReport += $"Courses Migration Successes ( { CountCourseMigrationSuccess } ) and Failures ( { CountCourseMigrationFailure } )" + Environment.NewLine;
+                providerReport += $"Number of good to migrate CourseRuns ( { CountProviderCourseRuns } ) - Pending ( { CountProviderCourseRunsPending } ) and Live ( { CountProviderCourseRunsLive } )" + Environment.NewLine;
+                providerReport += $"Courses Migration Successes ( { CountProviderCourseMigrationSuccess } ) and Failures ( { CountProviderCourseMigrationFailure } )" + Environment.NewLine;
 
                 string providerReportFileName = string.Empty;
                 if (generateReportFilesLocally)
@@ -499,7 +516,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 adminReport += coursesToBeMigrated + Environment.NewLine;
                 adminReport += $"Number of good to migrate Courses ( { CountCourseGoodToMigrate } ) - Pending ( { CountCoursePending} ) and Live ( { CountCourseLive } )" + Environment.NewLine;
                 adminReport += $"Number of NOT good to migrate Courses ( { CountCourseNotGoodToMigrate } )" + Environment.NewLine;
-                adminReport += $"Courses Migration Successes ( { CountCourseMigrationSuccess } ) and Failures ( { CountCourseMigrationFailure } )" + Environment.NewLine + Environment.NewLine;
+                adminReport += $"Number of good to migrate CourseRuns ( { CountProviderCourseRuns } ) - Pending ( { CountProviderCourseRunsPending } ) and Live ( { CountProviderCourseRunsLive } )" + Environment.NewLine;
+                adminReport += $"Courses Migration Successes ( { CountProviderCourseMigrationSuccess } ) and Failures ( { CountProviderCourseMigrationFailure } )" + Environment.NewLine + Environment.NewLine;
 
                 // Provider Auditing 
                 string errorMessageProviderAuditAdd = string.Empty;
@@ -511,8 +529,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                                            CountCoursePending,
                                                            CountCourseLive,
                                                            CountCourseNotGoodToMigrate,
-                                                           CountCourseMigrationSuccess,
-                                                           CountCourseMigrationFailure,
+                                                           CountProviderCourseMigrationSuccess,
+                                                           CountProviderCourseMigrationFailure,
                                                            providerReportFileName,
                                                            providerStopWatch.Elapsed.ToString(),
                                                            providerReport,
@@ -525,8 +543,14 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 CountAllCoursesNotGoodToMigrate = CountAllCoursesNotGoodToMigrate + (tribalCourses.Count - CountCourseGoodToMigrate);
                 CountAllCoursesPending = CountAllCoursesPending + CountCoursePending;
                 CountAllCoursesLive = CountAllCoursesLive + CountCourseLive;
-                CountAllCoursesMigrated = CountAllCoursesMigrated + CountCourseMigrationSuccess;
-                CountAllCoursesNotMigrated = CountAllCoursesNotMigrated + CountCourseMigrationFailure;
+                //CountAllCoursesMigrated = CountAllCoursesMigrated + CountCourseMigrationSuccess;
+                //CountAllCoursesNotMigrated = CountAllCoursesNotMigrated + CountCourseMigrationFailure;
+                CountCourseMigrationSuccess = CountCourseMigrationSuccess + CountProviderCourseMigrationSuccess;
+                CountCourseMigrationFailure = CountCourseMigrationFailure + CountProviderCourseMigrationFailure;
+
+                CountAllCourseRuns = CountAllCourseRuns + CountProviderCourseRuns;
+                CountAllCourseRunsLive = CountAllCourseRunsLive + CountProviderCourseRunsLive;
+                CountAllCourseRunsPending = CountAllCourseRunsPending + CountProviderCourseRunsPending;
             }
 
             // Finish Admin Report
@@ -535,10 +559,11 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             //string formatedStopWatchElapsedTime = string.Format("{0:D2}:{1:D2}:{2:D2}:{3:D2}:{4:D3}", stopWatch.Elapsed.Days, stopWatch.Elapsed.Hours, stopWatch.Elapsed.Minutes, stopWatch.Elapsed.Seconds, stopWatch.Elapsed.Milliseconds);
             adminReport += $"Number of Providers to be migrated ( { CountProviders } ). Total time taken: { adminStopWatch.Elapsed } " + Environment.NewLine;
             adminReport += $"Number of migrated Providers ( { CountProviders - CountProvidersNotGoodToMigrate } ). Number of Providers which are not active or not have any courses ( { CountProvidersNotGoodToMigrate } )" + Environment.NewLine;
-            adminReport += $"Total number of courses processed ( { CountAllCourses } )." + Environment.NewLine;
-            adminReport += $"Total number of GOOD to migrate courses ( { CountAllCoursesGoodToMigrate} ) and total number of NOT good to migrate courses ( { CountAllCoursesNotGoodToMigrate } )" + Environment.NewLine;
-            adminReport += $"Total number of GOOD to migrate courses with Pending status  ( { CountAllCoursesPending} ) and Live status ( { CountAllCoursesLive } )" + Environment.NewLine;
-            adminReport += $"Total number of courses migrated ( { CountAllCoursesMigrated } ) and total number of NOT migrated courses ( { CountAllCoursesNotMigrated } )" + Environment.NewLine;
+            adminReport += $"Total number of Courses processed ( { CountAllCourses } )." + Environment.NewLine;
+            adminReport += $"Total number of GOOD to migrate Courses ( { CountAllCoursesGoodToMigrate} ) and total number of NOT good to migrate courses ( { CountAllCoursesNotGoodToMigrate } )" + Environment.NewLine;
+            adminReport += $"Total number of GOOD to migrate Courses with Pending status  ( { CountAllCoursesPending} ) and Live status ( { CountAllCoursesLive } )" + Environment.NewLine;
+            adminReport += $"Total number of GOOD to migrate CourseRuns ( { CountAllCourseRuns } ) with Pending status  ( { CountAllCourseRunsPending } ) and Live status ( { CountAllCourseRunsLive } )" + Environment.NewLine;
+            adminReport += $"Total number of courses migrated ( { CountCourseMigrationSuccess } ) and total number of NOT migrated courses ( { CountCourseMigrationFailure } )" + Environment.NewLine;
 
             string adminReportFileName = string.Empty;
             if (generateReportFilesLocally)
@@ -559,8 +584,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                                 CountAllCoursesNotGoodToMigrate,
                                                 CountAllCoursesLive,
                                                 CountAllCoursesPending,
-                                                CountAllCoursesMigrated,
-                                                CountAllCoursesNotMigrated,
+                                                CountCourseMigrationSuccess,
+                                                CountCourseMigrationFailure,
                                                 DateTime.Now,
                                                 adminStopWatch.Elapsed.ToString(),
                                                 bulkUploadFileName,

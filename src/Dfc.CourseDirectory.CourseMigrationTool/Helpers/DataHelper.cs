@@ -506,7 +506,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             tribalCourseRun.DurationUnit = (TribalDurationUnit)CheckForDbNull(reader["DurationUnitId"], TribalDurationUnit.Undefined);
             tribalCourseRun.DurationValue = (int)CheckForDbNull(reader["DurationUnit"], 0);
             tribalCourseRun.StudyMode = (TribalStudyMode)CheckForDbNull(reader["StudyModeId"], TribalStudyMode.Undefined);
-            tribalCourseRun.AttendancePattern = (TribalAttendancePattern)CheckForDbNull(reader["AttendanceTypeId"], TribalAttendancePattern.Undefined);
+            tribalCourseRun.AttendancePattern = (TribalAttendancePattern)CheckForDbNull(reader["AttendancePatternId"], TribalAttendancePattern.Undefined);
 
             return tribalCourseRun;
         }

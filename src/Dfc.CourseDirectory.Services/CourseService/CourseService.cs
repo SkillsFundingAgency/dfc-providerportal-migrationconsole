@@ -72,7 +72,7 @@ namespace Dfc.CourseDirectory.Services.CourseService
                 }
                 else
                 {
-                    return Result.Fail<ICourse>("Course add service unsuccessful http response");
+                    return Result.Fail<ICourse>("Course add service unsuccessful http response - ResponseStatusCode: " + response.StatusCode);
                 }
             }
             catch (HttpRequestException hre)

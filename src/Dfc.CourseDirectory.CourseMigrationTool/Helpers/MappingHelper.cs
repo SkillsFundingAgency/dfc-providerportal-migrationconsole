@@ -64,7 +64,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         courseRun.DeliveryMode = DeliveryMode.Undefined;
                         courseRun.RecordStatus = RecordStatus.Pending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
-                                            $"because your AttendanceType/StudyMode is set to { tribalCourseRun.AttendanceType } and we don't have it" + Environment.NewLine);
+                                            $"because your AttendanceType is set to { tribalCourseRun.AttendanceType } and we don't have it" + Environment.NewLine);
                         break;
                 }
 
@@ -173,7 +173,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         courseRun.DurationUnit = DurationUnit.Undefined;
                         courseRun.RecordStatus = RecordStatus.Pending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
-                                            $"because your StudyMode is set to { tribalCourseRun.DurationUnit } and we don't have it" + Environment.NewLine);
+                                            $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" + Environment.NewLine);
                         break;
                 }
 
