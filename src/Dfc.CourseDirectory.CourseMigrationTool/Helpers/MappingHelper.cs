@@ -7,7 +7,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 {
     public static class MappingHelper
     {
-        public static Course MapTribalCourseToCourse(TribalCourse tribalCourse, out List<string> mappingMessages, out bool courseTooOldDoNotMigrate)
+        public static Course MapTribalCourseToCourse(TribalCourse tribalCourse, int numberOfMonthsAgo, bool dummyMode, out List<string> mappingMessages, out bool courseTooOldDoNotMigrate)
         {
             var course = new Course();
             var courseRuns = new List<CourseRun>();
@@ -62,7 +62,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case AttendanceType.Undefined:
                     default:
                         courseRun.DeliveryMode = DeliveryMode.Undefined;
-                        courseRun.RecordStatus = RecordStatus.Pending;
+                        if(!dummyMode) courseRun.RecordStatus = RecordStatus.Pending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
                                             $"because your AttendanceType is set to { tribalCourseRun.AttendanceType } and we don't have it" + Environment.NewLine);
                         break;
@@ -73,7 +73,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 //tribalCourseRun.StartDate = DateTime.Now.AddMonths(-5);
                 if (tribalCourseRun.StartDate != null && tribalCourseRun.StartDate > DateTime.MinValue)
                 {
-                    if(tribalCourseRun.StartDate >= (DateTime.Now.AddMonths(-3)))
+                    if(tribalCourseRun.StartDate >= (DateTime.Now.AddMonths(-numberOfMonthsAgo)))
                     {
                         courseRun.StartDate = tribalCourseRun.StartDate;
                         courseRun.FlexibleStartDate = false;
@@ -96,7 +96,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     // latest decision Imran & Mark C. 
                     courseRun.StartDate = null;
                     courseRun.FlexibleStartDate = false;
-                    courseRun.RecordStatus = RecordStatus.Pending;
+                    if (!dummyMode) courseRun.RecordStatus = RecordStatus.Pending;
+                    mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was set to Pending, because it didn't have StartDate " + Environment.NewLine);
                 }
 
                 courseRun.CourseURL = tribalCourseRun.Url;
@@ -125,9 +126,13 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case TribalDurationUnit.Terms:
                     
                         if (tribalCourseRun.DurationValue == null)
+                        {
                             courseRun.DurationValue = null;
+                        }
                         else
+                        {
                             courseRun.DurationValue = (tribalCourseRun.DurationValue ?? 0) * 3;
+                        }
                         courseRun.DurationUnit = DurationUnit.Months;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was set to DurationUnit = { tribalCourseRun.DurationUnit } " +
                                             $"and  DurationValue = { tribalCourseRun.DurationValue }. We needed to convert it to  DurationUnit = { courseRun.DurationUnit } and DurationValue = { courseRun.DurationValue }." + Environment.NewLine);                      
@@ -142,7 +147,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case TribalDurationUnit.Semesters:
                         courseRun.DurationValue = tribalCourseRun.DurationValue;
                         courseRun.DurationUnit = DurationUnit.Undefined;
-                        courseRun.RecordStatus = RecordStatus.Pending;
+                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.Pending;
+                        mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was set to DurationUnit = Semesters " +
+                                           $"and  DurationValue = { tribalCourseRun.DurationValue }. We preserved the DurationValue = { courseRun.DurationValue }, but you need to select available DurationUnit and change the DurationValue accordingly." + Environment.NewLine);
                         break;
                     /*
                                         case TribalDurationUnit.Semesters:
@@ -171,7 +178,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case TribalDurationUnit.Undefined:
                     default:
                         courseRun.DurationUnit = DurationUnit.Undefined;
-                        courseRun.RecordStatus = RecordStatus.Pending;
+                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.Pending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
                                             $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" + Environment.NewLine);
                         break;
@@ -194,7 +201,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case TribalStudyMode.Undefined:
                     default:
                         courseRun.StudyMode = StudyMode.Undefined;
-                        courseRun.RecordStatus = RecordStatus.Pending;
+                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.Pending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
                                             $"because your StudyMode is set to { tribalCourseRun.StudyMode } and we don't have it" + Environment.NewLine); 
                         break;
@@ -221,7 +228,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case TribalAttendancePattern.Undefined:
                     default:
                         courseRun.AttendancePattern = AttendancePattern.Undefined;
-                        courseRun.RecordStatus = RecordStatus.Pending;
+                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.Pending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING, " +
                                             $"because your AttendancePattern is set to { tribalCourseRun.AttendancePattern } and we don't have it" + Environment.NewLine);
                         break;
@@ -262,7 +269,16 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 course.CourseRuns = courseRuns;
 
                 // If any of the CourseRuns is set to Pending state, the Course must be set to Pending as well.
-                if (courseRuns == null || courseRuns.Find(cr => cr.RecordStatus == RecordStatus.Pending) != null)
+                // Rule was revoked
+                //if (courseRuns == null || courseRuns.Find(cr => cr.RecordStatus == RecordStatus.Pending) != null)
+                //{
+                //    course.RecordStatus = RecordStatus.Pending;
+                //}
+                //else
+                //{
+                //    course.RecordStatus = RecordStatus.Live;
+                //}
+                if (string.IsNullOrEmpty(course.CourseDescription))
                 {
                     course.RecordStatus = RecordStatus.Pending;
                 }
@@ -270,6 +286,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 {
                     course.RecordStatus = RecordStatus.Live;
                 }
+
                 course.CreatedDate = DateTime.Now;
                 course.CreatedBy = "DFC – Course Migration Tool";
             }

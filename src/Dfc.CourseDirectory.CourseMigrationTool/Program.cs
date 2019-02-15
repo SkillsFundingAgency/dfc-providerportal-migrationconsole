@@ -101,6 +101,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             string selectionOfProvidersFileName = configuration.GetValue<string>("SelectionOfProvidersFileName");
             DeploymentEnvironment deploymentEnvironment = configuration.GetValue<DeploymentEnvironment>("DeploymentEnvironment");
             //TransferMethod transferMethod = configuration.GetValue<TransferMethod>("TransferMethod");
+            int numberOfMonthsAgo = configuration.GetValue<int>("NumberOfMonthsAgo");
+            bool dummyMode = configuration.GetValue<bool>("DummyMode");
+            bool deleteCoursesByUKPRN = configuration.GetValue<bool>("DeleteCoursesByUKPRN");
 
             #endregion 
 
@@ -269,6 +272,11 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 providerReport += reportForProvider + Environment.NewLine + Environment.NewLine;
                 providerReport += "________________________________________________________________________________" + Environment.NewLine + Environment.NewLine;
 
+                if (deleteCoursesByUKPRN)
+                {
+                    providerReport += $"Existing Courses for Provider '{ providerName }' with UKPRN  ( { providerUKPRN } ) got deleted.";
+                }
+
                 foreach (var tribalCourse in tribalCourses)
                 {
                     string courseReport = Environment.NewLine + $"Course Report" + Environment.NewLine;
@@ -388,7 +396,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                             // Do the mapping
                             var mappingMessages = new List<string>();
                             bool courseTooOldDoNotMigrate = false;
-                            course = MappingHelper.MapTribalCourseToCourse(tribalCourse, out mappingMessages, out courseTooOldDoNotMigrate);
+                            course = MappingHelper.MapTribalCourseToCourse(tribalCourse, numberOfMonthsAgo, dummyMode, out mappingMessages, out courseTooOldDoNotMigrate);
 
                             if (courseTooOldDoNotMigrate)
                             {
