@@ -21,6 +21,7 @@ namespace Dfc.CourseDirectory.Services.CourseService
         private readonly ILogger<CourseService> _logger;
         private readonly HttpClient _httpClient;
         private readonly Uri _addCourseUri;
+        private readonly Uri _deleteCoursesByUKPRNUri;
 
         public CourseService(
             ILogger<CourseService> logger,
@@ -35,6 +36,7 @@ namespace Dfc.CourseDirectory.Services.CourseService
             _httpClient = httpClient;
 
             _addCourseUri = settings.Value.ToAddCourseUri();
+            _deleteCoursesByUKPRNUri = settings.Value.ToDeleteCoursesByUKPRNUri();
         }
 
         public async Task<IResult<ICourse>> AddCourseAsync(ICourse course)
@@ -91,6 +93,61 @@ namespace Dfc.CourseDirectory.Services.CourseService
                 _logger.LogMethodExit();
             }
         }
+
+
+        public async Task<IResult<List<string>>> DeleteCoursesByUKPRNAsync(IDeleteCoursesByUKPRNCriteria criteria)
+        {
+            Throw.IfNull(criteria, nameof(criteria));
+            Throw.IfLessThan(0, criteria.UKPRN.Value, nameof(criteria.UKPRN.Value));
+            _logger.LogMethodEnter();
+
+            try
+            {
+                _logger.LogInformationObject("Delete Courses By UKPRN criteria", criteria);
+                _logger.LogInformationObject("Delete Courses By UKPRN URI", _deleteCoursesByUKPRNUri);
+
+                if (!criteria.UKPRN.HasValue)
+                    return Result.Fail<List<string>>("Delete Courses By UKPRN - unknown UKRLP");
+
+                var response = await _httpClient.GetAsync(new Uri(_deleteCoursesByUKPRNUri.AbsoluteUri + "&UKPRN=" + criteria.UKPRN));
+                _logger.LogHttpResponseMessage("Delete Courses By UKPRN service http response", response);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+
+                    if (!json.StartsWith("["))
+                        json = "[" + json + "]";
+
+                    _logger.LogInformationObject("Delete Courses By UKPRN json response", json);
+                    List<string> messagesList = JsonConvert.DeserializeObject<List<string>>(json);
+
+                    return Result.Ok<List<string>>(messagesList);
+                }
+                else
+                {
+                    return Result.Fail<List<string>>("Delete Courses By UKPRN service unsuccessful http response");
+                }
+
+            }
+            catch (HttpRequestException hre)
+            {
+                _logger.LogException("Delete Courses By UKPRN service http request error", hre);
+                return Result.Fail<List<string>>("Delete Courses By UKPRN service http request error.");
+
+            }
+            catch (Exception e)
+            {
+                _logger.LogException("Delete Courses By UKPRN service unknown error.", e);
+                return Result.Fail<List<string>>("Delete Courses By UKPRN service unknown error.");
+
+            }
+            finally
+            {
+                _logger.LogMethodExit();
+            }
+        }
+
     }
 
     internal static class CourseServiceSettingsExtensions
@@ -98,6 +155,10 @@ namespace Dfc.CourseDirectory.Services.CourseService
         internal static Uri ToAddCourseUri(this ICourseServiceSettings extendee)
         {
             return new Uri($"{extendee.ApiUrl + "AddCourse?code=" + extendee.ApiKey}");
+        }
+        internal static Uri ToDeleteCoursesByUKPRNUri(this ICourseServiceSettings extendee)
+        {
+            return new Uri($"{extendee.ApiUrl + "DeleteCoursesByUKPRN?code=" + extendee.ApiKey}");
         }
     }
 }

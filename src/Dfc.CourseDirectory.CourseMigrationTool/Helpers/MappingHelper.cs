@@ -257,8 +257,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             course.HowYoullBeAssessed = tribalCourse.AssessmentMethod;
             course.WhereNext = tribalCourse.WhereNext;
             course.AdvancedLearnerLoan = tribalCourse.AdvancedLearnerLoan;
+            course.AdultEducationBudget = false; // WE don't have the data/or rule for it.
 
-            // Removing CourseRuns, which are older than 3 months
+            // Removing CourseRuns, which are older than 3 (configurable) months
             foreach(var courseRunToBeRemovedAsTooOld in courseRunsToBeRemovedAsTooOld)
             {
                 courseRuns.Remove(courseRunToBeRemovedAsTooOld);
@@ -280,6 +281,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 //}
                 if (string.IsNullOrEmpty(course.CourseDescription))
                 {
+                    // Check for CourseText
                     course.RecordStatus = RecordStatus.Pending;
                 }
                 else

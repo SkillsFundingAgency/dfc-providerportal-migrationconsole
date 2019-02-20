@@ -5,8 +5,10 @@ using Dfc.CourseDirectory.Models.Models.Courses;
 using Dfc.CourseDirectory.Models.Models.Venues;
 using Dfc.CourseDirectory.Services;
 using Dfc.CourseDirectory.Services.CourseService;
+using Dfc.CourseDirectory.Services.CourseTextService;
 using Dfc.CourseDirectory.Services.Interfaces;
 using Dfc.CourseDirectory.Services.Interfaces.CourseService;
+using Dfc.CourseDirectory.Services.Interfaces.CourseTextService;
 using Dfc.CourseDirectory.Services.Interfaces.VenueService;
 using Dfc.CourseDirectory.Services.VenueService;
 using Microsoft.Extensions.Configuration;
@@ -74,6 +76,13 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 }
                 )
                 .AddScoped<ICourseService, CourseService>()
+                .Configure<CourseTextServiceSettings>(courseTextServiceSettingsOptions =>
+                {
+                    courseTextServiceSettingsOptions.ApiUrl = configuration.GetValue<string>("CourseTextServiceSettings:ApiUrl");
+                    courseTextServiceSettingsOptions.ApiKey = configuration.GetValue<string>("CourseTextServiceSettings:ApiKey");
+                }
+                )
+                .AddScoped<ICourseTextService, CourseTextService>()
                 .BuildServiceProvider();
 
             // Configure console logging
@@ -89,6 +98,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             var venueService = serviceProvider.GetService<IVenueService>();
             var larsSearchService = serviceProvider.GetService<ILarsSearchService>();
             var courseService = serviceProvider.GetService<ICourseService>();
+            var courseTextService = serviceProvider.GetService<ICourseTextService>();
 
             logger.LogDebug("Log test.");
 
@@ -274,7 +284,25 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
                 if (deleteCoursesByUKPRN)
                 {
-                    providerReport += $"Existing Courses for Provider '{ providerName }' with UKPRN  ( { providerUKPRN } ) got deleted.";
+                    providerReport += $"ATTENTION - Existing Courses for Provider '{ providerName }' with UKPRN  ( { providerUKPRN } ) to be deleted." + Environment.NewLine;
+
+                    // Call the service 
+                    var deleteCoursesByUKPRNResult = Task.Run(async () => await courseService.DeleteCoursesByUKPRNAsync(new DeleteCoursesByUKPRNCriteria(providerUKPRN))).Result;
+
+                    if (deleteCoursesByUKPRNResult.IsSuccess && deleteCoursesByUKPRNResult.HasValue) 
+                    {
+                        foreach (var deleteMessage in deleteCoursesByUKPRNResult.Value)
+                        {
+                            providerReport += deleteMessage + Environment.NewLine;
+                        }
+                        providerReport += $"The deleted courses  " + Environment.NewLine;
+                    }
+                    else
+                    {
+                        // No
+                        //providerReport += $"The course is NOT migrated.  " + Environment.NewLine;
+                        providerReport += $"The deleted courses. Error -  { deleteCoursesByUKPRNResult.Error }  " + Environment.NewLine;
+                    }
                 }
 
                 foreach (var tribalCourse in tribalCourses)
@@ -287,7 +315,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                     migrationSuccess = MigrationSuccess.Undefined;
 
                     //providerReport += Environment.NewLine + $">>> Course { tribalCourse.CourseId } LARS: { tribalCourse.LearningAimRefId } to be migrated " + Environment.NewLine;
-                    courseReport += Environment.NewLine + $">>> Course { tribalCourse.CourseId } LARS: { tribalCourse.LearningAimRefId } to be migrated " + Environment.NewLine;
+                    courseReport += Environment.NewLine + $">>> Course { tribalCourse.CourseId } LARS: { tribalCourse.LearningAimRefId } and Title ( { tribalCourse.CourseTitle } ) to be migrated " + Environment.NewLine;
                     // DO NOT MIGRATE COURSES WITHOUT A LARS REFERENCE. WE WILL LOOK TO AUGMENT THIS DATA WITH AN ILR EXTRACT
                     if (string.IsNullOrEmpty(tribalCourse.LearningAimRefId))
                     {
@@ -348,6 +376,26 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                         {
                             //providerReport += $"We couldn't retreive LARS data for LARS { tribalCourse.LearningAimRefId }, because of technical reason, Error: " + larsResult?.Error;
                             courseReport += $"We couldn't retreive LARS data for LARS { tribalCourse.LearningAimRefId }, because of technical reason, Error: " + larsResult?.Error;
+                        }
+
+
+                        // If there is no CourseFor Text we getting it from CourseTextService
+                        if (string.IsNullOrEmpty(tribalCourse.CourseSummary))
+                        {
+                            courseReport += $"The course with LARS { tribalCourse.LearningAimRefId } did not have CourseSummary, which is required." + Environment.NewLine;
+                            var courseTextResult = courseTextService.GetCourseTextByLARS(new CourseTextServiceCriteria(tribalCourse.LearningAimRefId)).Result;
+
+                            if (courseTextResult.IsSuccess && courseTextResult.HasValue)
+                            {
+                                tribalCourse.CourseSummary = courseTextResult.Value?.CourseDescription;
+
+                                courseReport += $"And have placed exemplar content for it." + Environment.NewLine;
+                            }
+                            else
+                            {
+                                // No
+                                courseReport += $"And we have tried to place exemplar content for it. Unfortunately, we couldn’t do it. Error -  { courseTextResult.Error }  " + Environment.NewLine;
+                            }
                         }
 
 
