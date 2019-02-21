@@ -131,6 +131,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
             if (automatedMode)
             {
+                Console.WriteLine("The Migration Tool is running in Automated Mode." + Environment.NewLine + "Please, do not close this window until \"Migration completed\" message is displayed." + Environment.NewLine);
+
                 string errorMessageGetCourses = string.Empty;
                 providerUKPRNList = DataHelper.GetProviderUKPRNs(connectionString, out errorMessageGetCourses);
                 if (!string.IsNullOrEmpty(errorMessageGetCourses))
@@ -291,16 +293,16 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
                     if (deleteCoursesByUKPRNResult.IsSuccess && deleteCoursesByUKPRNResult.HasValue) 
                     {
+                        providerReport += $"The deleted courses:  " + Environment.NewLine;
+                        // StatusCode => NoContent = 204 is good 
                         foreach (var deleteMessage in deleteCoursesByUKPRNResult.Value)
                         {
                             providerReport += deleteMessage + Environment.NewLine;
                         }
-                        providerReport += $"The deleted courses  " + Environment.NewLine;
                     }
                     else
                     {
-                        // No
-                        providerReport += $"The deleted courses. Error -  { deleteCoursesByUKPRNResult.Error }  " + Environment.NewLine;
+                        providerReport += $"Error on delteing courses -  { deleteCoursesByUKPRNResult.Error }  " + Environment.NewLine;
                     }
                 }
 
@@ -626,7 +628,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                                 out errorMessageCourseTransferUpdate);
             if (!string.IsNullOrEmpty(errorMessageCourseTransferUpdate)) Console.WriteLine("Error on CourseTransferUpdate" + errorMessageCourseTransferUpdate); 
 
-            Console.WriteLine("Migration completed");
+            Console.WriteLine("Migration completed.");
             string nextLine = Console.ReadLine(); 
         }
 
