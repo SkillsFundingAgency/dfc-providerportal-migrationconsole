@@ -66,15 +66,15 @@ namespace Dfc.CourseDirectory.Models.Enums
         BulkUloadPendingAndReadyToGoLive = 48,
 
         // For Migrattion
-        // All Live goes directly in YourCourses
+        // All Live goes directly in YourCourses => from MigrationTool
         //
-        [Description("All Migration Pending")]
+        [Description("All Migration Pending")] // => from MigrationTool
         AllMigrationPending = 256,
         [Description("All Migration Ready To Go Live")]
         AllMigrationReadyToGoLive = 512,
         //[Description("All Migration Deleted")] // Or where it will go (e.g DELETED TAB)
         //AllMigrationDeleted = 1024,
-        [Description("Live And Migration Pending")]
+        [Description("Live And Migration Pending")] // => from MigrationTool
         LiveAndMigrationPending = 257,
         [Description("Live And Migration Ready To Go Live")]
         LiveAndMigrationReadyToGoLive = 513,

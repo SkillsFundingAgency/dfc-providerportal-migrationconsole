@@ -32,18 +32,18 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
         public DateTime? UpdatedDate { get; set; }
         public string UpdatedBy { get; set; }
 
-
-        public int BitMaskState {
+        public bool IsValid { get; set; }
+        public BitMaskStatus BitMaskState {
             get
             {
                 return GetBitMaskState(CourseRuns);
             }
         }
 
-        internal static int GetBitMaskState(IEnumerable<CourseRun> courseRuns)
+        internal static BitMaskStatus GetBitMaskState(IEnumerable<CourseRun> courseRuns)
         {
-            int bitMaskState = 0; // Default BitMaskState (handles undefined and no CourseRuns)
-
+            BitMaskStatus bitMaskStatus = BitMaskStatus.Undefined; // Default BitMaskState (handles undefined and no CourseRuns)
+            int bitMaskState = 0;
             if (courseRuns != null)
             {
                 foreach (RecordStatus recordStatus in Enum.GetValues(typeof(RecordStatus))) 
@@ -53,9 +53,11 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
                         bitMaskState = bitMaskState + (int)recordStatus;
                     }
                 }
+
+                bitMaskStatus = (BitMaskStatus)Enum.ToObject(typeof(BitMaskStatus), bitMaskState);
             }
 
-            return bitMaskState;
+            return bitMaskStatus;
         }
     }
 }
