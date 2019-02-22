@@ -2,6 +2,7 @@
 using Dfc.CourseDirectory.Models.Interfaces.Courses;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Dfc.CourseDirectory.Models.Models.Courses
 {
@@ -30,5 +31,31 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
         public string CreatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
         public string UpdatedBy { get; set; }
+
+
+        public int BitMaskState {
+            get
+            {
+                return GetBitMaskState(CourseRuns);
+            }
+        }
+
+        internal static int GetBitMaskState(IEnumerable<CourseRun> courseRuns)
+        {
+            int bitMaskState = 0; // Default BitMaskState (handles undefined and no CourseRuns)
+
+            if (courseRuns != null)
+            {
+                foreach (RecordStatus recordStatus in Enum.GetValues(typeof(RecordStatus))) 
+                {
+                    if(courseRuns.Any(c => c.RecordStatus == recordStatus))
+                    {
+                        bitMaskState = bitMaskState + (int)recordStatus;
+                    }
+                }
+            }
+
+            return bitMaskState;
+        }
     }
 }
