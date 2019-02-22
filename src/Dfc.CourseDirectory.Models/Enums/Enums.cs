@@ -22,6 +22,7 @@ namespace Dfc.CourseDirectory.Models.Enums
     //}
 
     // BitMask
+    [Flags]
     public enum RecordStatus
     {
         [Description("Undefined")]
