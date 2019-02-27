@@ -22,7 +22,7 @@ namespace Dfc.CourseDirectory.Models.Enums
     //}
 
     // BitMask
-    [Flags]
+    //[Flags]
     public enum RecordStatus
     {
         [Description("Undefined")]
@@ -51,61 +51,6 @@ namespace Dfc.CourseDirectory.Models.Enums
         MigrationDeleted = 1024,
     }
 
-    [Flags]
-    public enum BitMaskStatus
-    {
-        [Description("Undefined")]
-        Undefined = 0,
-        [Description("All Live")]
-        AllLive = 1,
-        // For Bulk Upload Interface
-        [Description("All BulkUload Pending")]
-        AllBulkUloadPending = 16,
-        [Description("All BulkUpload Ready To Go Live")]
-        AllBulkUploadReadyToGoLive = 32,
-        [Description("BulkUload Pending and Ready To Go Live")]
-        BulkUloadPendingAndReadyToGoLive = 48,
-
-        // For Migrattion
-        // All Live goes directly in YourCourses => from MigrationTool
-        //
-        [Description("All Migration Pending")] // => from MigrationTool
-        AllMigrationPending = 256,
-        [Description("All Migration Ready To Go Live")]
-        AllMigrationReadyToGoLive = 512,
-        //[Description("All Migration Deleted")] // Or where it will go (e.g DELETED TAB)
-        //AllMigrationDeleted = 1024,
-        [Description("Live And Migration Pending")] // => from MigrationTool
-        LiveAndMigrationPending = 257,
-        [Description("Live And Migration Ready To Go Live")]
-        LiveAndMigrationReadyToGoLive = 513,
-        [Description("Live And Migration Deleted")] // where ELSE it will go (e.g DELETED TAB)
-        LiveAndMigrationDeleted = 1025,
-
-
-        [Description("Live And Migration Pending And Ready")]
-        LiveAndMigrationPendingAndReady = 769,
-        [Description("Live And Migration Pending And Ready And Deleted")] // where ELSE it will go (e.g DELETED TAB)
-        LiveAndMigrationPendingAndReadyAndDeleted = 1793,
-        [Description("Live And Migration Ready And Deleted")] // where ELSE it will go (e.g DELETED TAB)
-        LiveAndMigrationReadyAndDeleted = 1537,
-        [Description("Live And Migration Pending And Deleted")] // where ELSE it will go (e.g DELETED TAB)
-        LiveAndMigrationPendingAndDeleted = 1281,
-
-
-        [Description("Migration Pending And Ready To Go Live")]
-        MigrationPendingAndReadyToGoLive = 768,
-        [Description("Migration Pending And Deleted")] // where ELSE it will go (e.g DELETED TAB)
-        MigrationPendingAndDeleted = 1280,
-
-        [Description("Migration Pending And Ready To Go Live And Deleted")] // where ELSE it will go (e.g DELETED TAB)
-        MigrationPendingAndReadyToGoLiveAndDelete = 1782,
-
-        //[Description("Migration Pending And Ready To Go Live And Deleted")] // where ELSE it will go (e.g DELETED TAB)
-        //MigrationPendingAndReadyToGoLiveAndDelete = 1782,
-        //[Description("Migration Pending And Ready To Go Live And Deleted")] // where ELSE it will go (e.g DELETED TAB)
-        //MigrationPendingAndReadyToGoLiveAndDelete = 1782,
-    }
 
     public enum TransferMethod
     {

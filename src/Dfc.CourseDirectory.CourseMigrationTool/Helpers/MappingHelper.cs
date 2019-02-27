@@ -1,6 +1,6 @@
-﻿using Dfc.CourseDirectory.Models.Models.Courses;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Dfc.CourseDirectory.Models.Models.Courses;
 using Dfc.CourseDirectory.Models.Enums;
 
 namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
@@ -18,7 +18,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             foreach (var tribalCourseRun in tribalCourse.TribalCourseRuns)
             {
                 var courseRun = new CourseRun();
-
+                
                 // JUST FOR TESTING - DO NOT UNCOMMENT
                 //tribalCourseRun.AttendanceType = AttendanceType.DistanceWithAttendance;
                 //tribalCourseRun.DurationUnit = TribalDurationUnit.Terms;
@@ -281,13 +281,10 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 //}
                 if (string.IsNullOrEmpty(course.CourseDescription))
                 {
-                    // Check for CourseText
-                    course.RecordStatus = RecordStatus.Pending;
                     course.IsValid = false;
                 }
                 else
                 {
-                    course.RecordStatus = RecordStatus.Live;
                     course.IsValid = true;
                 }
 

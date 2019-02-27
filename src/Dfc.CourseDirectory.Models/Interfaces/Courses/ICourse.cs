@@ -26,7 +26,7 @@ namespace Dfc.CourseDirectory.Models.Interfaces.Courses
         bool AdultEducationBudget { get; set; }
         bool AdvancedLearnerLoan { get; set; }
         IEnumerable<CourseRun> CourseRuns { get; }
-        RecordStatus RecordStatus { get; set; }
+        RecordStatus CourseStatus { get; }
         DateTime CreatedDate { get; set; }
         string CreatedBy { get; set; }
         DateTime? UpdatedDate { get; set; }
