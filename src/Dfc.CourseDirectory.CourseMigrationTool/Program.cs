@@ -1,6 +1,7 @@
 ﻿using Dfc.CourseDirectory.CourseMigrationTool.Helpers;
 using Dfc.CourseDirectory.CourseMigrationTool.Models;
 using Dfc.CourseDirectory.Models.Enums;
+using Dfc.CourseDirectory.Models.Helpers;
 using Dfc.CourseDirectory.Models.Models.Courses;
 using Dfc.CourseDirectory.Models.Models.Venues;
 using Dfc.CourseDirectory.Services;
@@ -416,13 +417,13 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                         }
                                         else
                                         {
-                                            tribalCourseRun.RecordStatus = RecordStatus.Pending;
+                                            tribalCourseRun.RecordStatus = RecordStatus.MigrationPending;
                                             courseReport += $"ATTENTION - CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' - Venue with VenueId -  '{ tribalCourseRun.VenueId }' could not obtain VenueIdGuid , Error:  { venueResult?.Error } for BAD " + Environment.NewLine;
                                         }
                                     }
                                     else
                                     {
-                                        tribalCourseRun.RecordStatus = RecordStatus.Pending;
+                                        tribalCourseRun.RecordStatus = RecordStatus.MigrationPending;
                                         courseReport += $"ATTENTION - NO Venue Id for CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' , although it's of  AttendanceType.Location" + Environment.NewLine;
                                     }
                                 }
@@ -451,10 +452,10 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                     courseReport += mappingMessage;
                                 }
 
-                                courseReport += Environment.NewLine + $"The Course has RecordStatus:  { course.RecordStatus } " + Environment.NewLine; ;
+                                courseReport += Environment.NewLine + $"The Course has RecordStatus:  { course.CourseStatus } " + Environment.NewLine; ;
 
-                                if (course.RecordStatus.Equals(RecordStatus.Live)) CountCourseLive++;
-                                if (course.RecordStatus.Equals(RecordStatus.Pending)) CountCoursePending++;
+                                if (BitmaskHelper.IsSet(course.CourseStatus, RecordStatus.Live)) CountCourseLive++;
+                                if (BitmaskHelper.IsSet(course.CourseStatus, RecordStatus.Pending)) CountCoursePending++;
 
                                 // Migrate Course 
                                 if (generateJsonFilesLocally)
@@ -497,7 +498,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                     foreach (var courseRun in course.CourseRuns ?? Enumerable.Empty<CourseRun>())
                     {
                         if (courseRun.RecordStatus.Equals(RecordStatus.Live)) courseRunsLive++;
-                        if (courseRun.RecordStatus.Equals(RecordStatus.Pending)) courseRunsPending++;
+                        if (courseRun.RecordStatus.Equals(RecordStatus.MigrationPending)) courseRunsPending++;
                     }
 
                     CountProviderCourseRuns = CountProviderCourseRuns + GetCourseRunsCount(course?.CourseRuns);
@@ -510,7 +511,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                                providerUKPRN,
                                                course?.CourseId ?? 0,
                                                course?.LearnAimRef,
-                                               (int)course?.RecordStatus,
+                                               (int)course?.CourseStatus,
                                                GetCourseRunsCount(course?.CourseRuns),
                                                courseRunsLive,
                                                courseRunsPending,

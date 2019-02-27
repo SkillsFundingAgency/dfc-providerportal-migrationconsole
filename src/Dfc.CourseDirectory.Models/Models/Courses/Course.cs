@@ -8,6 +8,7 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
 {
     public class Course : ICourse 
     {
+       
         public Guid id { get; set; }
         public int? CourseId { get; set; }
         public string QualificationCourseTitle { get; set; } 
@@ -26,36 +27,43 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
         public bool AdultEducationBudget { get; set; }
         public bool AdvancedLearnerLoan { get; set; }    
         public IEnumerable<CourseRun> CourseRuns { get; set; }
-        public RecordStatus RecordStatus { get; set; }
+        //public RecordStatus RecordStatus { get; set; }
         public DateTime CreatedDate { get; set; }
         public string CreatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
         public string UpdatedBy { get; set; }
 
-
-        public int BitMaskState {
+        public bool IsValid { get; set; }
+        public RecordStatus CourseStatus
+        {
             get
             {
                 return GetBitMaskState(CourseRuns);
             }
+           
         }
+            
 
-        internal static int GetBitMaskState(IEnumerable<CourseRun> courseRuns)
+        internal static RecordStatus GetBitMaskState(IEnumerable<CourseRun> courseRuns)
         {
-            int bitMaskState = 0; // Default BitMaskState (handles undefined and no CourseRuns)
-
+            RecordStatus courseStatus = RecordStatus.Undefined; // Default BitMaskState (handles undefined and no CourseRuns)
+           
             if (courseRuns != null)
             {
                 foreach (RecordStatus recordStatus in Enum.GetValues(typeof(RecordStatus))) 
                 {
                     if(courseRuns.Any(c => c.RecordStatus == recordStatus))
                     {
-                        bitMaskState = bitMaskState + (int)recordStatus;
+                        Helpers.BitmaskHelper.Set<RecordStatus>(ref courseStatus, recordStatus);
+                        
                     }
                 }
+
+               
             }
 
-            return bitMaskState;
+            return courseStatus;
         }
     }
+    
 }

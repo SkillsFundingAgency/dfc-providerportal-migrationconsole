@@ -1,6 +1,6 @@
-﻿using Dfc.CourseDirectory.Models.Models.Courses;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Dfc.CourseDirectory.Models.Models.Courses;
 using Dfc.CourseDirectory.Models.Enums;
 
 namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
@@ -18,7 +18,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             foreach (var tribalCourseRun in tribalCourse.TribalCourseRuns)
             {
                 var courseRun = new CourseRun();
-
+                
                 // JUST FOR TESTING - DO NOT UNCOMMENT
                 //tribalCourseRun.AttendanceType = AttendanceType.DistanceWithAttendance;
                 //tribalCourseRun.DurationUnit = TribalDurationUnit.Terms;
@@ -26,9 +26,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 //tribalCourseRun.AttendancePattern = TribalAttendancePattern.Customised;
 
                 // It's need it, because of the VenueId Check
-                if (tribalCourseRun.RecordStatus.Equals(RecordStatus.Pending))
+                if (tribalCourseRun.RecordStatus.Equals(RecordStatus.MigrationPending))
                 {
-                    courseRun.RecordStatus = RecordStatus.Pending;
+                    courseRun.RecordStatus = RecordStatus.MigrationPending;
                 }
                 else
                 {
@@ -62,7 +62,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case AttendanceType.Undefined:
                     default:
                         courseRun.DeliveryMode = DeliveryMode.Undefined;
-                        if(!dummyMode) courseRun.RecordStatus = RecordStatus.Pending;
+                        if(!dummyMode) courseRun.RecordStatus = RecordStatus.MigrationPending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
                                             $"because your AttendanceType is set to { tribalCourseRun.AttendanceType } and we don't have it" + Environment.NewLine);
                         break;
@@ -96,7 +96,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     // latest decision Imran & Mark C. 
                     courseRun.StartDate = null;
                     courseRun.FlexibleStartDate = false;
-                    if (!dummyMode) courseRun.RecordStatus = RecordStatus.Pending;
+                    if (!dummyMode) courseRun.RecordStatus = RecordStatus.MigrationPending;
                     mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was set to Pending, because it didn't have StartDate " + Environment.NewLine);
                 }
 
@@ -139,7 +139,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         //courseRun.DurationValue = tribalCourseRun.DurationValue;
                         //courseRun.DurationUnit = DurationUnit.Undefined;
                         //// Alternativly 3 x Months or X x Weeks // TODO 
-                        //courseRun.RecordStatus = RecordStatus.Pending;
+                        //courseRun.RecordStatus = RecordStatus.MigrationPending;
                         //mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
                         //                    $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" +
                         //                    $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
@@ -147,7 +147,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case TribalDurationUnit.Semesters:
                         courseRun.DurationValue = tribalCourseRun.DurationValue;
                         courseRun.DurationUnit = DurationUnit.Undefined;
-                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.Pending;
+                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.MigrationPending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was set to DurationUnit = Semesters " +
                                            $"and  DurationValue = { tribalCourseRun.DurationValue }. We preserved the DurationValue = { courseRun.DurationValue }, but you need to select available DurationUnit and change the DurationValue accordingly." + Environment.NewLine);
                         break;
@@ -165,7 +165,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                                             //courseRun.DurationValue = tribalCourseRun.DurationValue;
                                             //courseRun.DurationUnit = DurationUnit.Undefined;
                                             //// Alternativly 3 x Months or X x Weeks // TODO 
-                                            //courseRun.RecordStatus = RecordStatus.Pending;
+                                            //courseRun.RecordStatus = RecordStatus.MigrationPending;
                                             //mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
                                             //                    $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" +
                                             //                    $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
@@ -178,7 +178,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case TribalDurationUnit.Undefined:
                     default:
                         courseRun.DurationUnit = DurationUnit.Undefined;
-                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.Pending;
+                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.MigrationPending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
                                             $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" + Environment.NewLine);
                         break;
@@ -201,7 +201,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case TribalStudyMode.Undefined:
                     default:
                         courseRun.StudyMode = StudyMode.Undefined;
-                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.Pending;
+                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.MigrationPending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
                                             $"because your StudyMode is set to { tribalCourseRun.StudyMode } and we don't have it" + Environment.NewLine); 
                         break;
@@ -228,7 +228,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case TribalAttendancePattern.Undefined:
                     default:
                         courseRun.AttendancePattern = AttendancePattern.Undefined;
-                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.Pending;
+                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.MigrationPending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING, " +
                                             $"because your AttendancePattern is set to { tribalCourseRun.AttendancePattern } and we don't have it" + Environment.NewLine);
                         break;
@@ -271,9 +271,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 
                 // If any of the CourseRuns is set to Pending state, the Course must be set to Pending as well.
                 // Rule was revoked
-                //if (courseRuns == null || courseRuns.Find(cr => cr.RecordStatus == RecordStatus.Pending) != null)
+                //if (courseRuns == null || courseRuns.Find(cr => cr.RecordStatus == RecordStatus.MigrationPending) != null)
                 //{
-                //    course.RecordStatus = RecordStatus.Pending;
+                //    course.RecordStatus = RecordStatus.MigrationPending;
                 //}
                 //else
                 //{
@@ -281,12 +281,11 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 //}
                 if (string.IsNullOrEmpty(course.CourseDescription))
                 {
-                    // Check for CourseText
-                    course.RecordStatus = RecordStatus.Pending;
+                    course.IsValid = false;
                 }
                 else
                 {
-                    course.RecordStatus = RecordStatus.Live;
+                    course.IsValid = true;
                 }
 
                 course.CreatedDate = DateTime.Now;
