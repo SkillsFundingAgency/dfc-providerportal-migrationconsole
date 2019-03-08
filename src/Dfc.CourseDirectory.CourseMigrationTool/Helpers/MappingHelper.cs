@@ -269,16 +269,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             {
                 course.CourseRuns = courseRuns;
 
-                // If any of the CourseRuns is set to Pending state, the Course must be set to Pending as well.
-                // Rule was revoked
-                //if (courseRuns == null || courseRuns.Find(cr => cr.RecordStatus == RecordStatus.MigrationPending) != null)
-                //{
-                //    course.RecordStatus = RecordStatus.MigrationPending;
-                //}
-                //else
-                //{
-                //    course.RecordStatus = RecordStatus.Live;
-                //}
                 if (string.IsNullOrEmpty(course.CourseDescription))
                 {
                     course.IsValid = false;

@@ -309,6 +309,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
                 foreach (var tribalCourse in tribalCourses)
                 {
+                    string preserveCourseTitle = tribalCourse.CourseTitle;
                     string courseReport = Environment.NewLine + $"Course Report" + Environment.NewLine;
                     courseReport += "________________________________________________________________________________" + Environment.NewLine;
 
@@ -354,7 +355,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                 tribalCourse.CourseTitle = qualifications[0].LearnAimRefTitle;
                                 tribalCourse.QualificationLevelIdString = qualifications[0].NotionalNVQLevelv2;
                                 tribalCourse.LearningAimAwardOrgCode = qualifications[0].AwardOrgCode;
-                                tribalCourse.Qualification = qualifications[0].LearnAimRefTypeDesc;                                
+                                tribalCourse.Qualification = qualifications[0].LearnAimRefTypeDesc;   
+                                
+                                // We continue only if we could much LARS
                             }
                             else
                             {
@@ -401,7 +404,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                             tribalCourse.TribalCourseRuns = tribalCourseRuns;
                             foreach (var tribalCourseRun in tribalCourse.TribalCourseRuns)
                             {
-                                tribalCourseRun.CourseName = tribalCourse.CourseTitle;
+                                tribalCourseRun.CourseName = preserveCourseTitle; //tribalCourse.CourseTitle;
 
                                 // Call VenueService and for each tribalCourseRun.VenueId get tribalCourseRun.VenueGuidId (Applicable only for type Location/Classroom)
                                 if (tribalCourseRun.AttendanceType.Equals(AttendanceType.Location))

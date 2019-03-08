@@ -430,7 +430,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 
             tribalCourse.Ukprn = (int)CheckForDbNull(reader["Ukprn"], 0);
             tribalCourse.CourseId = (int)CheckForDbNull(reader["CourseId"], 0);
-            tribalCourse.CourseTitle = (string)CheckForDbNull(reader["LearningAimTitle"], string.Empty);
+            tribalCourse.CourseTitle = (string)CheckForDbNull(reader["CourseTitle"], string.Empty);
             tribalCourse.LearningAimRefId = (string)CheckForDbNull(reader["LearningAimRefId"], string.Empty);
             tribalCourse.QualificationLevelId = (int)CheckForDbNull(reader["QualificationLevelId"], 0);
             tribalCourse.LearningAimAwardOrgCode = (string)CheckForDbNull(reader["LearningAimAwardOrgCode"], string.Empty);

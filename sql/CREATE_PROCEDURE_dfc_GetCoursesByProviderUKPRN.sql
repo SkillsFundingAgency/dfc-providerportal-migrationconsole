@@ -24,7 +24,7 @@ BEGIN
 
 	 SELECT  [Ukprn] 
 			,CourseId 
-			,la.[LearningAimTitle] 
+			,c.CourseTitle
 			,c.LearningAimRefId 
 			,c.QualificationLevelId 
 			,la.LearningAimAwardOrgCode 
