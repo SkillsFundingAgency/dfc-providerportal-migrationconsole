@@ -1,4 +1,5 @@
-﻿using Dfc.CourseDirectory.CourseMigrationTool.Helpers;
+﻿using Dfc.CourseDirectory.Common.Settings;
+using Dfc.CourseDirectory.CourseMigrationTool.Helpers;
 using Dfc.CourseDirectory.CourseMigrationTool.Models;
 using Dfc.CourseDirectory.Models.Enums;
 using Dfc.CourseDirectory.Models.Helpers;
@@ -39,19 +40,10 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
             IConfigurationRoot configuration = builder.Build();
 
-            //var venueServiceSettings = configuration.GetSection(nameof(VenueServiceSettings)); // DoesNotTakeAnything
-            //VenueServiceSettings venueServiceSettings = new VenueServiceSettings
-            //{
-            //    ApiUrl = configuration.GetValue<string>("VenueServiceSettings:ApiUrl"), 
-            //    ApiKey = configuration.GetValue<string>("VenueServiceSettings:ApiKey") 
-            //};
-
             //setup our DI
             var serviceProvider = new ServiceCollection()
                 .AddLogging()
                 .AddTransient((provider) => new HttpClient())
-                //.AddSingleton<IVenueService, VenueService>()
-                //.Configure<VenueServiceSettings>(configuration.GetSection(nameof(VenueServiceSettings))) // Not Working
                 .Configure<VenueServiceSettings>(venueServiceSettingsOptions =>
                     {
                         venueServiceSettingsOptions.ApiUrl = configuration.GetValue<string>("VenueServiceSettings:ApiUrl");
@@ -70,6 +62,20 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                  }
                 )
                 .AddScoped<ILarsSearchService, LarsSearchService>()
+                .Configure<CourseForComponentSettings>(CourseForComponentSettingsOptions => 
+                { CourseForComponentSettingsOptions.TextFieldMaxChars = configuration.GetValue<int>("AppUISettings:CourseForComponentSettings:TextFieldMaxChars");  })
+                .Configure<EntryRequirementsComponentSettings>(EntryRequirementsComponentSettingsOptions =>
+                { EntryRequirementsComponentSettingsOptions.TextFieldMaxChars = configuration.GetValue<int>("AppUISettings:EntryRequirementsComponentSettings:TextFieldMaxChars"); })
+                .Configure<WhatWillLearnComponentSettings>(WhatWillLearnComponentSettingsOptions =>
+                { WhatWillLearnComponentSettingsOptions.TextFieldMaxChars = configuration.GetValue<int>("AppUISettings:WhatWillLearnComponentSettings:TextFieldMaxChars"); })
+                .Configure<HowYouWillLearnComponentSettings>(HowYouWillLearnComponentSettingsOptions =>
+                { HowYouWillLearnComponentSettingsOptions.TextFieldMaxChars = configuration.GetValue<int>("AppUISettings:HowYouWillLearnComponentSettings:TextFieldMaxChars"); })
+                .Configure<WhatYouNeedComponentSettings>(WhatYouNeedComponentSettingsOptions =>
+                { WhatYouNeedComponentSettingsOptions.TextFieldMaxChars = configuration.GetValue<int>("AppUISettings:WhatYouNeedComponentSettings:TextFieldMaxChars"); })
+                .Configure<HowAssessedComponentSettings>(HowAssessedComponentSettingsOptions =>
+                { HowAssessedComponentSettingsOptions.TextFieldMaxChars = configuration.GetValue<int>("AppUISettings:HowAssessedComponentSettings:TextFieldMaxChars"); })
+                .Configure<WhereNextComponentSettings>(WhereNextComponentSettingsOptions =>
+                { WhereNextComponentSettingsOptions.TextFieldMaxChars = configuration.GetValue<int>("AppUISettings:WhereNextComponentSettings:TextFieldMaxChars"); })
                 .Configure<CourseServiceSettings>(courseServiceSettingsOptions =>
                 {
                     courseServiceSettingsOptions.ApiUrl = configuration.GetValue<string>("CourseServiceSettings:ApiUrl");
@@ -455,10 +461,36 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                     courseReport += mappingMessage;
                                 }
 
-                                courseReport += Environment.NewLine + $"The Course has RecordStatus:  { course.CourseStatus } " + Environment.NewLine; ;
+                                
 
                                 if (BitmaskHelper.IsSet(course.CourseStatus, RecordStatus.Live)) CountCourseLive++;
                                 if (BitmaskHelper.IsSet(course.CourseStatus, RecordStatus.Pending)) CountCoursePending++;
+
+                                // Validate Course
+                                var courseValidationMessages = courseService.ValidateCourse(course);
+                                course.IsValid = courseValidationMessages.Any() ? false : true;
+                                courseReport += Environment.NewLine + $"Course Validation Messages:  " + Environment.NewLine; ;                                
+                                foreach (var courseValidationMessage in courseValidationMessages)
+                                {
+                                    courseReport += courseValidationMessage + Environment.NewLine; ;
+                                }
+                                courseReport += Environment.NewLine + $"The Course IsValid property:  { course.IsValid } " + Environment.NewLine; ;
+
+                                // Validate CourseRuns
+                                courseReport += Environment.NewLine + $"CourseRuns Validation Messages: " + Environment.NewLine; ;
+                                foreach (var courseRun in course.CourseRuns)
+                                {
+                                   var courseRunValidationMessages = courseService.ValidateCourseRun(courseRun, ValidationMode.MigrateCourse);
+                                   courseRun.RecordStatus = courseRunValidationMessages.Any() ? RecordStatus.MigrationPending : RecordStatus.Live;
+                                    courseReport += $"CourseRun: { courseRun.ProviderCourseID }, { courseRun.CourseName }, { courseRun.StudyMode }" + Environment.NewLine; ;
+                                    foreach (var courseRunValidationMessage in courseRunValidationMessages)
+                                    {
+                                        courseReport += courseRunValidationMessage + Environment.NewLine; ;
+                                    }
+                                    courseReport += Environment.NewLine + $"The CourseRun RecordStatus:  { courseRun.RecordStatus } " + Environment.NewLine; ;
+                                }
+                               
+
 
                                 // Migrate Course 
                                 if (generateJsonFilesLocally)

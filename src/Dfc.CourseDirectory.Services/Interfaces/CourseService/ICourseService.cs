@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dfc.CourseDirectory.Common.Interfaces;
+using Dfc.CourseDirectory.Models.Enums;
 using Dfc.CourseDirectory.Models.Interfaces.Courses;
 
 
@@ -12,5 +13,7 @@ namespace Dfc.CourseDirectory.Services.Interfaces.CourseService
     {
         Task<IResult<ICourse>> AddCourseAsync(ICourse course);
         Task<IResult<List<string>>> DeleteCoursesByUKPRNAsync(IDeleteCoursesByUKPRNCriteria criteria);
+        IList<string> ValidateCourse(ICourse course);
+        IList<string> ValidateCourseRun(ICourseRun courseRun, ValidationMode validationMode);
     }
 }
