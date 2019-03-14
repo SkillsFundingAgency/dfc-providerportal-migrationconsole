@@ -7,13 +7,13 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 {
     public static class MappingHelper
     {
-        public static Course MapTribalCourseToCourse(TribalCourse tribalCourse, int numberOfMonthsAgo, bool dummyMode, out List<string> mappingMessages, out bool courseTooOldDoNotMigrate)
+        public static Course MapTribalCourseToCourse(TribalCourse tribalCourse, int numberOfMonthsAgo, bool dummyMode, out List<string> mappingMessages, out bool courseNOTtoBeMigrated)
         {
             var course = new Course();
             var courseRuns = new List<CourseRun>();
             mappingMessages = new List<string>();
-            courseTooOldDoNotMigrate = false;
-            var courseRunsToBeRemovedAsTooOld = new List<CourseRun>();
+            courseNOTtoBeMigrated = false;
+            //var courseRunsToBeRemovedAsTooOld = new List<CourseRun>();
 
             foreach (var tribalCourseRun in tribalCourse.TribalCourseRuns)
             {
@@ -24,16 +24,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 //tribalCourseRun.DurationUnit = TribalDurationUnit.Terms;
                 //tribalCourseRun.StudyMode = TribalStudyMode.PartOfAFulltimeProgram;
                 //tribalCourseRun.AttendancePattern = TribalAttendancePattern.Customised;
-
-                // It's need it, because of the VenueId Check
-                if (tribalCourseRun.RecordStatus.Equals(RecordStatus.MigrationPending))
-                {
-                    courseRun.RecordStatus = RecordStatus.MigrationPending;
-                }
-                else
-                {
-                    courseRun.RecordStatus = RecordStatus.Live;
-                }
                 
                 courseRun.id = Guid.NewGuid();
                 courseRun.CourseInstanceId = tribalCourseRun.CourseInstanceId;
@@ -62,7 +52,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case AttendanceType.Undefined:
                     default:
                         courseRun.DeliveryMode = DeliveryMode.Undefined;
-                        if(!dummyMode) courseRun.RecordStatus = RecordStatus.MigrationPending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
                                             $"because your AttendanceType is set to { tribalCourseRun.AttendanceType } and we don't have it" + Environment.NewLine);
                         break;
@@ -73,30 +62,27 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 //tribalCourseRun.StartDate = DateTime.Now.AddMonths(-5);
                 if (tribalCourseRun.StartDate != null && tribalCourseRun.StartDate > DateTime.MinValue)
                 {
-                    if(tribalCourseRun.StartDate >= (DateTime.Now.AddMonths(-numberOfMonthsAgo)))
-                    {
-                        courseRun.StartDate = tribalCourseRun.StartDate;
-                        courseRun.FlexibleStartDate = false;
-                    }
-                    else
-                    {
-                        //courseRunsIsTooOld.Add(true);
-                        courseRunsToBeRemovedAsTooOld.Add(courseRun);
-                        mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was REMOVED " +
-                                            $"because the CourseRun StartDate ( { tribalCourseRun.StartDate.Value.ToShortDateString() } ) was more than 3 months ago and we didn't migrate it" + Environment.NewLine);
-                    }
+                    courseRun.StartDate = tribalCourseRun.StartDate;
+                    courseRun.FlexibleStartDate = false;
+
+                    //if (tribalCourseRun.StartDate >= (DateTime.Now.AddMonths(-numberOfMonthsAgo)))
+                    //{
+                    //    courseRun.StartDate = tribalCourseRun.StartDate;
+                    //    courseRun.FlexibleStartDate = false;
+                    //}
+                    //else
+                    //{
+                    //    //courseRunsIsTooOld.Add(true);
+                    //    courseRunsToBeRemovedAsTooOld.Add(courseRun);
+                    //    mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was REMOVED " +
+                    //                        $"because the CourseRun StartDate ( { tribalCourseRun.StartDate.Value.ToShortDateString() } ) was more than 3 months ago and we didn't migrate it" + Environment.NewLine);
+                    //}
                 }
-                //else if (tribalCourseRun.StartDateDescription.Contains("Flexible", StringComparison.InvariantCultureIgnoreCase)) // Considering Data in StartDateDescription field
-                //{
-                //    courseRun.StartDate = null;
-                //    courseRun.FlexibleStartDate = true;
-                //}
                 else
                 {
                     // latest decision Imran & Mark C. 
                     courseRun.StartDate = null;
                     courseRun.FlexibleStartDate = false;
-                    if (!dummyMode) courseRun.RecordStatus = RecordStatus.MigrationPending;
                     mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was set to Pending, because it didn't have StartDate " + Environment.NewLine);
                 }
 
@@ -147,7 +133,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case TribalDurationUnit.Semesters:
                         courseRun.DurationValue = tribalCourseRun.DurationValue;
                         courseRun.DurationUnit = DurationUnit.Undefined;
-                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.MigrationPending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was set to DurationUnit = Semesters " +
                                            $"and  DurationValue = { tribalCourseRun.DurationValue }. We preserved the DurationValue = { courseRun.DurationValue }, but you need to select available DurationUnit and change the DurationValue accordingly." + Environment.NewLine);
                         break;
@@ -178,7 +163,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case TribalDurationUnit.Undefined:
                     default:
                         courseRun.DurationUnit = DurationUnit.Undefined;
-                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.MigrationPending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
                                             $"because your DurationUnit is set to { tribalCourseRun.DurationUnit } and we don't have it" + Environment.NewLine);
                         break;
@@ -201,7 +185,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case TribalStudyMode.Undefined:
                     default:
                         courseRun.StudyMode = StudyMode.Undefined;
-                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.MigrationPending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING " +
                                             $"because your StudyMode is set to { tribalCourseRun.StudyMode } and we don't have it" + Environment.NewLine); 
                         break;
@@ -228,7 +211,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     case TribalAttendancePattern.Undefined:
                     default:
                         courseRun.AttendancePattern = AttendancePattern.Undefined;
-                        if (!dummyMode) courseRun.RecordStatus = RecordStatus.MigrationPending;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' is set to PENDING, " +
                                             $"because your AttendancePattern is set to { tribalCourseRun.AttendancePattern } and we don't have it" + Environment.NewLine);
                         break;
@@ -244,7 +226,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             course.CourseId = tribalCourse.CourseId;
             course.QualificationCourseTitle = tribalCourse.CourseTitle;
             course.LearnAimRef = tribalCourse.LearningAimRefId;
-            //course.NotionalNVQLevelv2 = tribalCourse.QualificationLevelId.Equals(0) ? string.Empty : tribalCourse.QualificationLevelId.ToString();
             course.NotionalNVQLevelv2 = tribalCourse.QualificationLevelIdString;
             course.AwardOrgCode = tribalCourse.LearningAimAwardOrgCode;
             course.QualificationType = tribalCourse.Qualification;
@@ -258,32 +239,22 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             course.WhereNext = tribalCourse.WhereNext;
             course.AdvancedLearnerLoan = tribalCourse.AdvancedLearnerLoan;
             course.AdultEducationBudget = false; // WE don't have the data/or rule for it.
-
+            course.CreatedDate = DateTime.Now;
+            course.CreatedBy = "DFC – Course Migration Tool";
             // Removing CourseRuns, which are older than 3 (configurable) months
-            foreach(var courseRunToBeRemovedAsTooOld in courseRunsToBeRemovedAsTooOld)
-            {
-                courseRuns.Remove(courseRunToBeRemovedAsTooOld);
-            }
-            
+            //foreach(var courseRunToBeRemovedAsTooOld in courseRunsToBeRemovedAsTooOld)
+            //{
+            //    courseRuns.Remove(courseRunToBeRemovedAsTooOld);
+            //}
+
             if (courseRuns != null && courseRuns.Count > 0)
             {
-                course.CourseRuns = courseRuns;
-
-                if (string.IsNullOrEmpty(course.CourseDescription))
-                {
-                    course.IsValid = false;
-                }
-                else
-                {
-                    course.IsValid = true;
-                }
-
-                course.CreatedDate = DateTime.Now;
-                course.CreatedBy = "DFC – Course Migration Tool";
+                course.CourseRuns = courseRuns;               
             }
             else
             {
-                courseTooOldDoNotMigrate = true;
+                // We don't migrate courses without CourseRuns
+                courseNOTtoBeMigrated = true;
             }
            
             return course;

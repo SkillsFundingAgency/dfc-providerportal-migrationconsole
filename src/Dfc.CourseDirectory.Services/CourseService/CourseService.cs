@@ -331,8 +331,8 @@ namespace Dfc.CourseDirectory.Services.CourseService
                             validationMessages.Add($"Start Date should not be older than 3 months and not more than 2 years in the future");
                         break;
                     case ValidationMode.MigrateCourse:
-                        if (courseRun.StartDate < DateTime.Now.AddMonths(-3) || courseRun.StartDate > DateTime.Now.AddYears(2))
-                            validationMessages.Add($"Start Date should not be older than 3 months and not more than 2 years in the future");
+                        if (courseRun.StartDate > DateTime.Now.AddYears(2))
+                            validationMessages.Add($"Start Date should not be more than 2 years in the future");
                         break;
                     case ValidationMode.Undefined: // Question ???
                     default:

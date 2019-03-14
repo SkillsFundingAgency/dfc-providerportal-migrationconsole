@@ -437,6 +437,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             tribalCourse.Qualification = (string)CheckForDbNull(reader["Qualification"], string.Empty);
             tribalCourse.CourseSummary = (string)CheckForDbNull(reader["CourseSummary"], string.Empty);
             tribalCourse.EntryRequirements = (string)CheckForDbNull(reader["EntryRequirements"], string.Empty);
+            tribalCourse.EquipmentRequired = (string)CheckForDbNull(reader["EquipmentRequired"], string.Empty);
             tribalCourse.AssessmentMethod = (string)CheckForDbNull(reader["AssessmentMethod"], string.Empty);
             ////
             //tribalCourse.AdvancedLearnerLoan = // TODO:
