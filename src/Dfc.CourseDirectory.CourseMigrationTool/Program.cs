@@ -4,6 +4,7 @@ using Dfc.CourseDirectory.CourseMigrationTool.Models;
 using Dfc.CourseDirectory.Models.Enums;
 using Dfc.CourseDirectory.Models.Helpers;
 using Dfc.CourseDirectory.Models.Models.Courses;
+using Dfc.CourseDirectory.Models.Models.Providers;
 using Dfc.CourseDirectory.Models.Models.Venues;
 using Dfc.CourseDirectory.Services;
 using Dfc.CourseDirectory.Services.CourseService;
@@ -11,7 +12,9 @@ using Dfc.CourseDirectory.Services.CourseTextService;
 using Dfc.CourseDirectory.Services.Interfaces;
 using Dfc.CourseDirectory.Services.Interfaces.CourseService;
 using Dfc.CourseDirectory.Services.Interfaces.CourseTextService;
+using Dfc.CourseDirectory.Services.Interfaces.ProviderService;
 using Dfc.CourseDirectory.Services.Interfaces.VenueService;
+using Dfc.CourseDirectory.Services.ProviderService;
 using Dfc.CourseDirectory.Services.VenueService;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,6 +54,13 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                     }
                 )
                 .AddScoped<IVenueService, VenueService>()
+                .Configure<ProviderServiceSettings>(providerServiceSettingsOptions =>
+                {
+                    providerServiceSettingsOptions.ApiUrl = configuration.GetValue<string>("ProviderServiceSettings:ApiUrl");
+                    providerServiceSettingsOptions.ApiKey = configuration.GetValue<string>("ProviderServiceSettings:ApiKey");
+                }
+                )
+                .AddScoped<IProviderService, ProviderService>()
                  .Configure<LarsSearchSettings>(larsSearchSettingsOptions =>
                  {
                      larsSearchSettingsOptions.ApiUrl = configuration.GetValue<string>("LarsSearchSettings:ApiUrl");
@@ -106,6 +116,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             var larsSearchService = serviceProvider.GetService<ILarsSearchService>();
             var courseService = serviceProvider.GetService<ICourseService>();
             var courseTextService = serviceProvider.GetService<ICourseTextService>();
+            var providerService = serviceProvider.GetService<IProviderService>();
 
             logger.LogDebug("Log test.");
 
@@ -247,6 +258,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
 
             int CountAllCourses = 0;
+            //int CountAllCourseRunsToBeMigrated = 0;
             int CountAllCoursesGoodToMigrate = 0;
             int CountAllCoursesNotGoodToMigrate = 0;
             int CountAllCoursesPending = 0;
@@ -258,12 +270,14 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             int CountAllCourseRuns = 0;
             int CountAllCourseRunsLive = 0;
             int CountAllCourseRunsPending = 0;
+            int CountAllCourseRunsReadyToGoLive = 0;
 
             #endregion
 
             foreach (var providerUKPRN in providerUKPRNList)
             {
                 CountProviders++;
+                int CountCourseRunsToBeMigrated = 0;
                 int CountCourseInvalid = 0;
                 int CountCourseValid = 0;
                 int CountCourseGoodToMigrate = 0;
@@ -291,6 +305,58 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 string reportForProvider = $"for Provider '{ providerName }' with UKPRN  ( { providerUKPRN } )";
                 providerReport += reportForProvider + Environment.NewLine + Environment.NewLine;
                 providerReport += "________________________________________________________________________________" + Environment.NewLine + Environment.NewLine;
+
+
+                // Check whether Provider is Onboarded
+                var providerCriteria = new ProviderSearchCriteria(providerUKPRN.ToString());
+                var providerResult = Task.Run(async () => await providerService.GetProviderByPRNAsync(providerCriteria)).Result;
+
+                if (providerResult.IsSuccess && providerResult.HasValue)
+                {
+                    var providers = providerResult.Value.Value;
+                    if (providers.Count().Equals(1))
+                    {
+                        var provider = providers.FirstOrDefault();
+                        if (provider.Status.Equals(Status.Onboarded))
+                        {
+                            // Everyting is great Provider is Onborded
+                        }
+                        else
+                        {
+                            if (provider.ProviderStatus.Equals("Active", StringComparison.InvariantCultureIgnoreCase)
+                                || provider.ProviderStatus.Equals("Verified", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                // Onboard the Provider
+                                ProviderAdd providerOnboard = new ProviderAdd(provider.id, (int)Status.Onboarded, "DFC – Course Migration Tool");
+                                var resultProviderOnboard = Task.Run(async () => await providerService.AddProviderAsync(providerOnboard)).Result;
+                                if (resultProviderOnboard.IsSuccess && resultProviderOnboard.HasValue)
+                                {
+                                    // GOOD "Provider Onboarded.";
+                                }
+                                else
+                                {
+                                    // BAD 
+                                }
+                            }
+                            else
+                            {
+                                // Provider cannot be Onboarded
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Something wrong with getting the Provider
+                    }
+
+                }
+                else
+                {
+                    // Could not find the Provider => result.Error
+                }
+
+
+
 
                 if (deleteCoursesByUKPRN)
                 {
@@ -419,6 +485,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
                             if (tribalCourseRuns != null && tribalCourseRuns.Count > 0)
                             {
+                                CountCourseRunsToBeMigrated = CountCourseRunsToBeMigrated + tribalCourseRuns.Count;
                                 tribalCourse.TribalCourseRuns = tribalCourseRuns;
                                 foreach (var tribalCourseRun in tribalCourse.TribalCourseRuns)
                                 {
@@ -464,8 +531,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                 }
                                 else
                                 {                                
-                                    
-
                                     // Validate Course
                                     var courseValidationMessages = courseService.ValidateCourse(course);
                                     course.IsValid = courseValidationMessages.Any() ? false : true;
@@ -590,7 +655,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 CountCourseGoodToMigrate = tribalCourses.Count - CountCourseNotGoodToMigrate;
                 providerReport += "________________________________________________________________________________" + Environment.NewLine + Environment.NewLine;
 
-                string coursesToBeMigrated = $"( { tribalCourses.Count } ) Courses to be migrated ";
+                string coursesToBeMigrated = $"( { tribalCourses.Count } ) Courses with ( { CountCourseRunsToBeMigrated } ) CourseRuns to be migrated ";
                 if (tribalCourses.Count.Equals(0))
                 {
                     CountProvidersNotGoodToMigrate++;
@@ -648,6 +713,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 CountAllCourseRuns = CountAllCourseRuns + CountProviderCourseRuns;
                 CountAllCourseRunsLive = CountAllCourseRunsLive + CountProviderCourseRunsLive;
                 CountAllCourseRunsPending = CountAllCourseRunsPending + CountProviderCourseRunsPending;
+                CountAllCourseRunsReadyToGoLive = CountAllCourseRunsReadyToGoLive + CountProviderCourseRunsReadyToGoLive;
             }
 
             // Finish Admin Report
@@ -659,7 +725,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             adminReport += $"Total number of Courses processed ( { CountAllCourses } )." + Environment.NewLine;
             adminReport += $"Total number of GOOD to migrate Courses ( { CountAllCoursesGoodToMigrate} ) and total number of NOT good to migrate courses ( { CountAllCoursesNotGoodToMigrate } )" + Environment.NewLine;
             adminReport += $"Total number of GOOD to migrate Courses with Invalid status  ( { CountAllCoursesPending} ) and Valid status ( { CountAllCoursesLive } )" + Environment.NewLine;
-            adminReport += $"Total number of GOOD to migrate CourseRuns ( { CountAllCourseRuns } ) with MigrationPending status  ( { CountAllCourseRunsPending } ) and Live status ( { CountAllCourseRunsLive } )" + Environment.NewLine;
+            adminReport += $"Total number of GOOD to migrate CourseRuns ( { CountAllCourseRuns } ) with Live status ( { CountAllCourseRunsLive } ), MigrationPending status  ( { CountAllCourseRunsPending } ) and MigrationReadyToGoLive status  ( { CountAllCourseRunsReadyToGoLive } )" + Environment.NewLine;
             adminReport += $"Total number of courses migrated ( { CountCourseMigrationSuccess } ) and total number of NOT migrated courses ( { CountCourseMigrationFailure } )" + Environment.NewLine;
 
             string adminReportFileName = string.Empty;
