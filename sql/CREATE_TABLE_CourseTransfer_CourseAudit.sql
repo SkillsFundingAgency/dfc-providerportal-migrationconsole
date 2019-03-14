@@ -18,6 +18,7 @@ CREATE TABLE [dbo].[CourseTransfer_CourseAudit](
 	[CourseRuns] [int] NULL,
 	[CourseRunsLive] [int] NULL,
 	[CourseRunsPending] [int] NULL,
+	[CourseRunsReadyToGoLive] [int] NULL,
 	[MigrationSuccess] [int] NULL,
 	[CourseMigrationNote] [nvarchar](max) NULL,
  CONSTRAINT [PK_CourseTransfer_CourseAudit] PRIMARY KEY CLUSTERED 

@@ -221,6 +221,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                                                            int courseRuns,
                                                            int courseRunsLive,
                                                            int courseRunsPending,
+                                                           int courseRunsReadyToGoLive,
                                                            int migrationSuccess,
                                                            string courseMigrationNote,
                                                            out string errorMessageCourseAuditAdd)
@@ -257,6 +258,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 
                     command.Parameters.Add(new SqlParameter("@CourseRunsPending", SqlDbType.Int));
                     command.Parameters["@CourseRunsPending"].Value = courseRunsPending;
+
+                    command.Parameters.Add(new SqlParameter("@CourseRunsReadyToGoLive", SqlDbType.Int));
+                    command.Parameters["@CourseRunsReadyToGoLive"].Value = courseRunsReadyToGoLive;
 
                     command.Parameters.Add(new SqlParameter("@MigrationSuccess", SqlDbType.Int));
                     command.Parameters["@MigrationSuccess"].Value = migrationSuccess;

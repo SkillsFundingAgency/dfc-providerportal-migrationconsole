@@ -576,6 +576,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                                GetCourseRunsCount(course?.CourseRuns),
                                                courseRunsLive,
                                                courseRunsPending,
+                                               courseRunsReadyToGoLive,
                                                (int)migrationSuccess,
                                                courseReport,
                                                out errorMessageCourseAuditAdd);

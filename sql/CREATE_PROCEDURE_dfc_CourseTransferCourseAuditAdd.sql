@@ -22,7 +22,8 @@ CREATE PROCEDURE [dbo].[dfc_CourseTransferCourseAuditAdd]
            ,@CourseRecordStatus int
            ,@CourseRuns int
            ,@CourseRunsLive int
-           ,@CourseRunsPending int
+           ,@CourseRunsPending INT
+           ,@CourseRunsReadyToGoLive int
            ,@MigrationSuccess int
            ,@CourseMigrationNote nvarchar(max)
 )
@@ -38,6 +39,7 @@ INSERT INTO [CourseTransfer_CourseAudit]
            ,[CourseRuns]
            ,[CourseRunsLive]
            ,[CourseRunsPending]
+		   ,[CourseRunsReadyToGoLive]
            ,[MigrationSuccess]
            ,[CourseMigrationNote])
      VALUES
@@ -49,6 +51,7 @@ INSERT INTO [CourseTransfer_CourseAudit]
            ,@CourseRuns
            ,@CourseRunsLive
            ,@CourseRunsPending
+		   ,@CourseRunsReadyToGoLive
            ,@MigrationSuccess
            ,@CourseMigrationNote)
 
