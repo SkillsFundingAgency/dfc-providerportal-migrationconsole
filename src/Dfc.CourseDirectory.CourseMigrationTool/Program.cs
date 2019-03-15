@@ -319,7 +319,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                         var provider = providers.FirstOrDefault();
                         if (provider.Status.Equals(Status.Onboarded))
                         {
-                            // Everyting is great Provider is Onborded
+                            providerReport += $"Provider WAS already ONBOARDED" + Environment.NewLine + Environment.NewLine;
                         }
                         else
                         {
@@ -331,28 +331,28 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                 var resultProviderOnboard = Task.Run(async () => await providerService.AddProviderAsync(providerOnboard)).Result;
                                 if (resultProviderOnboard.IsSuccess && resultProviderOnboard.HasValue)
                                 {
-                                    // GOOD "Provider Onboarded.";
+                                    providerReport += $"We HAVE ONBOARDED the Provider" + Environment.NewLine + Environment.NewLine;
                                 }
                                 else
                                 {
-                                    // BAD 
+                                    providerReport += $"ERROR on ONBOARDING the Provider - { resultProviderOnboard.Error }" + Environment.NewLine + Environment.NewLine;
                                 }
                             }
                             else
                             {
-                                // Provider cannot be Onboarded
+                                providerReport += $"Provider CANNOT be ONBOARDED" + Environment.NewLine + Environment.NewLine;
                             }
                         }
                     }
                     else
                     {
-                        // Something wrong with getting the Provider
+                        providerReport += $"We CANNOT IDENTIFY the Provider - " + Environment.NewLine + Environment.NewLine;
                     }
 
                 }
                 else
                 {
-                    // Could not find the Provider => result.Error
+                    providerReport += $"ERROR on GETTING the Provider - { providerResult.Error }" + Environment.NewLine + Environment.NewLine;
                 }
 
 
