@@ -131,7 +131,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             //TransferMethod transferMethod = configuration.GetValue<TransferMethod>("TransferMethod");
             int numberOfMonthsAgo = configuration.GetValue<int>("NumberOfMonthsAgo");
             bool dummyMode = configuration.GetValue<bool>("DummyMode");
-            bool deleteCoursesByUKPRN = configuration.GetValue<bool>("DeleteCoursesByUKPRN");
+            bool DeleteCoursesByUKPRN = configuration.GetValue<bool>("DeleteCoursesByUKPRN");
+            bool EnableProviderOnboarding = configuration.GetValue<bool>("EnableProviderOnboarding");
 
             #endregion 
 
@@ -244,10 +245,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                     providerUKPRNList = null;
                 }
             }
-            else
-            {
-                // Do something
-            }
+
 
             Stopwatch adminStopWatch = new Stopwatch();
             adminStopWatch.Start();
@@ -307,58 +305,59 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 providerReport += "________________________________________________________________________________" + Environment.NewLine + Environment.NewLine;
 
 
-                // Check whether Provider is Onboarded
-                var providerCriteria = new ProviderSearchCriteria(providerUKPRN.ToString());
-                var providerResult = Task.Run(async () => await providerService.GetProviderByPRNAsync(providerCriteria)).Result;
-
-                if (providerResult.IsSuccess && providerResult.HasValue)
+                if (EnableProviderOnboarding)
                 {
-                    var providers = providerResult.Value.Value;
-                    if (providers.Count().Equals(1))
+                    // Check whether Provider is Onboarded
+                    var providerCriteria = new ProviderSearchCriteria(providerUKPRN.ToString());
+                    var providerResult = Task.Run(async () => await providerService.GetProviderByPRNAsync(providerCriteria)).Result;
+
+                    if (providerResult.IsSuccess && providerResult.HasValue)
                     {
-                        var provider = providers.FirstOrDefault();
-                        if (provider.Status.Equals(Status.Onboarded))
+                        var providers = providerResult.Value.Value;
+                        if (providers.Count().Equals(1))
                         {
-                            providerReport += $"Provider WAS already ONBOARDED" + Environment.NewLine + Environment.NewLine;
-                        }
-                        else
-                        {
-                            if (provider.ProviderStatus.Equals("Active", StringComparison.InvariantCultureIgnoreCase)
-                                || provider.ProviderStatus.Equals("Verified", StringComparison.InvariantCultureIgnoreCase))
+                            var provider = providers.FirstOrDefault();
+                            if (provider.Status.Equals(Status.Onboarded))
                             {
-                                // Onboard the Provider
-                                ProviderAdd providerOnboard = new ProviderAdd(provider.id, (int)Status.Onboarded, "DFC – Course Migration Tool");
-                                var resultProviderOnboard = Task.Run(async () => await providerService.AddProviderAsync(providerOnboard)).Result;
-                                if (resultProviderOnboard.IsSuccess && resultProviderOnboard.HasValue)
-                                {
-                                    providerReport += $"We HAVE ONBOARDED the Provider" + Environment.NewLine + Environment.NewLine;
-                                }
-                                else
-                                {
-                                    providerReport += $"ERROR on ONBOARDING the Provider - { resultProviderOnboard.Error }" + Environment.NewLine + Environment.NewLine;
-                                }
+                                providerReport += $"Provider WAS already ONBOARDED" + Environment.NewLine + Environment.NewLine;
                             }
                             else
                             {
-                                providerReport += $"Provider CANNOT be ONBOARDED" + Environment.NewLine + Environment.NewLine;
+                                if (provider.ProviderStatus.Equals("Active", StringComparison.InvariantCultureIgnoreCase)
+                                    || provider.ProviderStatus.Equals("Verified", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    // Onboard the Provider
+                                    ProviderAdd providerOnboard = new ProviderAdd(provider.id, (int)Status.Onboarded, "DFC – Course Migration Tool");
+                                    var resultProviderOnboard = Task.Run(async () => await providerService.AddProviderAsync(providerOnboard)).Result;
+                                    if (resultProviderOnboard.IsSuccess && resultProviderOnboard.HasValue)
+                                    {
+                                        providerReport += $"We HAVE ONBOARDED the Provider" + Environment.NewLine + Environment.NewLine;
+                                    }
+                                    else
+                                    {
+                                        providerReport += $"ERROR on ONBOARDING the Provider - { resultProviderOnboard.Error }" + Environment.NewLine + Environment.NewLine;
+                                    }
+                                }
+                                else
+                                {
+                                    providerReport += $"Provider CANNOT be ONBOARDED" + Environment.NewLine + Environment.NewLine;
+                                }
                             }
                         }
+                        else
+                        {
+                            providerReport += $"We CANNOT IDENTIFY the Provider - " + Environment.NewLine + Environment.NewLine;
+                        }
+
                     }
                     else
                     {
-                        providerReport += $"We CANNOT IDENTIFY the Provider - " + Environment.NewLine + Environment.NewLine;
+                        providerReport += $"ERROR on GETTING the Provider - { providerResult.Error }" + Environment.NewLine + Environment.NewLine;
                     }
-
-                }
-                else
-                {
-                    providerReport += $"ERROR on GETTING the Provider - { providerResult.Error }" + Environment.NewLine + Environment.NewLine;
                 }
 
 
-
-
-                if (deleteCoursesByUKPRN)
+                if (DeleteCoursesByUKPRN)
                 {
                     providerReport += $"ATTENTION - Existing Courses for Provider '{ providerName }' with UKPRN  ( { providerUKPRN } ) to be deleted." + Environment.NewLine;
 
@@ -594,13 +593,13 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                         if (courseResult.IsSuccess && courseResult.HasValue)
                                         {
                                             CountProviderCourseMigrationSuccess++;
-                                            courseReport += $"The course is migrated  " + Environment.NewLine;
+                                            courseReport += Environment.NewLine + $"The course is migrated  " + Environment.NewLine;
                                             migrationSuccess = MigrationSuccess.Success;
                                         }
                                         else
                                         {
                                             CountProviderCourseMigrationFailure++;
-                                            courseReport += $"The course is NOT migrated. Error -  { courseResult.Error }  " + Environment.NewLine;
+                                            courseReport += Environment.NewLine +  $"The course is NOT migrated. Error -  { courseResult.Error }  " + Environment.NewLine;
                                             migrationSuccess = MigrationSuccess.Failure;
                                         }
                                     }
