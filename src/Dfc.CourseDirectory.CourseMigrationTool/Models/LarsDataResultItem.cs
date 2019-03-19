@@ -1,5 +1,5 @@
 ﻿using Dfc.CourseDirectory.CourseMigrationTool.Interfaces;
-
+using System;
 
 namespace Dfc.CourseDirectory.CourseMigrationTool.Models
 {
@@ -10,5 +10,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Models
         public string NotionalNVQLevelv2 { get; set; }
         public string AwardOrgCode { get; set; }
         public string LearnAimRefTypeDesc { get; set; }
+        public DateTime? CertificationEndDate { get; set; }
     }
 }

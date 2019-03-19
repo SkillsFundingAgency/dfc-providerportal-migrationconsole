@@ -389,14 +389,15 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                     var migrationSuccess = new MigrationSuccess();
                     migrationSuccess = MigrationSuccess.Undefined;
 
-                    bool RemoveCourseWithBadLARS = false;
-
                     courseReport += Environment.NewLine + $">>> Course { tribalCourse.CourseId } LARS: { tribalCourse.LearningAimRefId } and Title ( { tribalCourse.CourseTitle } ) to be migrated " + Environment.NewLine;
+
+                    bool LARSlessCourse = false;
                     // DO NOT MIGRATE COURSES WITHOUT A LARS REFERENCE. WE WILL LOOK TO AUGMENT THIS DATA WITH AN ILR EXTRACT
                     if (string.IsNullOrEmpty(tribalCourse.LearningAimRefId))
                     {
-                        courseReport += $"ATTENTION - Course does NOT have LARS and will NOT be migrated - ATTENTION" + Environment.NewLine;
-                        CountCourseNotGoodToMigrate++;
+                        LARSlessCourse = true;
+                        courseReport += $"ATTENTION - Course does NOT have LARS - ATTENTION" + Environment.NewLine;
+                        //CountCourseNotGoodToMigrate++;
                     }
                     else
                     {
@@ -415,48 +416,58 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                     LearnAimRefTitle = item.LearnAimRefTitle,
                                     NotionalNVQLevelv2 = item.NotionalNVQLevelv2,
                                     AwardOrgCode = item.AwardOrgCode,
-                                    LearnAimRefTypeDesc = item.LearnAimRefTypeDesc
+                                    LearnAimRefTypeDesc = item.LearnAimRefTypeDesc,
+                                    CertificationEndDate = item.CertificationEndDate
                                 };
                                 qualifications.Add(larsDataResultItem);
                             }
 
                             if (qualifications.Count.Equals(0))
                             {
-                                RemoveCourseWithBadLARS = true;
-                                CountCourseNotGoodToMigrate++;
-                                courseReport += $"ATTENTION The course will NOT be migrated - We couldn't obtain LARS Data for LARS: { tribalCourse.LearningAimRefId }. LARS Service returns nothing." + Environment.NewLine;
+                                LARSlessCourse = true;
+                                //CountCourseNotGoodToMigrate++;
+                                courseReport += $"ATTENTION - We couldn't obtain LARS Data for LARS: { tribalCourse.LearningAimRefId }. LARS Service returns nothing." + Environment.NewLine;
                             }
                             else if (qualifications.Count.Equals(1))
                             {
-                                tribalCourse.CourseTitle = qualifications[0].LearnAimRefTitle;
-                                tribalCourse.QualificationLevelIdString = qualifications[0].NotionalNVQLevelv2;
-                                tribalCourse.LearningAimAwardOrgCode = qualifications[0].AwardOrgCode;
-                                tribalCourse.Qualification = qualifications[0].LearnAimRefTypeDesc;
-
-                                // We continue only if we could much LARS
+                                if (qualifications[0].CertificationEndDate != null && qualifications[0].CertificationEndDate < DateTime.Now)
+                                {
+                                    // Expired LARS
+                                    LARSlessCourse = true;
+                                    //CountCourseNotGoodToMigrate++;
+                                    courseReport += $"ATTENTION - LARS has expired for LARS: { tribalCourse.LearningAimRefId }. The CertificationEndDate is { qualifications[0].CertificationEndDate }" + Environment.NewLine;
+                                }
+                                else
+                                {
+                                    // We continue only if we could much LARS
+                                    tribalCourse.CourseTitle = qualifications[0].LearnAimRefTitle;
+                                    tribalCourse.QualificationLevelIdString = qualifications[0].NotionalNVQLevelv2;
+                                    tribalCourse.LearningAimAwardOrgCode = qualifications[0].AwardOrgCode;
+                                    tribalCourse.Qualification = qualifications[0].LearnAimRefTypeDesc;
+                                }                                                              
                             }
                             else
                             {
-                                RemoveCourseWithBadLARS = true;
-                                CountCourseNotGoodToMigrate++;
+                                LARSlessCourse = true;
+                                //CountCourseNotGoodToMigrate++;
                                 string logMoreQualifications = string.Empty;
                                 foreach (var qualification in qualifications)
                                 {
                                     logMoreQualifications += "( '" + qualification.LearnAimRefTitle + "' with Level " + qualification.NotionalNVQLevelv2 + " and AwardOrgCode " + qualification.AwardOrgCode + " ) ";
                                 }
-                                courseReport += $"ATTENTION The course will NOT be migrated - We retrieve multiple qualifications ( { qualifications.Count.ToString() } ) for the LARS { tribalCourse.LearningAimRefId }, which are { logMoreQualifications } " + Environment.NewLine;
+                                courseReport += $"ATTENTION - We retrieve multiple qualifications ( { qualifications.Count.ToString() } ) for the LARS { tribalCourse.LearningAimRefId }, which are { logMoreQualifications } " + Environment.NewLine;
                             }
                         }
                         else
                         {
-                            RemoveCourseWithBadLARS = true;
-                            CountCourseNotGoodToMigrate++;
-                            courseReport += $"ATTENTION The course will NOT be migrated - We couldn't retreive LARS data for LARS { tribalCourse.LearningAimRefId }, because of technical reason, Error: " + larsResult?.Error;
+                            LARSlessCourse = true;
+                            //CountCourseNotGoodToMigrate++;
+                            courseReport += $"ATTENTION - We couldn't retreive LARS data for LARS { tribalCourse.LearningAimRefId }, because of technical reason, Error: " + larsResult?.Error;
                         }
 
                         
                         // Do not migrate courses with BAD LARS
-                        if (!RemoveCourseWithBadLARS)
+                        if (!LARSlessCourse)
                         {
                             // If there is no CourseFor Text we getting it from CourseTextService
                             if (string.IsNullOrEmpty(tribalCourse.CourseSummary))

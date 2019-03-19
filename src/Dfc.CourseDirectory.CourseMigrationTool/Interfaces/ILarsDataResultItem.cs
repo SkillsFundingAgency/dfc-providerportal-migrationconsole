@@ -11,5 +11,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Interfaces
         string NotionalNVQLevelv2 { get; set; }
         string AwardOrgCode { get; set; }
         string LearnAimRefTypeDesc { get; set; }
+        DateTime? CertificationEndDate { get; set; }
     }
 }
