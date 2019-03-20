@@ -17,6 +17,7 @@ CREATE TABLE [dbo].[CourseTransfer_ProviderAudit](
 	[CoursesGoodToBeMigratedPending] [int] NULL,
 	[CoursesGoodToBeMigratedLive] [int] NULL,
 	[CoursesNotGoodToBeMigrated] [int] NULL,
+	[CoursesLARSless] [int] NULL,
 	[MigrationSuccesses] [int] NULL,
 	[MigrationFailures] [int] NULL,
 	[TimeTaken] [varchar](50) NULL,

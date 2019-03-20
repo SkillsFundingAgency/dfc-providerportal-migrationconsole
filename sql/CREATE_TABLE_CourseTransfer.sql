@@ -24,6 +24,7 @@ CREATE TABLE [dbo].[CourseTransfer](
 	[CountCoursesNotGoodToBeMigrated] [int] NULL,
 	[CountCoursesGoodToBeMigratedLive] [int] NULL,
 	[CountCoursesGoodToBeMigratedPending] [int] NULL,
+	[CountAllCoursesLARSless] [int] NULL,
 	[CountAllCoursesMigrated] [int] NULL,
 	[CountAllCoursesNotMigrated] [int] NULL,
 	[CompleteTransferDateTime] [datetime] NULL,

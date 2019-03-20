@@ -127,6 +127,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                                                 int countCoursesNotGoodToBeMigrated,
                                                 int countCoursesGoodToBeMigratedLive,
                                                 int countCoursesGoodToBeMigratedPending,
+                                                int countAllCoursesLARSless,
                                                 int countAllCoursesMigrated,
                                                 int countAllCoursesNotMigrated,
                                                 DateTime completeTransferDateTime,
@@ -172,6 +173,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 
                     command.Parameters.Add(new SqlParameter("@CountCoursesGoodToBeMigratedPending", SqlDbType.Int));
                     command.Parameters["@CountCoursesGoodToBeMigratedPending"].Value = countCoursesGoodToBeMigratedPending;
+
+                    command.Parameters.Add(new SqlParameter("@CountAllCoursesLARSless", SqlDbType.Int));
+                    command.Parameters["@CountAllCoursesLARSless"].Value = countAllCoursesLARSless;
 
                     command.Parameters.Add(new SqlParameter("@CountAllCoursesMigrated", SqlDbType.Int));
                     command.Parameters["@CountAllCoursesMigrated"].Value = countAllCoursesMigrated;
@@ -222,6 +226,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                                                            int courseRunsLive,
                                                            int courseRunsPending,
                                                            int courseRunsReadyToGoLive,
+                                                           int courseRunsLARSless,
                                                            int migrationSuccess,
                                                            string courseMigrationNote,
                                                            out string errorMessageCourseAuditAdd)
@@ -262,6 +267,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                     command.Parameters.Add(new SqlParameter("@CourseRunsReadyToGoLive", SqlDbType.Int));
                     command.Parameters["@CourseRunsReadyToGoLive"].Value = courseRunsReadyToGoLive;
 
+                    command.Parameters.Add(new SqlParameter("@CourseRunsLARSless", SqlDbType.Int));
+                    command.Parameters["@CourseRunsLARSless"].Value = courseRunsLARSless;
+
                     command.Parameters.Add(new SqlParameter("@MigrationSuccess", SqlDbType.Int));
                     command.Parameters["@MigrationSuccess"].Value = migrationSuccess;
 
@@ -295,6 +303,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                                                            int coursesGoodToBeMigratedPending,
                                                            int coursesGoodToBeMigratedLive,
                                                            int coursesNotGoodToBeMigrated,
+                                                           int coursesLARSless,
                                                            int migrationSuccesses,
                                                            int migrationFailures,
                                                            string providerReportFileName,
@@ -331,6 +340,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 
                     command.Parameters.Add(new SqlParameter("@CoursesNotGoodToBeMigrated", SqlDbType.Int));
                     command.Parameters["@CoursesNotGoodToBeMigrated"].Value = coursesNotGoodToBeMigrated;
+
+                    command.Parameters.Add(new SqlParameter("@CoursesLARSless", SqlDbType.Int));
+                    command.Parameters["@CoursesLARSless"].Value = coursesLARSless;
 
                     command.Parameters.Add(new SqlParameter("@MigrationSuccesses", SqlDbType.Int));
                     command.Parameters["@MigrationSuccesses"].Value = migrationSuccesses;

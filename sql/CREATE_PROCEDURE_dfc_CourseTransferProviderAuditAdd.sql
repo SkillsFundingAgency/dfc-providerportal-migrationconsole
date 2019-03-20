@@ -21,7 +21,8 @@ CREATE PROCEDURE [dbo].[dfc_CourseTransferProviderAuditAdd]
            ,@CoursesGoodToBeMigrated int
            ,@CoursesGoodToBeMigratedPending int
            ,@CoursesGoodToBeMigratedLive int
-           ,@CoursesNotGoodToBeMigrated int
+           ,@CoursesNotGoodToBeMigrated INT
+           ,@CoursesLARSless int
            ,@MigrationSuccesses int
            ,@MigrationFailures int
            ,@ProviderReportFileName varchar(255)
@@ -39,6 +40,7 @@ BEGIN
            ,[CoursesGoodToBeMigratedPending]
            ,[CoursesGoodToBeMigratedLive]
            ,[CoursesNotGoodToBeMigrated]
+		   ,[CoursesLARSless]
            ,[MigrationSuccesses]
            ,[MigrationFailures]
            ,[ProviderReportFileName]
@@ -52,6 +54,7 @@ BEGIN
            ,@CoursesGoodToBeMigratedPending
            ,@CoursesGoodToBeMigratedLive
            ,@CoursesNotGoodToBeMigrated
+		   ,@CoursesLARSless
            ,@MigrationSuccesses
            ,@MigrationFailures
            ,@ProviderReportFileName

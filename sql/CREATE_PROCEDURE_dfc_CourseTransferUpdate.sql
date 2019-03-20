@@ -23,7 +23,8 @@ CREATE PROCEDURE [dbo].[dfc_CourseTransferUpdate]
       ,@CountCoursesGoodToBeMigrated int
       ,@CountCoursesNotGoodToBeMigrated int
       ,@CountCoursesGoodToBeMigratedLive int
-      ,@CountCoursesGoodToBeMigratedPending int
+      ,@CountCoursesGoodToBeMigratedPending INT
+      ,@CountAllCoursesLARSless int
       ,@CountAllCoursesMigrated int
       ,@CountAllCoursesNotMigrated int
       ,@CompleteTransferDateTime datetime
@@ -44,6 +45,7 @@ BEGIN
       ,[CountCoursesNotGoodToBeMigrated] = @CountCoursesNotGoodToBeMigrated
       ,[CountCoursesGoodToBeMigratedLive] = @CountCoursesGoodToBeMigratedLive
       ,[CountCoursesGoodToBeMigratedPending] = @CountCoursesGoodToBeMigratedPending
+	  ,[CountAllCoursesLARSless] = @CountAllCoursesLARSless
       ,[CountAllCoursesMigrated] = @CountAllCoursesMigrated
       ,[CountAllCoursesNotMigrated] = @CountAllCoursesNotMigrated
       ,[CompleteTransferDateTime] = @CompleteTransferDateTime
