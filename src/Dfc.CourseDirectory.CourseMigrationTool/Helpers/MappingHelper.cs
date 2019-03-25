@@ -131,10 +131,11 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         //                    $"We preserved the DurationValue, but you have to set appropriate DurationUnit and change the DurationValue accordingly" + Environment.NewLine);
                         break;
                     case TribalDurationUnit.Semesters:
-                        courseRun.DurationValue = tribalCourseRun.DurationValue;
+                        courseRun.DurationValue = tribalCourseRun.DurationValue;  // New requirement - null
                         courseRun.DurationUnit = DurationUnit.Undefined;
                         mappingMessages.Add($"ATTENTION - CourseRun { tribalCourseRun.CourseInstanceId } with Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' was set to DurationUnit = Semesters " +
-                                           $"and  DurationValue = { tribalCourseRun.DurationValue }. We preserved the DurationValue = { courseRun.DurationValue }, but you need to select available DurationUnit and change the DurationValue accordingly." + Environment.NewLine);
+                                            $"and  DurationValue = { tribalCourseRun.DurationValue }. We preserved the DurationValue = { courseRun.DurationValue }, but you need to select available DurationUnit and change the DurationValue accordingly." + Environment.NewLine);
+                                          //$"and  DurationValue = { tribalCourseRun.DurationValue }. 'Semester' DurationUnit is not supported." + Environment.NewLine);
                         break;
                     /*
                                         case TribalDurationUnit.Semesters:
