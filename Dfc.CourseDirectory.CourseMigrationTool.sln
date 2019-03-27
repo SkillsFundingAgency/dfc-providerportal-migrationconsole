@@ -44,6 +44,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UsersRolesUKPRNs", "UsersRo
 		sql\UsersRolesUKPRNs\CREATE_TABLE_ProviderUser.sql = sql\UsersRolesUKPRNs\CREATE_TABLE_ProviderUser.sql
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CD-MigrationScripts", "CD-MigrationScripts", "{26367CA2-ECB6-4028-959E-BD48D7981ABF}"
+	ProjectSection(SolutionItems) = preProject
+		sql\CD-MigrationScripts\CD-MigrationScripts.sql = sql\CD-MigrationScripts\CD-MigrationScripts.sql
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,6 +81,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0C865450-C651-49CF-8D79-18C9E2566F58} = {84C1F5AF-3719-4E01-9E21-8E546B5D2174}
+		{26367CA2-ECB6-4028-959E-BD48D7981ABF} = {84C1F5AF-3719-4E01-9E21-8E546B5D2174}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {39CDC23F-858E-4296-8FE4-FDC7F22FE61C}
