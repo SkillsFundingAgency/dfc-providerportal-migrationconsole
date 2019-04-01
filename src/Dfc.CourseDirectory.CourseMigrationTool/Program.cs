@@ -253,6 +253,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
             Stopwatch adminStopWatch = new Stopwatch();
             adminStopWatch.Start();
+            Stopwatch provStopWatch = new Stopwatch();
+            provStopWatch.Start();
 
             int CountProviders = 0;
             //int CountProvidersGoodToMigrate = 0;
@@ -281,6 +283,13 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             foreach (var providerUKPRN in providerUKPRNList)
             {
                 CountProviders++;
+                Console.WriteLine("Doing: " + providerUKPRN.ToString());
+                Console.WriteLine("Count: " + CountProviders.ToString());
+                provStopWatch.Stop();
+                //string formatedStopWatchElapsedTime = string.Format("{0:D2}:{1:D2}:{2:D2}:{3:D2}:{4:D3}", stopWatch.Elapsed.Days, stopWatch.Elapsed.Hours, stopWatch.Elapsed.Minutes, stopWatch.Elapsed.Seconds, stopWatch.Elapsed.Milliseconds);
+                Console.WriteLine("Total time taken:" + provStopWatch.Elapsed.ToString());
+                provStopWatch.Start();
+
                 int CountCourseRunsToBeMigrated = 0;
                 int CountCourseInvalid = 0;
                 int CountCourseValid = 0;
