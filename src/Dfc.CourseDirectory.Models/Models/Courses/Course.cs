@@ -27,7 +27,6 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
         public bool AdultEducationBudget { get; set; }
         public bool AdvancedLearnerLoan { get; set; }    
         public IEnumerable<CourseRun> CourseRuns { get; set; }
-        //public RecordStatus RecordStatus { get; set; }
         public DateTime CreatedDate { get; set; }
         public string CreatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
