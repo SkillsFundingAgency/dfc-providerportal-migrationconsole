@@ -277,6 +277,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             int CountAllCourseRunsPending = 0;
             int CountAllCourseRunsReadyToGoLive = 0;
             int CountAllCourseRunsLARSless = 0;
+            int InvalidCharCount = 0;
 
             #endregion
 
@@ -301,6 +302,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 int CountProviderCourseRunsPending = 0;
                 int CountProviderCourseRunsReadyToGoLive = 0;
                 int CountProviderCourseRunsLARSless = 0;
+                //InvalidCharCount = 0;
 
 
                 string providerReport = "                         Migration Report " + Environment.NewLine;
@@ -561,7 +563,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                             courseReport += Environment.NewLine + $"Course Validation Messages:  " + Environment.NewLine; ;
                             foreach (var courseValidationMessage in courseValidationMessages)
                             {
-                                courseReport += courseValidationMessage + Environment.NewLine; ;
+                                courseReport += courseValidationMessage + Environment.NewLine;
+                                if (courseValidationMessage.Contains("invalid character")) InvalidCharCount++;
                             }
                             courseReport += Environment.NewLine + $"The Course IsValid property:  { course.IsValid } " + Environment.NewLine; ;
 
@@ -796,7 +799,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 Console.WriteLine("Total time taken:" + provStopWatch.Elapsed.ToString());
                 provStopWatch.Start();
             }
-
+           Console.WriteLine("Invalid Char count: " + InvalidCharCount.ToString());
             // Finish Admin Report
             adminReport += "________________________________________________________________________________" + Environment.NewLine + Environment.NewLine;
             adminStopWatch.Stop();
