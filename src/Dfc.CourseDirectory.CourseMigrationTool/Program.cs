@@ -527,7 +527,16 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
                                     if (venueResult.IsSuccess && venueResult.HasValue)
                                     {
-                                        tribalCourseRun.VenueGuidId = new Guid(((Venue)venueResult.Value).ID);
+                                        if (((Venue)venueResult.Value).Status.Equals(VenueStatus.Live))
+                                        {
+                                            tribalCourseRun.VenueGuidId = new Guid(((Venue)venueResult.Value).ID);
+                                        }
+                                        else
+                                        {
+                                            tribalCourseRun.RecordStatus = RecordStatus.MigrationPending;
+                                            courseReport += $"ATTENTION - Venue is not LIVE (The status is { ((Venue)venueResult.Value).Status }) for CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }', VenueId '{ tribalCourseRun.VenueId }'" + Environment.NewLine;
+                                        }
+                                        
                                     }
                                     else
                                     {
