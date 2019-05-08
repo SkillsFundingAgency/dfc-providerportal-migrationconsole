@@ -166,6 +166,9 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             }
             else
             {
+                Console.WriteLine("-------------------");
+                Console.WriteLine(" COURSES MIGRATION");
+                Console.WriteLine("-------------------");
                 Console.WriteLine("Please enter valid UKPRN to migrate courses for a single Provider" + Environment.NewLine + "or \"s\" to migrate courses for a selection of Providers:" + 
                                    Environment.NewLine + "(Ensure that you have created a folder named 'ProviderSelections' and placed your .csv file in it.)");
                 string providerInput = Console.ReadLine();

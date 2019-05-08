@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <RootNamespace>Dfc.CourseDirectory._ApprenticeshipMigrationTool</RootNamespace>
+    <RootNamespace>Dfc.CourseDirectory.ApprenticeshipMigrationTool</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,7 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Helpers\" />
+    <ProjectReference Include="..\Dfc.CourseDirectory.Models\Dfc.CourseDirectory.Models.csproj" />
+    <ProjectReference Include="..\Dfc.CourseDirectory.Services\Dfc.CourseDirectory.Services.csproj" />
   </ItemGroup>
 
 </Project>
