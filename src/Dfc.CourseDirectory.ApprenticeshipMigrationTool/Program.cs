@@ -210,7 +210,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
 
             foreach (var providerUKPRN in providerUKPRNList)
             {
-                Console.WriteLine(providerUKPRN);
+                Console.WriteLine("Provider - " + providerUKPRN);
             }
 
 
