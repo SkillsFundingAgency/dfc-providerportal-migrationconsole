@@ -19,7 +19,9 @@ namespace Dfc.CourseDirectory.Models.Interfaces.Venues
         string Town { get; }
         string County { get; }
         string PostCode { get; }
-        VenueStatus Status { get; }
+        decimal Latitude { get; set; }
+        decimal Longitude { get; set; }
+        VenueStatus Status { get; set; }
         DateTime DateAdded { get; }
         DateTime DateUpdated { get; }
         string UpdatedBy { get; }
