@@ -49,7 +49,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CD-MigrationScripts", "CD-M
 		sql\CD-MigrationScripts\CD-MigrationScripts.sql = sql\CD-MigrationScripts\CD-MigrationScripts.sql
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfc.CourseDirectory.ApprenticeshipMigrationTool", "src\Dfc.CourseDirectory.ApprenticeshipMigrationTool\Dfc.CourseDirectory.ApprenticeshipMigrationTool.csproj", "{25FAB0A2-7ABF-4E0C-A2D0-5DF0206DABC7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfc.CourseDirectory.ApprenticeshipMigrationTool", "src\Dfc.CourseDirectory.ApprenticeshipMigrationTool\Dfc.CourseDirectory.ApprenticeshipMigrationTool.csproj", "{25FAB0A2-7ABF-4E0C-A2D0-5DF0206DABC7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apprenticeships", "Apprenticeships", "{822094B2-261E-4078-9BD8-0DE6C61927F9}"
+	ProjectSection(SolutionItems) = preProject
+		sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetApprenticeshipsByProviderId.sql = sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetApprenticeshipsByProviderId.sql
+		sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetProviderDetailsByUKPRN.sql = sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetProviderDetailsByUKPRN.sql
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -88,6 +94,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{0C865450-C651-49CF-8D79-18C9E2566F58} = {84C1F5AF-3719-4E01-9E21-8E546B5D2174}
 		{26367CA2-ECB6-4028-959E-BD48D7981ABF} = {84C1F5AF-3719-4E01-9E21-8E546B5D2174}
+		{822094B2-261E-4078-9BD8-0DE6C61927F9} = {84C1F5AF-3719-4E01-9E21-8E546B5D2174}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {39CDC23F-858E-4296-8FE4-FDC7F22FE61C}

@@ -1,5 +1,6 @@
 ﻿using Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers;
 using Dfc.CourseDirectory.Models.Enums;
+using Dfc.CourseDirectory.Models.Models.Apprenticeships;
 using Dfc.CourseDirectory.Services.Interfaces.ProviderService;
 using Dfc.CourseDirectory.Services.Interfaces.VenueService;
 using Dfc.CourseDirectory.Services.ProviderService;
@@ -24,7 +25,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
 
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
             IConfigurationRoot configuration = builder.Build();
 
@@ -45,7 +46,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                     providerServiceSettingsOptions.ApiKey = configuration.GetValue<string>("ProviderServiceSettings:ApiKey");
                 }
                 )
-                .AddScoped<IProviderService, ProviderService>()              
+                .AddScoped<IProviderService, ProviderService>()
                 .BuildServiceProvider();
 
             // Configure console logging
@@ -211,6 +212,24 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
             foreach (var providerUKPRN in providerUKPRNList)
             {
                 Console.WriteLine("Provider - " + providerUKPRN);
+                // GetProviderDetailsByUKPRN
+
+                // GetApprenticeshipsByProviderId 
+                // Mapp Apprenticeships
+                var apprenticeships = new List<Apprenticeship>();
+
+                foreach(var apprenticeship in apprenticeships)
+                {
+                    // Get Framework/Standard GUID id => ????
+
+                    // Get ApprenticeshipLocation
+                    var apprenticeshipLocations = new List<ApprenticeshipLocation>();
+                    
+                    // Get ApprenticeshipLocationDeliveryMode
+
+
+                }
+
             }
 
 
