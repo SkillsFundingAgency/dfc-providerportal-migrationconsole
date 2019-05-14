@@ -20,11 +20,11 @@ namespace Dfc.CourseDirectory.Models.Models.Apprenticeships
     {
         [Description("Undefined")]
         Undefined = 0,
-        [Description("Classroom based")] // Venue
+        [Description("Classroom based")] // Venue - Location (preset redius)
         ClassroomBased = 1,
-        [Description("Employer based")] // Region
+        [Description("Employer based")] // Region/Subregion (preset redius)
         EmployerBased = 2,
-        [Description("Classroom based and employer based")] // Venue with added 
+        [Description("Classroom based and employer based")] // Venue (user set redious or preset national redious)
         ClassroomBasedAndEmployerBased = 3
     }
 

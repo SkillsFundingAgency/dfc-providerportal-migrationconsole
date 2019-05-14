@@ -1,4 +1,5 @@
 ﻿using Dfc.CourseDirectory.Models.Models.Courses;
+using Dfc.CourseDirectory.Models.Models.Providers;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -49,6 +50,69 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
                 }
             }
             return ukprnList;
+        }
+
+        public static Provider GetProviderDetailsByUKPRN(int ProviderUKPRN, string connectionString, out string errorMessageGetProviderDetailsByUKPRN)
+        {
+            var provider = new Provider(null, null, null);
+            errorMessageGetProviderDetailsByUKPRN = string.Empty;
+
+            using (var sqlConnection = new SqlConnection(connectionString))
+            {
+                using (var command = sqlConnection.CreateCommand())
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "dfc_GetProviderDetailsByUKPRN";
+
+                    command.Parameters.Add(new SqlParameter("@ProviderUKPRN", SqlDbType.Int));
+                    command.Parameters["@ProviderUKPRN"].Value = ProviderUKPRN;
+
+                    try
+                    {
+                        //Open connection.
+                        sqlConnection.Open();
+
+                        using (SqlDataReader dataReader = command.ExecuteReader())
+                        {
+                            while (dataReader.Read())
+                            {
+                                provider = ExtractProviderDetailsFromDbReader(dataReader);
+                            }
+                            // Close the SqlDataReader.
+                            dataReader.Close();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMessageGetProviderDetailsByUKPRN = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
+                    }
+                    finally
+                    {
+                        sqlConnection.Close();
+                    }
+                }
+            }
+
+            return provider;
+        }
+
+        public static Provider ExtractProviderDetailsFromDbReader(SqlDataReader reader)
+        {
+            Provider provider = new Provider(null, null, null);
+
+            provider.ProviderId = (int)CheckForDbNull(reader["ProviderId"], 0);
+            provider.ProviderName = (string)CheckForDbNull(reader["ProviderName"], string.Empty);
+            //provider.ProviderNameAlias = (string)CheckForDbNull(reader["ProviderNameAlias"], string.Empty);          
+            provider.TradingName = (string)CheckForDbNull(reader["TradingName"], string.Empty);
+            provider.UnitedKingdomProviderReferenceNumber = ((int)CheckForDbNull(reader["Ukprn"], 0)).ToString();
+            provider.UPIN = (int)CheckForDbNull(reader["UPIN"], 0);
+            //provider.Email = (string)CheckForDbNull(reader["Email"], string.Empty);
+            //provider.Website = (string)CheckForDbNull(reader["Website"], string.Empty);
+            //provider.Telephone = (string)CheckForDbNull(reader["Telephone"], string.Empty);
+            provider.MarketingInformation = (string)CheckForDbNull(reader["MarketingInformation"], string.Empty);
+            provider.NationalApprenticeshipProvider = (bool)CheckForDbNull(reader["NationalApprenticeshipProvider"], false);
+
+            return provider;
         }
 
         public static void CourseTransferAdd(string connectionString,

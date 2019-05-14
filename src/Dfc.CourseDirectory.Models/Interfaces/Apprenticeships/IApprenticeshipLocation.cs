@@ -10,11 +10,12 @@ namespace Dfc.CourseDirectory.Models.Interfaces.Apprenticeships
     {
         Guid id { get; set; } // Cosmos DB id
 
-        Guid LocationId { get; set; }
-        int? TribalLocationId { get; set; }
+        Guid? LocationId { get; set; }
+        int? ApiLocationId { get; set; }
         List<string> DeliveryModes { get; set; }
 
         ApprenticeshipLocationType ApprenticeshipLocationType { get; set; }
+        LocationType LocationType { get; set; }
 
         int? Radius { get; set; }
 

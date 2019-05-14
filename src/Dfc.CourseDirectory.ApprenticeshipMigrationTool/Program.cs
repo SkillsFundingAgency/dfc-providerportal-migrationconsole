@@ -213,23 +213,36 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
             {
                 Console.WriteLine("Provider - " + providerUKPRN);
                 // GetProviderDetailsByUKPRN
-
-                // GetApprenticeshipsByProviderId 
-                // Mapp Apprenticeships
-                var apprenticeships = new List<Apprenticeship>();
-
-                foreach(var apprenticeship in apprenticeships)
+                string errorMessageGetProviderDetailsByUKPRN = string.Empty;
+                var provider = DataHelper.GetProviderDetailsByUKPRN(providerUKPRN, connectionString, out errorMessageGetProviderDetailsByUKPRN);
+                if (!string.IsNullOrEmpty(errorMessageGetProviderDetailsByUKPRN))
                 {
-                    // Get Framework/Standard GUID id => ????
-
-                    // Get ApprenticeshipLocation
-                    var apprenticeshipLocations = new List<ApprenticeshipLocation>();
-                    
-                    // Get ApprenticeshipLocationDeliveryMode
-
-
+                    adminReport += errorMessageGetProviderDetailsByUKPRN + Environment.NewLine;
                 }
+                else
+                {
+                    // Update Provider
 
+                    // GetApprenticeshipsByProviderId 
+                    // Mapp Apprenticeships
+                    var apprenticeships = new List<Apprenticeship>();
+
+                    foreach (var apprenticeship in apprenticeships)
+                    {
+                        // Get Framework/Standard GUID id => ????
+
+                        // Get ApprenticeshipLocation
+                        var apprenticeshipLocations = new List<ApprenticeshipLocation>();
+
+                        // Get ApprenticeshipLocationDeliveryMode
+
+                        // Get Location per 
+
+                        // Checks locations / Add Locations
+
+                        // Add Apprenticeship to CosmosDB
+                    }
+                }
             }
 
 

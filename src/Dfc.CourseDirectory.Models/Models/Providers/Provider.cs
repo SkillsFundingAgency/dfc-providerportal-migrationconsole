@@ -22,15 +22,11 @@ namespace Dfc.CourseDirectory.Models.Models.Providers
 
         // Apprenticeship related
         public int? ProviderId { get; set; }
-        public int? UPIN { get; set; } // Needed to get LearnerSatisfaction & EmployerSatisfaction from FEChoices
+        public int? UPIN { get; set; } // Needed to get LearnerSatisfaction & EmployerSatisfaction from FEChoices        
         public string TradingName { get; set; }
         public bool NationalApprenticeshipProvider { get; set; }
         public string MarketingInformation { get; set; }
-        public string Email { get; set; }
-        public string Website { get; set; }
-        public string Telephone { get; set; }
-        public double? LearnerSatisfaction { get; set; }
-        public double? EmployerSatisfaction { get; set; }
+
 
         public Provider(Providercontact[] providercontact, Provideralias[] provideraliases, Verificationdetail[] verificationdetails)
         {
