@@ -1,4 +1,6 @@
-﻿using Dfc.CourseDirectory.Models.Models.Courses;
+﻿using Dfc.CourseDirectory.ApprenticeshipMigrationTool.Models;
+using Dfc.CourseDirectory.Models.Models.Apprenticeships;
+using Dfc.CourseDirectory.Models.Models.Courses;
 using Dfc.CourseDirectory.Models.Models.Providers;
 using System;
 using System.Collections.Generic;
@@ -52,9 +54,9 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
             return ukprnList;
         }
 
-        public static Provider GetProviderDetailsByUKPRN(int ProviderUKPRN, string connectionString, out string errorMessageGetProviderDetailsByUKPRN)
+        public static TribalProvider GetProviderDetailsByUKPRN(int ProviderUKPRN, string connectionString, out string errorMessageGetProviderDetailsByUKPRN)
         {
-            var provider = new Provider(null, null, null);
+            var provider = new TribalProvider();
             errorMessageGetProviderDetailsByUKPRN = string.Empty;
 
             using (var sqlConnection = new SqlConnection(connectionString))
@@ -96,23 +98,89 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
             return provider;
         }
 
-        public static Provider ExtractProviderDetailsFromDbReader(SqlDataReader reader)
+        public static TribalProvider ExtractProviderDetailsFromDbReader(SqlDataReader reader)
         {
-            Provider provider = new Provider(null, null, null);
+            TribalProvider provider = new TribalProvider();
 
             provider.ProviderId = (int)CheckForDbNull(reader["ProviderId"], 0);
             provider.ProviderName = (string)CheckForDbNull(reader["ProviderName"], string.Empty);
-            //provider.ProviderNameAlias = (string)CheckForDbNull(reader["ProviderNameAlias"], string.Empty);          
+            provider.ProviderNameAlias = (string)CheckForDbNull(reader["ProviderNameAlias"], string.Empty);          
             provider.TradingName = (string)CheckForDbNull(reader["TradingName"], string.Empty);
             provider.UnitedKingdomProviderReferenceNumber = ((int)CheckForDbNull(reader["Ukprn"], 0)).ToString();
             provider.UPIN = (int)CheckForDbNull(reader["UPIN"], 0);
-            //provider.Email = (string)CheckForDbNull(reader["Email"], string.Empty);
-            //provider.Website = (string)CheckForDbNull(reader["Website"], string.Empty);
-            //provider.Telephone = (string)CheckForDbNull(reader["Telephone"], string.Empty);
+            provider.Email = (string)CheckForDbNull(reader["Email"], string.Empty);
+            provider.Website = (string)CheckForDbNull(reader["Website"], string.Empty);
+            provider.Telephone = (string)CheckForDbNull(reader["Telephone"], string.Empty);
             provider.MarketingInformation = (string)CheckForDbNull(reader["MarketingInformation"], string.Empty);
             provider.NationalApprenticeshipProvider = (bool)CheckForDbNull(reader["NationalApprenticeshipProvider"], false);
 
             return provider;
+        }
+
+        public static List<Apprenticeship> GetApprenticeshipsByProviderId(int ProviderId, string connectionString, out string errorMessageGetApprenticeshipsByProviderId)
+        {
+            var apprenticeships = new List<Apprenticeship>();
+            errorMessageGetApprenticeshipsByProviderId = string.Empty;
+
+            using (var sqlConnection = new SqlConnection(connectionString))
+            {
+                using (var command = sqlConnection.CreateCommand())
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "dfc_GetApprenticeshipsByProviderId";
+
+                    command.Parameters.Add(new SqlParameter("@ProviderId", SqlDbType.Int));
+                    command.Parameters["@ProviderId"].Value = ProviderId;
+
+                    try
+                    {
+                        //Open connection.
+                        sqlConnection.Open();
+
+                        using (SqlDataReader dataReader = command.ExecuteReader())
+                        {
+                            while (dataReader.Read())
+                            {
+                                var apprenticeship = ExtractApprenticeshipsFromDbReader(dataReader);
+                                if (apprenticeship != null)
+                                    apprenticeships.Add(apprenticeship);
+                            }
+                            // Close the SqlDataReader.
+                            dataReader.Close();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMessageGetApprenticeshipsByProviderId = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
+                    }
+                    finally
+                    {
+                        sqlConnection.Close();
+                    }
+                }
+            }
+
+            return apprenticeships;
+        }
+
+        public static Apprenticeship ExtractApprenticeshipsFromDbReader(SqlDataReader reader)
+        {
+            Apprenticeship apprenticeship = new Apprenticeship();
+
+            apprenticeship.ApprenticeshipId = (int)CheckForDbNull(reader["ApprenticeshipId"], 0);
+            apprenticeship.TribalProviderId = (int)reader["ProviderId"];
+            apprenticeship.StandardCode = (int?)CheckForDbNull(reader["StandardCode"], null);
+            apprenticeship.Version = (int?)CheckForDbNull(reader["Version"], null);
+            apprenticeship.FrameworkCode = (int?)CheckForDbNull(reader["FrameworkCode"], null);
+            apprenticeship.ProgType = (int?)CheckForDbNull(reader["ProgType"], null);
+            apprenticeship.PathwayCode = (int?)CheckForDbNull(reader["PathwayCode"], null);
+            apprenticeship.MarketingInformation = (string)CheckForDbNull(reader["MarketingInformation"], string.Empty);
+            apprenticeship.Url = (string)CheckForDbNull(reader["Url"], string.Empty);
+            apprenticeship.ContactTelephone = (string)CheckForDbNull(reader["ContactTelephone"], string.Empty);
+            apprenticeship.ContactEmail = (string)CheckForDbNull(reader["ContactEmail"], string.Empty);
+            apprenticeship.ContactWebsite = (string)CheckForDbNull(reader["ContactWebsite"], string.Empty);
+
+            return apprenticeship;
         }
 
         public static void CourseTransferAdd(string connectionString,

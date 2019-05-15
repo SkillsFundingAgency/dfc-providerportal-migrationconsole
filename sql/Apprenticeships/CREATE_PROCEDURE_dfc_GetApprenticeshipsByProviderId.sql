@@ -37,7 +37,7 @@ BEGIN
       ,[ContactTelephone]
       ,[ContactEmail]
       ,[ContactWebsite]
-  FROM [Apprenticeship]
+  FROM [Tribal].[Apprenticeship]
   WHERE RecordStatusId = 2 AND ProviderId = @ProviderId
 
 END

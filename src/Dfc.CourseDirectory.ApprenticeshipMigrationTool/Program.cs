@@ -1,5 +1,7 @@
 ﻿using Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers;
+using Dfc.CourseDirectory.ApprenticeshipMigrationTool.Models;
 using Dfc.CourseDirectory.Models.Enums;
+using Dfc.CourseDirectory.Models.Interfaces.Providers;
 using Dfc.CourseDirectory.Models.Models.Apprenticeships;
 using Dfc.CourseDirectory.Services.Interfaces.ProviderService;
 using Dfc.CourseDirectory.Services.Interfaces.VenueService;
@@ -8,12 +10,15 @@ using Dfc.CourseDirectory.Services.VenueService;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
 {
@@ -66,13 +71,15 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
 
 
             string connectionString = configuration.GetConnectionString("DefaultConnection");
-            bool automatedMode = configuration.GetValue<bool>("AutomatedMode");
-            bool generateJsonFilesLocally = configuration.GetValue<bool>("GenerateJsonFilesLocally");
-            bool generateReportFilesLocally = configuration.GetValue<bool>("GenerateReportFilesLocally");
-            string jsonCourseFilesPath = configuration.GetValue<string>("JsonCourseFilesPath");
+            bool AutomatedMode = configuration.GetValue<bool>("AutomatedMode");
+            bool GenerateJsonFilesLocally = configuration.GetValue<bool>("GenerateJsonFilesLocally");
+            bool GenerateReportFilesLocally = configuration.GetValue<bool>("GenerateReportFilesLocally");
+            string JsonApprenticeshipFilesPath = configuration.GetValue<string>("JsonApprenticeshipFilesPath");
             string selectionOfProvidersFileName = configuration.GetValue<string>("SelectionOfProvidersFileName");
             DeploymentEnvironment deploymentEnvironment = configuration.GetValue<DeploymentEnvironment>("DeploymentEnvironment");
             //TransferMethod transferMethod = configuration.GetValue<TransferMethod>("TransferMethod");
+
+            bool UpdateProvider = configuration.GetValue<bool>("UpdateProvider");
 
 
             #endregion
@@ -92,7 +99,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
             int? singleProviderUKPRN = null;
             string bulkUploadFileName = string.Empty;
 
-            if (automatedMode)
+            if (AutomatedMode)
             {
                 Console.WriteLine("The Migration Apprenticeship Tool is running in Automated Mode." + Environment.NewLine + "Please, do not close this window until \"Migration completed\" message is displayed." + Environment.NewLine);
 
@@ -124,7 +131,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                 else if (providerInput.Equals("s", StringComparison.InvariantCultureIgnoreCase))
                 {
                     // Migrate selection of Providers from .CSV file
-                    string ProviderSelectionsPath = string.Format(@"{0}\ProviderSelections", jsonCourseFilesPath);
+                    string ProviderSelectionsPath = string.Format(@"{0}\ProviderSelections", JsonApprenticeshipFilesPath);
                     if (!Directory.Exists(ProviderSelectionsPath))
                         Directory.CreateDirectory(ProviderSelectionsPath);
                     string selectionOfProviderFile = string.Format(@"{0}\{1}", ProviderSelectionsPath, selectionOfProvidersFileName);
@@ -212,35 +219,144 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
             foreach (var providerUKPRN in providerUKPRNList)
             {
                 Console.WriteLine("Provider - " + providerUKPRN);
+                string providerReport = "                         Migration Report " + Environment.NewLine;
                 // GetProviderDetailsByUKPRN
                 string errorMessageGetProviderDetailsByUKPRN = string.Empty;
                 var provider = DataHelper.GetProviderDetailsByUKPRN(providerUKPRN, connectionString, out errorMessageGetProviderDetailsByUKPRN);
+                var ProviderGuidId = new Guid();
                 if (!string.IsNullOrEmpty(errorMessageGetProviderDetailsByUKPRN))
                 {
                     adminReport += errorMessageGetProviderDetailsByUKPRN + Environment.NewLine;
                 }
                 else
                 {
-                    // Update Provider
 
-                    // GetApprenticeshipsByProviderId 
-                    // Mapp Apprenticeships
-                    var apprenticeships = new List<Apprenticeship>();
 
-                    foreach (var apprenticeship in apprenticeships)
+                    var providerCriteria = new ProviderSearchCriteria(providerUKPRN.ToString());
+                    var providerResult = Task.Run(async () => await providerService.GetProviderByPRNAsync(providerCriteria)).Result;
+
+                    if (providerResult.IsSuccess && providerResult.HasValue)
                     {
-                        // Get Framework/Standard GUID id => ????
+                        var providers = providerResult.Value.Value;
+                        if (providers.Count().Equals(1))
+                        {
+                            var providerToUpdate = providers.FirstOrDefault();
+                            ProviderGuidId = providerToUpdate.id; // We need our Provider GUID id
 
-                        // Get ApprenticeshipLocation
-                        var apprenticeshipLocations = new List<ApprenticeshipLocation>();
+                            #region  Update Provider
 
-                        // Get ApprenticeshipLocationDeliveryMode
+                            if (UpdateProvider)
+                            {
+                                providerToUpdate.ProviderName = provider.ProviderName;
+                                providerToUpdate.TradingName = provider.TradingName;
+                                providerToUpdate.ProviderId = provider.ProviderId;
+                                providerToUpdate.UPIN = provider.UPIN;
+                                providerToUpdate.MarketingInformation = provider.MarketingInformation;
 
-                        // Get Location per 
+                                if (!string.IsNullOrEmpty(provider.ProviderNameAlias))
+                                {
+                                    if (providerToUpdate.ProviderAliases != null && providerToUpdate.ProviderAliases[0].ProviderAlias == null)
+                                    {
+                                        var providerAlias = new Provideralias();
+                                        providerAlias.ProviderAlias = provider.ProviderNameAlias;
+                                        providerAlias.LastUpdated = DateTime.Now;
+                                        providerToUpdate.ProviderAliases = new IProvideralias[] { providerAlias };
+                                    }
+                                }
 
-                        // Checks locations / Add Locations
+                                var ApprenticeshipProviderContact = new Providercontact();
+                                ApprenticeshipProviderContact.ContactType = "A";
+                                ApprenticeshipProviderContact.ContactTelephone1 = provider.Telephone;
+                                ApprenticeshipProviderContact.ContactEmail = provider.Email;
+                                ApprenticeshipProviderContact.ContactWebsiteAddress = provider.Website;
+                                ApprenticeshipProviderContact.LastUpdated = DateTime.Now;
+                                if (providerToUpdate.ProviderContact == null)
+                                {
+                                    providerToUpdate.ProviderContact = new IProvidercontact[] { ApprenticeshipProviderContact };
+                                }
+                                else
+                                {
+                                    providerToUpdate.ProviderContact = providerToUpdate.ProviderContact.Append(ApprenticeshipProviderContact).ToArray();
+                                }
 
-                        // Add Apprenticeship to CosmosDB
+
+                                if (GenerateJsonFilesLocally)
+                                {
+                                    var providerToUpdateJson = JsonConvert.SerializeObject(providerToUpdate);
+                                    string jsonUpdateProviderPathFileName = string.Format("{0}-UpdateProvider-{1}.json", DateTime.Now.ToString("yyMMdd-HHmmss"), providerToUpdate.UnitedKingdomProviderReferenceNumber);
+                                    string UpdateProviderPath = string.Format(@"{0}\UpdateProvider", JsonApprenticeshipFilesPath);
+                                    if (!Directory.Exists(UpdateProviderPath))
+                                        Directory.CreateDirectory(UpdateProviderPath);
+                                    File.WriteAllText(string.Format(@"{0}\{1}", UpdateProviderPath, jsonUpdateProviderPathFileName), providerToUpdateJson);
+                                }
+                                else
+                                {
+                                    // Call ProviderService API to update provider
+                                }
+                            }
+
+                            #endregion
+                        }
+                        else
+                        {
+                            providerReport += $"We CANNOT IDENTIFY the Provider - " + Environment.NewLine + Environment.NewLine;
+                        }
+                    }
+                    else
+                    {
+                        providerReport += $"ERROR on GETTING the Provider - { providerResult.Error }" + Environment.NewLine + Environment.NewLine;
+                    }
+
+                    // Get Apprenticeships by ProviderId                    
+                    string errorMessageGetApprenticeshipsByProviderId = string.Empty;
+                    var apprenticeships = DataHelper.GetApprenticeshipsByProviderId(provider.ProviderId ?? 0, connectionString, out errorMessageGetApprenticeshipsByProviderId);
+                    if (!string.IsNullOrEmpty(errorMessageGetApprenticeshipsByProviderId))
+                    {
+                        adminReport += errorMessageGetApprenticeshipsByProviderId + Environment.NewLine;
+                    }
+                    else
+                    {
+                        foreach (var apprenticeship in apprenticeships)
+                        {
+                            // // Mapp Apprenticeships
+                            apprenticeship.id = Guid.NewGuid();
+                            apprenticeship.ProviderId = ProviderGuidId;
+                            apprenticeship.ProviderUKPRN = providerUKPRN;
+
+                            apprenticeship.CreatedDate = DateTime.Now;
+                            apprenticeship.CreatedBy = "DFC – Apprenticeship Migration Tool";
+
+                            // Get Framework/Standard GUID id => ???? Call ReferenceData Service
+                            if (apprenticeship.FrameworkCode != null && apprenticeship.ProgType != null && apprenticeship.PathwayCode != null)
+                                apprenticeship.ApprenticeshipType = ApprenticeshipType.FrameworkCode;
+                            else if (apprenticeship.StandardCode != null && apprenticeship.Version != null)
+                                apprenticeship.ApprenticeshipType = ApprenticeshipType.StandardCode;
+                            else
+                                apprenticeship.ApprenticeshipType = ApprenticeshipType.Undefined;
+
+                            // Get ApprenticeshipLocation
+                            var apprenticeshipLocations = new List<ApprenticeshipLocation>();
+
+                            // Get ApprenticeshipLocationDeliveryMode
+
+                            // Get Location per 
+
+                            // Checks locations / Add Locations
+
+                            // Add Apprenticeship to CosmosDB
+                            if (GenerateJsonFilesLocally)
+                            {
+                                var apprenticeshipJson = JsonConvert.SerializeObject(apprenticeship);
+                                string jsonFileName = string.Format("{0}-Apprenticeship-{1}-{2}-{3}.json", DateTime.Now.ToString("yyMMdd-HHmmss"), providerUKPRN, apprenticeship.ApprenticeshipId, apprenticeship?.ApprenticeshipLocations?.Count());
+                                if (!Directory.Exists(JsonApprenticeshipFilesPath))
+                                    Directory.CreateDirectory(JsonApprenticeshipFilesPath);
+                                File.WriteAllText(string.Format(@"{0}\{1}", JsonApprenticeshipFilesPath, jsonFileName), apprenticeshipJson);
+                            }
+                            else
+                            {
+                                // Call ApprenticeshipService to Add a Apprenticeship
+                            }
+                        }
                     }
                 }
             }

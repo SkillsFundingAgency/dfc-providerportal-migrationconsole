@@ -36,7 +36,7 @@ SELECT [ProviderId]
       ,[Telephone]     
       ,[MarketingInformation]
       ,[NationalApprenticeshipProvider]
-  FROM [Provider]
+  FROM [Tribal].[Provider]
   WHERE [RecordStatusId] = 2 AND [Ukprn] = @ProviderUKPRN
 
 END
