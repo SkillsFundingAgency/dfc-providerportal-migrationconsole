@@ -84,9 +84,6 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
 
             #endregion
 
-            //Console.WriteLine("Hello World!");
-            //string providerInput = Console.ReadLine();
-
             #region Get User Input and Set Variables
 
             string adminReport = "                         Admin Report " + Environment.NewLine;
@@ -220,6 +217,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
             {
                 Console.WriteLine("Provider - " + providerUKPRN);
                 string providerReport = "                         Migration Report " + Environment.NewLine;
+                
                 // GetProviderDetailsByUKPRN
                 string errorMessageGetProviderDetailsByUKPRN = string.Empty;
                 var provider = DataHelper.GetProviderDetailsByUKPRN(providerUKPRN, connectionString, out errorMessageGetProviderDetailsByUKPRN);
@@ -230,8 +228,6 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                 }
                 else
                 {
-
-
                     var providerCriteria = new ProviderSearchCriteria(providerUKPRN.ToString());
                     var providerResult = Task.Run(async () => await providerService.GetProviderByPRNAsync(providerCriteria)).Result;
 
@@ -334,14 +330,97 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                             else
                                 apprenticeship.ApprenticeshipType = ApprenticeshipType.Undefined;
 
-                            // Get ApprenticeshipLocation
-                            var apprenticeshipLocations = new List<ApprenticeshipLocation>();
+                            // Get ApprenticeshipLocations                          
+                            string errorMessageGetApprenticeshipLocations = string.Empty;
+                            var apprenticeshipLocations = DataHelper.GetApprenticeshipLocationsByApprenticeshipId(apprenticeship.ApprenticeshipId ?? 0, connectionString, out errorMessageGetApprenticeshipLocations);
+                            if (!string.IsNullOrEmpty(errorMessageGetApprenticeshipLocations))
+                            {
+                                adminReport += errorMessageGetApprenticeshipLocations + Environment.NewLine;
+                            }
+                            else
+                            {
+                                foreach(var apprenticeshipLocation in apprenticeshipLocations)
+                                {
+                                    apprenticeshipLocation.id = Guid.NewGuid();
+                                    apprenticeshipLocation.CreatedDate = DateTime.Now;
+                                    apprenticeshipLocation.CreatedBy = "DFC – Apprenticeship Migration Tool";
 
-                            // Get ApprenticeshipLocationDeliveryMode
+                                    // Get ApprenticeshipLocation DeliveryModes
+                                    string errorMessageGetDeliveryModes = string.Empty;
+                                    var deliveryModes = DataHelper.GetDeliveryModesByApprenticeshipLocationId(apprenticeshipLocation.ApprenticeshipLocationId, connectionString, out errorMessageGetDeliveryModes);
+                                    if (!string.IsNullOrEmpty(errorMessageGetDeliveryModes))
+                                    {
+                                        adminReport += errorMessageGetDeliveryModes + Environment.NewLine;
+                                    }
+                                    else
+                                    {
+                                        apprenticeshipLocation.DeliveryModes = deliveryModes;
+                                        // Mapp DeliveryModes to ApprenticeshipLocationType
+                                        // 1 - 100PercentEmployer, 2 - DayRelease, 3 - BlockRelease
+                                        if((deliveryModes.Contains(1) && !deliveryModes.Contains(2) && deliveryModes.Contains(3)) ||
+                                           (deliveryModes.Contains(1) && deliveryModes.Contains(2) && !deliveryModes.Contains(3)) ||
+                                           (deliveryModes.Contains(1) && deliveryModes.Contains(2) && deliveryModes.Contains(3)))
+                                        {
+                                            apprenticeshipLocation.ApprenticeshipLocationType = ApprenticeshipLocationType.ClassroomBasedAndEmployerBased;
+                                            apprenticeshipLocation.LocationType = LocationType.Venue;
+                                        }
+                                        else if ((!deliveryModes.Contains(1) && !deliveryModes.Contains(2) && deliveryModes.Contains(3)) ||
+                                                 (!deliveryModes.Contains(1) && deliveryModes.Contains(2) && !deliveryModes.Contains(3)) ||
+                                                 (!deliveryModes.Contains(1) && deliveryModes.Contains(2) && deliveryModes.Contains(3)))
+                                        {
+                                            apprenticeshipLocation.ApprenticeshipLocationType = ApprenticeshipLocationType.ClassroomBased;
+                                            apprenticeshipLocation.LocationType = LocationType.Venue;
+                                        }
+                                        else if (deliveryModes.Contains(1) && !deliveryModes.Contains(2) && !deliveryModes.Contains(3))
+                                        {
+                                            apprenticeshipLocation.ApprenticeshipLocationType = ApprenticeshipLocationType.EmployerBased;
+                                            // apprenticeshipLocation.LocationType = Region or SubRegion depnding ...;
+                                        }
+                                        else
+                                        {
+                                            apprenticeshipLocation.ApprenticeshipLocationType = ApprenticeshipLocationType.Undefined;
+                                            apprenticeshipLocation.LocationType = LocationType.Undefined;
+                                        }
 
-                            // Get Location per 
+                                        // Get Location by Tribal LocationId
 
-                            // Checks locations / Add Locations
+
+                                        // Venue
+                                        if ((apprenticeshipLocation.ApprenticeshipLocationType.Equals(ApprenticeshipLocationType.ClassroomBased)) ||
+                                            apprenticeshipLocation.ApprenticeshipLocationType.Equals(ApprenticeshipLocationType.ClassroomBasedAndEmployerBased))
+                                        {
+
+                                        } // Region or SubRegion
+                                        else if (apprenticeshipLocation.ApprenticeshipLocationType.Equals(ApprenticeshipLocationType.EmployerBased))
+                                        {
+
+                                        }
+                                        else
+                                        {
+                                            apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
+                                        }
+
+                                        // Replace LocationId (TribalLocationId)
+
+                                        // Get Location per 
+
+                                        // Checks locations / Add Locations
+
+                                        // Override Radius / CutOff distance 10
+
+                                        // RecordStatus
+                                    }
+
+
+                                }
+
+                                apprenticeship.ApprenticeshipLocations = apprenticeshipLocations;
+                            }
+
+
+                            // Validate Apprenticeship and Counts
+                            if (apprenticeship.ApprenticeshipType.Equals(ApprenticeshipType.Undefined))
+                                apprenticeship.RecordStatus = RecordStatus.MigrationPending;
 
                             // Add Apprenticeship to CosmosDB
                             if (GenerateJsonFilesLocally)

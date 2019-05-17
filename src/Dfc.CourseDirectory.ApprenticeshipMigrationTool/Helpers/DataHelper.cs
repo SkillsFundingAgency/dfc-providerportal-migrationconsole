@@ -183,6 +183,112 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
             return apprenticeship;
         }
 
+        public static List<ApprenticeshipLocation> GetApprenticeshipLocationsByApprenticeshipId(int ApprenticeshipId, string connectionString, out string errorMessageGetApprenticeshipLocations)
+        {
+            var apprenticeshipLocations = new List<ApprenticeshipLocation>();
+            errorMessageGetApprenticeshipLocations = string.Empty;
+
+            using (var sqlConnection = new SqlConnection(connectionString))
+            {
+                using (var command = sqlConnection.CreateCommand())
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "dfc_GetApprenticeshipLocationsByApprenticeshipId";
+
+                    command.Parameters.Add(new SqlParameter("@ApprenticeshipId", SqlDbType.Int));
+                    command.Parameters["@ApprenticeshipId"].Value = ApprenticeshipId;
+
+                    try
+                    {
+                        //Open connection.
+                        sqlConnection.Open();
+
+                        using (SqlDataReader dataReader = command.ExecuteReader())
+                        {
+                            while (dataReader.Read())
+                            {
+                                var apprenticeshipLocation = ExtractApprenticeshipLocationFromDbReader(dataReader);
+                                if (apprenticeshipLocation != null)
+                                    apprenticeshipLocations.Add(apprenticeshipLocation);
+                            }
+                            // Close the SqlDataReader.
+                            dataReader.Close();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMessageGetApprenticeshipLocations = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
+                    }
+                    finally
+                    {
+                        sqlConnection.Close();
+                    }
+                }
+            }
+
+            return apprenticeshipLocations;
+        }
+
+        public static ApprenticeshipLocation ExtractApprenticeshipLocationFromDbReader(SqlDataReader reader)
+        {
+            ApprenticeshipLocation apprenticeshipLocation = new ApprenticeshipLocation();
+
+            apprenticeshipLocation.ApprenticeshipLocationId = (int)CheckForDbNull(reader["ApprenticeshipLocationId"], 0);           
+            apprenticeshipLocation.LocationId = (int)CheckForDbNull(reader["LocationId"], 0);
+            apprenticeshipLocation.Radius = (int)CheckForDbNull(reader["Radius"], 0);
+
+            return apprenticeshipLocation;
+        }
+
+        public static List<int> GetDeliveryModesByApprenticeshipLocationId(int ApprenticeshipLocationId, string connectionString, out string errorMessageGetDeliveryModes)
+        {
+            var deliveryModes = new List<int>();
+            errorMessageGetDeliveryModes = string.Empty;
+
+            using (var sqlConnection = new SqlConnection(connectionString))
+            {
+                using (var command = sqlConnection.CreateCommand())
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "dfc_GetDeliveryModesByApprenticeshipLocationId";
+
+                    command.Parameters.Add(new SqlParameter("@ApprenticeshipLocationId", SqlDbType.Int));
+                    command.Parameters["@ApprenticeshipLocationId"].Value = ApprenticeshipLocationId;
+
+                    try
+                    {
+                        //Open connection.
+                        sqlConnection.Open();
+
+                        using (SqlDataReader dataReader = command.ExecuteReader())
+                        {
+                            while (dataReader.Read())
+                            {
+                                    deliveryModes.Add(ExtractDeliveryModeFromDbReader(dataReader));
+                            }
+                            // Close the SqlDataReader.
+                            dataReader.Close();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMessageGetDeliveryModes = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
+                    }
+                    finally
+                    {
+                        sqlConnection.Close();
+                    }
+                }
+            }
+
+            return deliveryModes;
+        }
+
+        public static int ExtractDeliveryModeFromDbReader(SqlDataReader reader)
+        {
+            return (int)CheckForDbNull(reader["DeliveryModeId"], 0);
+        }
+
         public static void CourseTransferAdd(string connectionString,
                                                 DateTime startTransferDateTime,
                                                 int transferMethod,

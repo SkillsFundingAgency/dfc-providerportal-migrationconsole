@@ -53,7 +53,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dfc.CourseDirectory.Apprent
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apprenticeships", "Apprenticeships", "{822094B2-261E-4078-9BD8-0DE6C61927F9}"
 	ProjectSection(SolutionItems) = preProject
+		sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetApprenticeshipLocationsByApprenticeshipId.sql = sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetApprenticeshipLocationsByApprenticeshipId.sql
 		sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetApprenticeshipsByProviderId.sql = sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetApprenticeshipsByProviderId.sql
+		sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetDeliveryModesByApprenticeshipLocationId.sql = sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetDeliveryModesByApprenticeshipLocationId.sql
+		sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetLocationByLocationIdPerProvider.sql = sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetLocationByLocationIdPerProvider.sql
 		sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetProviderDetailsByUKPRN.sql = sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetProviderDetailsByUKPRN.sql
 	EndProjectSection
 EndProject
