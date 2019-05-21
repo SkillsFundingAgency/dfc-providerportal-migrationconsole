@@ -58,6 +58,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apprenticeships", "Apprenti
 		sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetDeliveryModesByApprenticeshipLocationId.sql = sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetDeliveryModesByApprenticeshipLocationId.sql
 		sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetLocationByLocationIdPerProvider.sql = sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetLocationByLocationIdPerProvider.sql
 		sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetProviderDetailsByUKPRN.sql = sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetProviderDetailsByUKPRN.sql
+		sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetRegionSubRegionByPostcode.sql = sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetRegionSubRegionByPostcode.sql
 	EndProjectSection
 EndProject
 Global

@@ -2,6 +2,7 @@
 using Dfc.CourseDirectory.Models.Models.Apprenticeships;
 using Dfc.CourseDirectory.Models.Models.Courses;
 using Dfc.CourseDirectory.Models.Models.Providers;
+using Dfc.CourseDirectory.Models.Models.Venues;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -288,6 +289,130 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
         {
             return (int)CheckForDbNull(reader["DeliveryModeId"], 0);
         }
+
+        public static Location GetLocationByLocationIdPerProvider(int LocationId, int ProviderId, string connectionString, out string errorMessageGetTribalLocation)
+        {
+            var location = new Location();
+            errorMessageGetTribalLocation = string.Empty;
+
+            using (var sqlConnection = new SqlConnection(connectionString))
+            {
+                using (var command = sqlConnection.CreateCommand())
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "dfc_GetLocationByLocationIdPerProvider";
+
+                    command.Parameters.Add(new SqlParameter("@LocationId", SqlDbType.Int));
+                    command.Parameters["@LocationId"].Value = LocationId;
+
+                    command.Parameters.Add(new SqlParameter("@ProviderId", SqlDbType.Int));
+                    command.Parameters["@ProviderId"].Value = ProviderId;
+
+                    try
+                    {
+                        //Open connection.
+                        sqlConnection.Open();
+
+                        using (SqlDataReader dataReader = command.ExecuteReader())
+                        {
+                            while (dataReader.Read())
+                            {
+                                location = ExtractTribalLocationFromDbReader(dataReader);
+                            }
+                            // Close the SqlDataReader.
+                            dataReader.Close();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMessageGetTribalLocation = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
+                    }
+                    finally
+                    {
+                        sqlConnection.Close();
+                    }
+                }
+            }
+
+            return location;
+        }
+
+        public static Location ExtractTribalLocationFromDbReader(SqlDataReader reader)
+        {
+            Location location = new Location();
+
+            location.LocationName = (string)CheckForDbNull(reader["LocationName"], string.Empty);
+            location.AddressLine1 = (string)CheckForDbNull(reader["AddressLine1"], string.Empty);
+            location.AddressLine2 = (string)CheckForDbNull(reader["AddressLine2"], string.Empty);
+            location.Town = (string)CheckForDbNull(reader["Town"], string.Empty);
+            location.County = (string)CheckForDbNull(reader["County"], string.Empty);
+            location.Postcode = (string)CheckForDbNull(reader["Postcode"], string.Empty);
+            location.Latitude = Convert.ToDecimal(CheckForDbNull(reader["Latitude"], 0));
+            location.Longitude = Convert.ToDecimal(CheckForDbNull(reader["Longitude"], 0));
+            location.Telephone = (string)CheckForDbNull(reader["Telephone"], string.Empty);
+            location.Email = (string)CheckForDbNull(reader["Email"], string.Empty);
+            location.Website = (string)CheckForDbNull(reader["Website"], string.Empty);
+
+            return location;
+        }
+
+        public static ONSPDRegionSubregion GetRegionSubRegionByPostcode(string Postcode, string connectionString, out string errorMessageGetRegionSubRegion)
+        {
+            var onspdRegionSubregion = new ONSPDRegionSubregion();
+            errorMessageGetRegionSubRegion = string.Empty;
+
+            using (var sqlConnection = new SqlConnection(connectionString))
+            {
+                using (var command = sqlConnection.CreateCommand())
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "dfc_GetRegionSubRegionByPostcode";
+
+                    command.Parameters.Add(new SqlParameter("@Postcode", SqlDbType.NVarChar, 50));
+                    command.Parameters["@Postcode"].Value = Postcode;
+
+                    try
+                    {
+                        //Open connection.
+                        sqlConnection.Open();
+
+                        using (SqlDataReader dataReader = command.ExecuteReader())
+                        {
+                            while (dataReader.Read())
+                            {
+                                onspdRegionSubregion = ExtractONSPDRegionSubregionFromDbReader(dataReader);
+                            }
+                            // Close the SqlDataReader.
+                            dataReader.Close();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMessageGetRegionSubRegion = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
+                    }
+                    finally
+                    {
+                        sqlConnection.Close();
+                    }
+                }
+            }
+
+            onspdRegionSubregion.Postcode = Postcode;
+
+            return onspdRegionSubregion;
+        }
+
+        public static ONSPDRegionSubregion ExtractONSPDRegionSubregionFromDbReader(SqlDataReader reader)
+        {
+            ONSPDRegionSubregion onspdRegionSubregion = new ONSPDRegionSubregion();
+
+            onspdRegionSubregion.Region = (string)CheckForDbNull(reader["Region"], string.Empty);
+            onspdRegionSubregion.SubRegion = (string)CheckForDbNull(reader["SubRegion"], string.Empty);
+
+            return onspdRegionSubregion;
+        }
+
+        // Auditing NOT USED yet
 
         public static void CourseTransferAdd(string connectionString,
                                                 DateTime startTransferDateTime,

@@ -20,7 +20,6 @@ BEGIN
 
 
 SELECT L.[LocationName]
-      ,L.[AddressId]
       ,L.[Telephone]
       ,L.[Email]
       ,L.[Website]

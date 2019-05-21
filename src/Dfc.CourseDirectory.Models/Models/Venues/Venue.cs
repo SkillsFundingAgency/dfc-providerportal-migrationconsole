@@ -56,12 +56,17 @@ namespace Dfc.CourseDirectory.Models.Models.Venues
         public string UpdatedBy { get; }
 
         // Apprenticeship related
-        public int? LocationId { get; set; }
-        public string Telephone { get; set; }
-        public string Email { get; set; }
-        public string Website { get; set; }
+        public string PHONE { get; set; }
+        public string EMAIL { get; set; }
+        public string WEBSITE { get; set; }
 
-public Venue(
+        public int? LocationId { get; set; }
+        public int? TribalLocationId { get; set; }
+        public string Telephone { get { return PHONE; } set { PHONE = value; } }
+        public string Email { get { return EMAIL; } set { EMAIL = value; } }
+        public string Website { get { return WEBSITE; } set { WEBSITE = value; } }
+
+        public Venue(
             string id,
             int ukPrn,
             string venueName,
