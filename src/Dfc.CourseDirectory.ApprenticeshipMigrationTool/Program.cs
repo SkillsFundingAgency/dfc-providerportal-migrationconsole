@@ -109,7 +109,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                 providerUKPRNList = DataHelper.GetProviderUKPRNs(connectionString, out errorMessageGetCourses);
                 if (!string.IsNullOrEmpty(errorMessageGetCourses))
                 {
-                    adminReport += errorMessageGetCourses + Environment.NewLine;
+                    adminReport += $"* ATTENTION * { errorMessageGetCourses }" + Environment.NewLine;
                 }
                 else
                 {
@@ -229,11 +229,12 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                 var ProviderGuidId = new Guid();
                 string providerUkprnLine = "Provider - " + providerUKPRN + " - " + provider.ProviderName;
                 Console.WriteLine(providerUkprnLine);
-                adminReport += providerUkprnLine + Environment.NewLine;
+                adminReport += "_________________________________________________________________________________________________________" + Environment.NewLine;
+                adminReport += Environment.NewLine + providerUkprnLine + Environment.NewLine;
 
                 if (!string.IsNullOrEmpty(errorMessageGetProviderDetailsByUKPRN))
                 {
-                    adminReport += errorMessageGetProviderDetailsByUKPRN + Environment.NewLine;
+                    adminReport += $"* ATTENTION * { errorMessageGetProviderDetailsByUKPRN }" + Environment.NewLine;
                 }
                 else
                 {
@@ -318,7 +319,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                     var apprenticeships = DataHelper.GetApprenticeshipsByProviderId(provider.ProviderId ?? 0, connectionString, out errorMessageGetApprenticeshipsByProviderId);
                     if (!string.IsNullOrEmpty(errorMessageGetApprenticeshipsByProviderId))
                     {
-                        adminReport += errorMessageGetApprenticeshipsByProviderId + Environment.NewLine;
+                        adminReport += $"* ATTENTION * { errorMessageGetApprenticeshipsByProviderId }" + Environment.NewLine;
                     }
                     else
                     {
@@ -329,38 +330,54 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                             apprenticeship.ProviderId = ProviderGuidId;
                             apprenticeship.ProviderUKPRN = providerUKPRN;
 
+                            apprenticeship.RecordStatus = RecordStatus.Live;
+
                             apprenticeship.CreatedDate = DateTime.Now;
                             apprenticeship.CreatedBy = "DFC – Apprenticeship Migration Tool";
-
+                            adminReport += "____________________________________________________________________" + Environment.NewLine;
                             // Get Framework/Standard GUID id => ???? Call ReferenceData Service
                             if (apprenticeship.FrameworkCode != null && apprenticeship.ProgType != null && apprenticeship.PathwayCode != null)
+                            {
                                 apprenticeship.ApprenticeshipType = ApprenticeshipType.FrameworkCode;
+                                adminReport += $"> Framework Apprenticeship - FrameworkCode ( { apprenticeship.FrameworkCode } ), ProgType ( { apprenticeship.ProgType } ), PathwayCode ( { apprenticeship.PathwayCode } )" + Environment.NewLine;
+                            }
                             else if (apprenticeship.StandardCode != null && apprenticeship.Version != null)
+                            {
                                 apprenticeship.ApprenticeshipType = ApprenticeshipType.StandardCode;
+                                adminReport += $"> Standard Apprenticeship - StandardCode ( { apprenticeship.StandardCode } ), Version ( { apprenticeship.Version } )" + Environment.NewLine;
+                            }
                             else
+                            {
                                 apprenticeship.ApprenticeshipType = ApprenticeshipType.Undefined;
+                                apprenticeship.RecordStatus = RecordStatus.MigrationPending;
+                                adminReport += $"> * ATTENTION * Apprenticeship NOT Defined - FrameworkCode ( { apprenticeship.FrameworkCode } ), ProgType ( { apprenticeship.ProgType } ), PathwayCode ( { apprenticeship.PathwayCode } ), StandardCode ( { apprenticeship.StandardCode } ), Version ( { apprenticeship.Version } )" + Environment.NewLine;
+                            }
+                                
 
                             // Get ApprenticeshipLocations                          
                             string errorMessageGetApprenticeshipLocations = string.Empty;
                             var apprenticeshipLocations = DataHelper.GetApprenticeshipLocationsByApprenticeshipId(apprenticeship.ApprenticeshipId ?? 0, connectionString, out errorMessageGetApprenticeshipLocations);
                             if (!string.IsNullOrEmpty(errorMessageGetApprenticeshipLocations))
                             {
-                                adminReport += errorMessageGetApprenticeshipLocations + Environment.NewLine;
+                                adminReport += $"* ATTENTION * { errorMessageGetApprenticeshipLocations }" + Environment.NewLine;
                             }
                             else
                             {
                                 foreach (var apprenticeshipLocation in apprenticeshipLocations)
                                 {
                                     apprenticeshipLocation.id = Guid.NewGuid();
+                                    apprenticeshipLocation.RecordStatus = RecordStatus.Live;
                                     apprenticeshipLocation.CreatedDate = DateTime.Now;
                                     apprenticeshipLocation.CreatedBy = "DFC – Apprenticeship Migration Tool";
+                                    adminReport += "__________________________" + Environment.NewLine;
+                                    adminReport += $">>> ApprenticeshipLocation with TribalLocationId ( { apprenticeshipLocation.LocationId } )";
 
                                     // Get ApprenticeshipLocation DeliveryModes
                                     string errorMessageGetDeliveryModes = string.Empty;
                                     var deliveryModes = DataHelper.GetDeliveryModesByApprenticeshipLocationId(apprenticeshipLocation.ApprenticeshipLocationId, connectionString, out errorMessageGetDeliveryModes);
                                     if (!string.IsNullOrEmpty(errorMessageGetDeliveryModes))
                                     {
-                                        adminReport += errorMessageGetDeliveryModes + Environment.NewLine;
+                                        adminReport += Environment.NewLine + $"* ATTENTION * { errorMessageGetDeliveryModes }" + Environment.NewLine;
                                     }
                                     else
                                     {
@@ -374,6 +391,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                             apprenticeshipLocation.ApprenticeshipLocationType = ApprenticeshipLocationType.ClassroomBasedAndEmployerBased;
                                             apprenticeshipLocation.LocationType = LocationType.Venue;
                                             apprenticeshipLocation.Radius = VenueBasedRadius; // Leave it as it is. COUR-419
+                                            adminReport += $" - ApprenticeshipLocationType ( { apprenticeshipLocation.ApprenticeshipLocationType } )" + Environment.NewLine;
                                         }
                                         else if ((!deliveryModes.Contains(1) && !deliveryModes.Contains(2) && deliveryModes.Contains(3)) ||
                                                  (!deliveryModes.Contains(1) && deliveryModes.Contains(2) && !deliveryModes.Contains(3)) ||
@@ -382,16 +400,20 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                             apprenticeshipLocation.ApprenticeshipLocationType = ApprenticeshipLocationType.ClassroomBased;
                                             apprenticeshipLocation.LocationType = LocationType.Venue;
                                             apprenticeshipLocation.Radius = VenueBasedRadius;
+                                            adminReport += $" -  ApprenticeshipLocationType ( { apprenticeshipLocation.ApprenticeshipLocationType } )" + Environment.NewLine;
                                         }
                                         else if (deliveryModes.Contains(1) && !deliveryModes.Contains(2) && !deliveryModes.Contains(3))
                                         {
                                             apprenticeshipLocation.ApprenticeshipLocationType = ApprenticeshipLocationType.EmployerBased;
                                             // apprenticeshipLocation.LocationType = Region or SubRegion depending ... bellow;
+                                            adminReport += $" -  ApprenticeshipLocationType ( { apprenticeshipLocation.ApprenticeshipLocationType } )" + Environment.NewLine;
                                         }
                                         else
                                         {
                                             apprenticeshipLocation.ApprenticeshipLocationType = ApprenticeshipLocationType.Undefined;
                                             apprenticeshipLocation.LocationType = LocationType.Undefined;
+                                            apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
+                                            adminReport += Environment.NewLine + $"*** ATTENTION *** ApprenticeshipLocationType ( { apprenticeshipLocation.ApprenticeshipLocationType } )" + Environment.NewLine;
                                         }
 
                                         // Get Location by Tribal LocationId
@@ -399,12 +421,16 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                         var location = DataHelper.GetLocationByLocationIdPerProvider(apprenticeshipLocation.LocationId ?? 0, provider.ProviderId ?? 0, connectionString, out errorMessageGetTribalLocation);
                                         if (!string.IsNullOrEmpty(errorMessageGetTribalLocation))
                                         {
-                                            adminReport += errorMessageGetTribalLocation + Environment.NewLine;
+                                            apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
+                                            adminReport += Environment.NewLine + $"*** ATTENTION *** { errorMessageGetTribalLocation }" + Environment.NewLine;
                                         }
                                         else
                                         {
                                             if (location == null)
+                                            {
+                                                apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
                                                 adminReport += $"We couldn't get location for LocationId ({ apprenticeshipLocation.LocationId }) " + Environment.NewLine;
+                                            } 
                                         }
 
 
@@ -423,44 +449,76 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
 
                                                 if (venues.Count().Equals(1))
                                                 {
+                                                    // It is a good case 
                                                     var venue = venues.FirstOrDefault();
-                                                    if (venue.Status.Equals(VenueStatus.Live))
+                                                    if(venue.LocationId == null || venue.LocationId.Equals(0))
+                                                    {
+                                                        // We don't have valid LocationId assign by our VenueService API
+                                                        apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
+                                                        adminReport += $"*** ATTENTION *** We don't have valid LocationId assign by our VenueService API - Location/VenueName ({ location.LocationName }). " + Environment.NewLine;
+                                                    }
+                                                    else
                                                     {
                                                         apprenticeshipLocation.LocationId = venue.LocationId;
                                                         apprenticeshipLocation.LocationGuidId = new Guid(venue.ID);
 
-                                                        // Shall we check TribalLocationId (used only for tracing locations back to Tribal)
-                                                        if (venue.TribalLocationId == location.LocationId)
+                                                  
+                                                        if (venue.Status.Equals(VenueStatus.Live))
                                                         {
-                                                            // It's good match - Do Nothing 
-                                                            adminReport += $"It's good match - Do Nothing" + Environment.NewLine;
-
-                                                            // Update Contacts (Telephone, Email, Website)
-                                                        }
-                                                        else
-                                                        {
-                                                            if (venue.TribalLocationId != null || venue.TribalLocationId.Equals(0))
+                                                            // Check Venue.TribalLocationId is equal to location.LocationId
+                                                            if (venue.TribalLocationId == location.LocationId)
                                                             {
-                                                                // No valid TribalLocationId (There is not going to be duplication) => Update Venue 
-                                                                adminReport += $"No valid TribalLocationId (There is not going to be duplication) => Update Venue" + Environment.NewLine;
+                                                                // It's good match - we don't update Contacts as we asume that they were updated when venue was initially created from the same location
+                                                                adminReport += $"It's a good match " + Environment.NewLine;
                                                             }
                                                             else
                                                             {
-                                                                // There is already Venue with different TribalLocationId => What to do? Update or NOT
-                                                                adminReport += $"There is already Venue with different TribalLocationId => What to do? Update or NOT" + Environment.NewLine;
+                                                                // If it's different we will update IDs above
+                                                                if (venue.TribalLocationId != null || venue.TribalLocationId.Equals(0))
+                                                                {
+                                                                    // No valid TribalLocationId (There is not going to be duplication) => Update Venue 
+                                                                    adminReport += $"No valid TribalLocationId (There is not going to be duplication) => Update Venue" + Environment.NewLine;
+                                                                }
+                                                                else
+                                                                {
+                                                                    // There is already Venue with different TribalLocationId => What to do? Update or NOT
+                                                                    adminReport += $"There is already Venue with different TribalLocationId => What to do? Update or NOT" + Environment.NewLine;
+                                                                }
                                                             }
                                                         }
-                                                    }
-                                                    else
-                                                    {
-                                                        // Bring it to LIVE ????
-                                                        adminReport += $"Bring it to LIVE ????" + Environment.NewLine;
+                                                        else
+                                                        {
+                                                            // Bring it to LIVE and Update????
+                                                            adminReport += $"Bring it to LIVE ????" + Environment.NewLine;
+
+                                                            // Update Venue.Status
+                                                            venue.Status = VenueStatus.Live;
+                                                            // Update Contacts (Telephone, Email, Website) 
+                                                            venue.PHONE = location.Telephone;
+                                                            venue.EMAIL = location.Email;
+                                                            venue.WEBSITE = location.Website;
+
+                                                            // ??? VenueService.Update
+
+                                                        }
                                                     }
                                                 }
                                                 else
                                                 {
-                                                    adminReport += $"Multiple Venues" + Environment.NewLine;
+                                                    // Issue raised many times
+                                                    adminReport += $"Multiple Venues for the same name ({ location.LocationName }). " + Environment.NewLine;
+                                                    foreach(var venue in venues)
+                                                    {
+                                                        if(venue.TribalLocationId == location.LocationId)
+                                                        {
+                                                            // That is our Venue. Use it.
 
+                                                        }
+                                                        else
+                                                        {
+                                                            adminReport += $"Venue not used ( { venue.ID } ). " + Environment.NewLine;
+                                                        }
+                                                    }
                                                 }
                                             }
                                             else if (venuesResult.IsSuccess && venuesResult.Value.Value == null)
@@ -521,10 +579,6 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                 adminReport += $"LocationName ({ location.LocationName })Problem with the service - GetVenuesByPRNAndNameAsync Error:  { venuesResult?.Error }" + Environment.NewLine;
                                             }
 
-
-
-
-
                                             #endregion
 
                                         } // Region or SubRegion Locations
@@ -537,7 +591,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                             var onspdRegionSubregion = DataHelper.GetRegionSubRegionByPostcode(location.Postcode, connectionString, out errorMessageGetRegionSubRegion);
                                             if (!string.IsNullOrEmpty(errorMessageGetRegionSubRegion))
                                             {
-                                                adminReport += errorMessageGetRegionSubRegion + Environment.NewLine;
+                                                adminReport += $"* ATTENTION * { errorMessageGetRegionSubRegion }" + Environment.NewLine;
                                             }
                                             else
                                             {
