@@ -299,6 +299,15 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                 else
                                 {
                                     // Call ProviderService API to update provider
+                                    var updateProviderResult = Task.Run(async () => await providerService.UpdateProviderDetails(providerToUpdate)).Result;
+                                    if (updateProviderResult.IsSuccess)
+                                    {
+                                        adminReport += $"Provider ( { providerToUpdate.ProviderName } ) with UKPRN ( { providerToUpdate.UnitedKingdomProviderReferenceNumber } ) was updated in CosmosDB" + Environment.NewLine;
+                                    }
+                                    else
+                                    {
+                                        adminReport += $"*** ATTENTION *** - Problem with the ProviderService - UpdateProviderDetails -  Error:  { updateProviderResult?.Error }" + Environment.NewLine;
+                                    }
                                 }
                             }
 
@@ -339,6 +348,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                             if (apprenticeship.FrameworkCode != null && apprenticeship.ProgType != null && apprenticeship.PathwayCode != null)
                             {
                                 apprenticeship.ApprenticeshipType = ApprenticeshipType.FrameworkCode;
+                               // apprenticeship.FrameworkId = //
                                 adminReport += $"> Framework Apprenticeship - FrameworkCode ( { apprenticeship.FrameworkCode } ), ProgType ( { apprenticeship.ProgType } ), PathwayCode ( { apprenticeship.PathwayCode } )" + Environment.NewLine;
                             }
                             else if (apprenticeship.StandardCode != null && apprenticeship.Version != null)
@@ -439,7 +449,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                         apprenticeshipLocation.ApprenticeshipLocationType.Equals(ApprenticeshipLocationType.ClassroomBasedAndEmployerBased))
                                         {
                                             #region Venue Locations
-
+                                            
                                             GetVenuesByPRNAndNameCriteria venueCriteria = new GetVenuesByPRNAndNameCriteria(apprenticeship.ProviderUKPRN.ToString(), location.LocationName);
                                             var venuesResult = Task.Run(async () => await venueService.GetVenuesByPRNAndNameAsync(venueCriteria)).Result;
 
@@ -447,22 +457,24 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                             {
                                                 var venues = venuesResult.Value.Value;
 
+                                                // It is a good case, but ... 
                                                 if (venues.Count().Equals(1))
                                                 {
-                                                    // It is a good case 
                                                     var venue = venues.FirstOrDefault();
-                                                    if(venue.LocationId == null || venue.LocationId.Equals(0))
+
+                                                    bool UpdateVenue = false;
+                                                    if (venue.LocationId == null || venue.LocationId.Equals(0))
                                                     {
-                                                        // We don't have valid LocationId assign by our VenueService API
+                                                        // We don't have valid LocationId assigned by our VenueService API
                                                         apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
-                                                        adminReport += $"*** ATTENTION *** We don't have valid LocationId assign by our VenueService API - Location/VenueName ({ location.LocationName }). " + Environment.NewLine;
+                                                        adminReport += $"*** ATTENTION *** We don't have valid LocationId assigned by our VenueService API - Location/VenueName ({ location.LocationName }). " + Environment.NewLine;
                                                     }
                                                     else
                                                     {
                                                         apprenticeshipLocation.LocationId = venue.LocationId;
                                                         apprenticeshipLocation.LocationGuidId = new Guid(venue.ID);
 
-                                                  
+
                                                         if (venue.Status.Equals(VenueStatus.Live))
                                                         {
                                                             // Check Venue.TribalLocationId is equal to location.LocationId
@@ -473,102 +485,120 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                             }
                                                             else
                                                             {
-                                                                // If it's different we will update IDs above
+                                                                // If it's different we will check whether Venue is TribalLocation. 
                                                                 if (venue.TribalLocationId != null || venue.TribalLocationId.Equals(0))
                                                                 {
-                                                                    // No valid TribalLocationId (There is not going to be duplication) => Update Venue 
-                                                                    adminReport += $"No valid TribalLocationId (There is not going to be duplication) => Update Venue" + Environment.NewLine;
+                                                                    // Venue is also TribalLocation. But it was used previosly. Therefor we do NOT update anything. Just use it. (These overides AL - TribalLocation relation.)  
+                                                                    adminReport += $"Venue is also TribalLocation. But it was used previosly. Therefor we do NOT update anything. Just use it." + Environment.NewLine;
                                                                 }
                                                                 else
                                                                 {
-                                                                    // There is already Venue with different TribalLocationId => What to do? Update or NOT
-                                                                    adminReport += $"There is already Venue with different TribalLocationId => What to do? Update or NOT" + Environment.NewLine;
+                                                                    // Venue is NOT TribalLocation. We can use it but we have to update Contacts.           
+                                                                    adminReport += $"Venue is NOT TribalLocation. We can use it but we have to update Contacts." + Environment.NewLine;
+                                                                    UpdateVenue = true;
+                                                                    venue.PHONE = location.Telephone;
+                                                                    venue.EMAIL = location.Email;
+                                                                    venue.WEBSITE = location.Website;
                                                                 }
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            // Bring it to LIVE and Update????
-                                                            adminReport += $"Bring it to LIVE ????" + Environment.NewLine;
+                                                            // Venue has Status ( {venue.Status} ). We will bring it to LIVE and update Contacts.
+                                                            adminReport += $"Venue has Status ( {venue.Status} ). We will bring it to LIVE and update Contacts." + Environment.NewLine;
 
+                                                            UpdateVenue = true;
                                                             // Update Venue.Status
                                                             venue.Status = VenueStatus.Live;
                                                             // Update Contacts (Telephone, Email, Website) 
                                                             venue.PHONE = location.Telephone;
                                                             venue.EMAIL = location.Email;
                                                             venue.WEBSITE = location.Website;
-
-                                                            // ??? VenueService.Update
-
                                                         }
                                                     }
-                                                }
-                                                else
-                                                {
-                                                    // Issue raised many times
-                                                    adminReport += $"Multiple Venues for the same name ({ location.LocationName }). " + Environment.NewLine;
-                                                    foreach(var venue in venues)
-                                                    {
-                                                        if(venue.TribalLocationId == location.LocationId)
-                                                        {
-                                                            // That is our Venue. Use it.
 
+                                                    if (UpdateVenue)
+                                                    {
+                                                        if (GenerateJsonFilesLocally)
+                                                        {
+                                                            var updateVenueJson = JsonConvert.SerializeObject(venue);
+                                                            string jsonFileName = string.Format("{0}-UpdateVenue-{1}-{2}.json", DateTime.Now.ToString("yyMMdd-HHmmss"), providerUKPRN, location.LocationName.Replace(" ", string.Empty).Replace(@"\", string.Empty).Replace("/", string.Empty));
+                                                            string UpdateVenuePath = string.Format(@"{0}\UpdateVenue", JsonApprenticeshipFilesPath);
+                                                            if (!Directory.Exists(UpdateVenuePath))
+                                                                Directory.CreateDirectory(UpdateVenuePath);
+                                                            File.WriteAllText(string.Format(@"{0}\{1}", UpdateVenuePath, jsonFileName), updateVenueJson);
                                                         }
                                                         else
                                                         {
-                                                            adminReport += $"Venue not used ( { venue.ID } ). " + Environment.NewLine;
+                                                            var updateVenueResult = Task.Run(async () => await venueService.UpdateAsync(venue)).Result;
+                                                            if (updateVenueResult.IsSuccess && updateVenueResult.HasValue)
+                                                            {
+                                                                adminReport += $"Venue ( { venue.VenueName } ) was updated in CosmosDB" + Environment.NewLine;
+                                                            }
+                                                            else
+                                                            {
+                                                                // Problem with the service  - UpdateAsync -  Error:  { updateVenueResult?.Error }
+                                                                apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
+                                                                adminReport += $"Problem with the service - UpdateAsync -  Error:  { updateVenueResult?.Error }" + Environment.NewLine;
+                                                            }
                                                         }
                                                     }
                                                 }
-                                            }
-                                            else if (venuesResult.IsSuccess && venuesResult.Value.Value == null)
-                                            {
-                                                // There is no such Venue - Add it
-                                                var addVenue = new Venue(Guid.NewGuid().ToString(),
-                                                                           location.ProviderUKPRN,
-                                                                           location.LocationName,
-                                                                           location.AddressLine1,
-                                                                           location.AddressLine2,
-                                                                           null,
-                                                                           location.Town,
-                                                                           location.County,
-                                                                           location.Postcode,
-                                                                           location.Latitude,
-                                                                           location.Longitude,
-                                                                           VenueStatus.Live,
-                                                                           "DFC – Apprenticeship Migration Tool",
-                                                                           DateTime.Now);
-                                                addVenue.PHONE = location.Telephone;
-                                                addVenue.EMAIL = location.Email;
-                                                addVenue.WEBSITE = location.Website;
-                                                addVenue.TribalLocationId = location.LocationId;
-
-                                                adminReport += $"Adds Venue for LocationName ({ location.LocationName })" + Environment.NewLine;
-
-                                                if (GenerateJsonFilesLocally)
+                                                else if (venues.Count().Equals(0))
                                                 {
-                                                    var addVenueJson = JsonConvert.SerializeObject(addVenue);
-                                                    string jsonFileName = string.Format("{0}-Venue-{1}-{2}.json", DateTime.Now.ToString("yyMMdd-HHmmss"), providerUKPRN, location.LocationName.Replace(" ", string.Empty));
-                                                    string AddVenuePath = string.Format(@"{0}\AddVenue", JsonApprenticeshipFilesPath);
-                                                    if (!Directory.Exists(AddVenuePath))
-                                                        Directory.CreateDirectory(AddVenuePath);
-                                                    File.WriteAllText(string.Format(@"{0}\{1}", AddVenuePath, jsonFileName), addVenueJson);
-                                                }
-                                                else
-                                                {
-                                                    var addVenueResult = Task.Run(async () => await venueService.AddAsync(addVenue)).Result;
-                                                    if (addVenueResult.IsSuccess && addVenueResult.HasValue)
+                                                    // There is no such Venue - Add it
+                                                    var addVenue = new Venue(Guid.NewGuid().ToString(),
+                                                                               location.ProviderUKPRN,
+                                                                               location.LocationName,
+                                                                               location.AddressLine1,
+                                                                               location.AddressLine2,
+                                                                               null,
+                                                                               location.Town,
+                                                                               location.County,
+                                                                               location.Postcode,
+                                                                               location.Latitude,
+                                                                               location.Longitude,
+                                                                               VenueStatus.Live,
+                                                                               "DFC – Apprenticeship Migration Tool",
+                                                                               DateTime.Now);
+                                                    addVenue.PHONE = location.Telephone;
+                                                    addVenue.EMAIL = location.Email;
+                                                    addVenue.WEBSITE = location.Website;
+                                                    addVenue.TribalLocationId = location.LocationId;
+
+                                                    adminReport += $"Adds Venue for LocationName ({ location.LocationName })" + Environment.NewLine;
+
+                                                    if (GenerateJsonFilesLocally)
                                                     {
-                                                        // All good => It's important to update apprenticeshipLocation.LocationId
-                                                        apprenticeshipLocation.LocationId = ((Venue)addVenueResult.Value).LocationId;
-                                                        adminReport += $"All good => It's important to update apprenticeshipLocation.LocationId" + Environment.NewLine;
+                                                        var addVenueJson = JsonConvert.SerializeObject(addVenue);
+                                                        string jsonFileName = string.Format("{0}-Venue-{1}-{2}.json", DateTime.Now.ToString("yyMMdd-HHmmss"), providerUKPRN, location.LocationName.Replace(" ", string.Empty).Replace(@"\", string.Empty).Replace("/", string.Empty));
+                                                        string AddVenuePath = string.Format(@"{0}\AddVenue", JsonApprenticeshipFilesPath);
+                                                        if (!Directory.Exists(AddVenuePath))
+                                                            Directory.CreateDirectory(AddVenuePath);
+                                                        File.WriteAllText(string.Format(@"{0}\{1}", AddVenuePath, jsonFileName), addVenueJson);
                                                     }
                                                     else
                                                     {
-                                                        // Problem with the service Error:  { addVenueResult?.Error }
-                                                        apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
-                                                        adminReport += $"Problem with the service - AddAsync -  Error:  { addVenueResult?.Error }" + Environment.NewLine;
+                                                        var addVenueResult = Task.Run(async () => await venueService.AddAsync(addVenue)).Result;
+                                                        if (addVenueResult.IsSuccess && addVenueResult.HasValue)
+                                                        {
+                                                            // All good => It's important to update apprenticeshipLocation.LocationId
+                                                            apprenticeshipLocation.LocationId = ((Venue)addVenueResult.Value).LocationId;
+                                                            adminReport += $"All good => It's important to update apprenticeshipLocation.LocationId" + Environment.NewLine;
+                                                        }
+                                                        else
+                                                        {
+                                                            // Problem with the service Error:  { addVenueResult?.Error }
+                                                            apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
+                                                            adminReport += $"Problem with the service - AddAsync -  Error:  { addVenueResult?.Error }" + Environment.NewLine;
+                                                        }
                                                     }
+                                                }
+                                                else
+                                                {
+                                                    // We have multiple Venues for the same name ({ location.LocationName }).  Issue raised many times
+                                                    adminReport += $"Multiple Venues for the same name ({ location.LocationName }). " + Environment.NewLine;
+                                                    apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
                                                 }
                                             }
                                             else
@@ -576,7 +606,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
 
                                                 // Problem with the service GetVenuesByPRNAndNameAsync Error:  { venueResult?.Error }
                                                 apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
-                                                adminReport += $"LocationName ({ location.LocationName })Problem with the service - GetVenuesByPRNAndNameAsync Error:  { venuesResult?.Error }" + Environment.NewLine;
+                                                adminReport += $"LocationName ( { location.LocationName } )Problem with the VenueService - GetVenuesByPRNAndNameAsync - Error:  { venuesResult?.Error }" + Environment.NewLine;
                                             }
 
                                             #endregion
@@ -602,12 +632,15 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                     if (selectedRegion == null)
                                                     {
                                                         // Problem - No selectedRegion match => Undefined 
+                                                        adminReport += $"* ATTENTION * We couldn't identify a Region for ( { onspdRegionSubregion.Region } ) " + Environment.NewLine;
+                                                        apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
                                                     }
                                                     else
                                                     {
                                                         apprenticeshipLocation.LocationId = selectedRegion.ApiLocationId;
                                                         apprenticeshipLocation.LocationType = LocationType.Region;
                                                         apprenticeshipLocation.Radius = RegionBasedRadius;
+                                                        adminReport += $" We've identified a Region ( { selectedRegion.RegionName } ) with ID ( { selectedRegion.ApiLocationId } ) " + Environment.NewLine;
                                                     }
                                                 }
                                                 else
@@ -621,13 +654,15 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                         if (selectedRegion == null)
                                                         {
                                                             // Problem - No selectedRegion and NO selectedSubRegion match => Undefined 
-                                                            // It will be hard to identify
+                                                            adminReport += $"* ATTENTION * After NOT be able to identify SubRegion, we couldn't identify a Region for ( { onspdRegionSubregion.Region } ) " + Environment.NewLine;
+                                                            apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
                                                         }
                                                         else
                                                         {
                                                             apprenticeshipLocation.LocationId = selectedRegion.ApiLocationId;
                                                             apprenticeshipLocation.LocationType = LocationType.Region;
                                                             apprenticeshipLocation.Radius = RegionBasedRadius;
+                                                            adminReport += $"After NOT be able to identify SubRegion, we've identified a Region ( { selectedRegion.RegionName } ) with ID ( { selectedRegion.ApiLocationId } ) " + Environment.NewLine;
                                                         }
                                                     }
                                                     else
@@ -635,6 +670,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                         apprenticeshipLocation.LocationId = selectedSubRegion.SubRegion.Where(x => x.SubRegionName == onspdRegionSubregion.SubRegion).SingleOrDefault().ApiLocationId;
                                                         apprenticeshipLocation.LocationType = LocationType.SubRegion;
                                                         apprenticeshipLocation.Radius = SubRegionBasedRadius;
+                                                        adminReport += $" We've identified a SubRegion ( { selectedSubRegion.RegionName } ) with ID ( { selectedSubRegion.ApiLocationId } ) " + Environment.NewLine;
                                                     }
                                                 }
                                             }
@@ -646,26 +682,16 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                             // Undefined - apprenticeshipLocation.ApprenticeshipLocationType
                                             apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
                                         }
-
-                                        // Replace LocationId (TribalLocationId)
-
-                                        // Get Location per 
-
-                                        // Checks locations / Add Locations
-
-                                        // Override Radius / CutOff distance 10
-
-                                        // RecordStatus
                                     }
+
+                                    adminReport += $"ApprenticeshipLocation Status ( { apprenticeshipLocation.RecordStatus } )." + Environment.NewLine;
                                 }
 
                                 apprenticeship.ApprenticeshipLocations = apprenticeshipLocations;
+
+                                adminReport += $"Apprenticeship Status ( { apprenticeship.RecordStatus } )." + Environment.NewLine;
                             }
 
-
-                            // Validate Apprenticeship and Counts
-                            if (apprenticeship.ApprenticeshipType.Equals(ApprenticeshipType.Undefined))
-                                apprenticeship.RecordStatus = RecordStatus.MigrationPending;
 
                             // Add Apprenticeship to CosmosDB
                             if (GenerateJsonFilesLocally)
