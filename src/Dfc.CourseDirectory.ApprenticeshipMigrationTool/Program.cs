@@ -214,13 +214,29 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
             provStopWatch.Start();
 
             int CountProviders = 0;
-
+            int CountAllApprenticeships = 0;
+            int CountAllApprenticeshipPending = 0;
+            int CountAllApprenticeshipLive = 0;
+            int CountAllApprenticeshipLocations = 0;
+            int CountAllApprenticeshipLocationsPending = 0;
+            int CountAllApprenticeshipLocationsLive = 0;
 
             #endregion
 
             foreach (var providerUKPRN in providerUKPRNList)
             {
+                Stopwatch providerStopWatch = new Stopwatch();
+                providerStopWatch.Start();
+
                 CountProviders++;
+
+                int CountApprenticeships = 0;
+                int CountApprenticeshipPending = 0;
+                int CountApprenticeshipLive = 0;
+                int CountApprenticeshipLocations = 0;
+                int CountApprenticeshipLocationsPending = 0;
+                int CountApprenticeshipLocationsLive = 0;
+
                 string providerReport = "                         Migration Report " + Environment.NewLine;
 
                 // GetProviderDetailsByUKPRN
@@ -332,8 +348,14 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                     }
                     else
                     {
+                        CountApprenticeships = apprenticeships.Count;
+
                         foreach (var apprenticeship in apprenticeships)
                         {
+                            int CountApprenticeshipLocationsPerAppr = 0;
+                            int CountApprenticeshipLocationsPendingPerAppr = 0;
+                            int CountApprenticeshipLocationsLivePerAppr = 0;
+
                             // // Mapp Apprenticeships
                             apprenticeship.id = Guid.NewGuid();
                             apprenticeship.ProviderId = ProviderGuidId;
@@ -348,12 +370,13 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                             if (apprenticeship.FrameworkCode != null && apprenticeship.ProgType != null && apprenticeship.PathwayCode != null)
                             {
                                 apprenticeship.ApprenticeshipType = ApprenticeshipType.FrameworkCode;
-                               // apprenticeship.FrameworkId = //
+                                // apprenticeship.FrameworkId = // Call ReferenceData Framework Service / API to obtain FrameworkId (GUID) by FrameworkCode, ProgType, PathwayCode
                                 adminReport += $"> Framework Apprenticeship - FrameworkCode ( { apprenticeship.FrameworkCode } ), ProgType ( { apprenticeship.ProgType } ), PathwayCode ( { apprenticeship.PathwayCode } )" + Environment.NewLine;
                             }
                             else if (apprenticeship.StandardCode != null && apprenticeship.Version != null)
                             {
                                 apprenticeship.ApprenticeshipType = ApprenticeshipType.StandardCode;
+                                // apprenticeship.StandardId = // Call ReferenceData Standard Service / API to obtain StandardId (GUID) by StandardCode and Version
                                 adminReport += $"> Standard Apprenticeship - StandardCode ( { apprenticeship.StandardCode } ), Version ( { apprenticeship.Version } )" + Environment.NewLine;
                             }
                             else
@@ -504,6 +527,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                         }
                                                         else
                                                         {
+                                                            // TODO _ CHECK IT OUT
                                                             // Venue has Status ( {venue.Status} ). We will bring it to LIVE and update Contacts.
                                                             adminReport += $"Venue has Status ( {venue.Status} ). We will bring it to LIVE and update Contacts." + Environment.NewLine;
 
@@ -687,11 +711,24 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                     adminReport += $"ApprenticeshipLocation Status ( { apprenticeshipLocation.RecordStatus } )." + Environment.NewLine;
                                 }
 
+
                                 apprenticeship.ApprenticeshipLocations = apprenticeshipLocations;
 
+                                CountApprenticeshipLocationsPerAppr = apprenticeship.ApprenticeshipLocations.Count();
+                                CountApprenticeshipLocationsPendingPerAppr = apprenticeship.ApprenticeshipLocations.Where(x => x.RecordStatus == RecordStatus.MigrationPending).Count();
+                                CountApprenticeshipLocationsLivePerAppr = apprenticeship.ApprenticeshipLocations.Where(x => x.RecordStatus == RecordStatus.Live).Count();
+
                                 adminReport += $"Apprenticeship Status ( { apprenticeship.RecordStatus } )." + Environment.NewLine;
+                                adminReport += $"Apprenticeship has ( { CountApprenticeshipLocationsPerAppr } ) ApprenticeshipLocations - Pending ( { CountApprenticeshipLocationsPendingPerAppr } ) and Live ( { CountApprenticeshipLocationsLivePerAppr } )." + Environment.NewLine;
+
+                                CountApprenticeshipLocations = CountApprenticeshipLocations + CountApprenticeshipLocationsPerAppr;
+                                CountApprenticeshipLocationsPending = CountApprenticeshipLocationsPending + CountApprenticeshipLocationsPendingPerAppr;
+                                CountApprenticeshipLocationsLive = CountApprenticeshipLocationsLive + CountApprenticeshipLocationsLivePerAppr;
                             }
 
+
+                            if (apprenticeship.RecordStatus.Equals(RecordStatus.MigrationPending)) CountApprenticeshipPending++;
+                            if (apprenticeship.RecordStatus.Equals(RecordStatus.Live)) CountApprenticeshipLive++;
 
                             // Add Apprenticeship to CosmosDB
                             if (GenerateJsonFilesLocally)
@@ -709,7 +746,32 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                         }
                     }
                 }
+
+                providerStopWatch.Stop();
+                //providerReport += $">>> Report { reportForProvider } - { providerReportFileName } - Time taken: { providerStopWatch.Elapsed } " + Environment.NewLine;
+                // Write Provider Report
+
+                //CountApprenticeships = appre
+                adminReport += $"Number of Apprenticeships migrated ( { CountApprenticeships  } ) with Pending ( { CountApprenticeshipPending } ) and Live ( { CountApprenticeshipLive} ) Status" + Environment.NewLine;
+                CountAllApprenticeships = CountAllApprenticeships + CountApprenticeships;
+                CountAllApprenticeshipPending = CountAllApprenticeshipPending + CountApprenticeshipPending;
+                CountAllApprenticeshipLive = CountAllApprenticeshipLive + CountApprenticeshipLive;
+
+                CountAllApprenticeshipLocations = CountAllApprenticeshipLocations + CountApprenticeshipLocations;
+                CountAllApprenticeshipLocationsPending = CountAllApprenticeshipLocationsPending + CountApprenticeshipLocationsPending;
+                CountAllApprenticeshipLocationsLive = CountAllApprenticeshipLocationsLive + CountApprenticeshipLocationsLive;
+
+                provStopWatch.Stop();
+                //string formatedStopWatchElapsedTime = string.Format("{0:D2}:{1:D2}:{2:D2}:{3:D2}:{4:D3}", stopWatch.Elapsed.Days, stopWatch.Elapsed.Hours, stopWatch.Elapsed.Minutes, stopWatch.Elapsed.Seconds, stopWatch.Elapsed.Milliseconds);
+                Console.WriteLine("Time taken for Provider:" + provStopWatch.Elapsed.ToString());
+                provStopWatch.Start();
             }
+
+            adminStopWatch.Stop();
+            adminReport += "_________________________________________________________________________________________________________" + Environment.NewLine;
+            adminReport += $"Number of Providers migrated ( { CountProviders } ). Total time taken: { adminStopWatch.Elapsed }" + Environment.NewLine;
+            adminReport += $"Number of ALL Apprenticeships migrated ( { CountAllApprenticeships  } ) with Pending ( { CountAllApprenticeshipPending } ) and Live ( { CountAllApprenticeshipLive} ) Status" + Environment.NewLine;
+            adminReport += $"Number of ALL ApprenticeshipLocations migrated ( { CountAllApprenticeshipLocations  } ) with Pending ( { CountAllApprenticeshipLocationsPending } ) and Live ( { CountAllApprenticeshipLocationsLive } ) Status" + Environment.NewLine;
 
             if (GenerateReportFilesLocally)
             {

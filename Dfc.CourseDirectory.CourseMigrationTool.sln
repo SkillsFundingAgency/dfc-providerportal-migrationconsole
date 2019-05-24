@@ -61,6 +61,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apprenticeships", "Apprenti
 		sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetRegionSubRegionByPostcode.sql = sql\Apprenticeships\CREATE_PROCEDURE_dfc_GetRegionSubRegionByPostcode.sql
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{1515ABEF-6FE5-424D-8AE4-0BCFB95B46FA}"
+	ProjectSection(SolutionItems) = preProject
+		documentation\ApprenticeshipMapping v2.xlsx = documentation\ApprenticeshipMapping v2.xlsx
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
