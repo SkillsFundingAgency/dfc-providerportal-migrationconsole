@@ -656,7 +656,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                     if (selectedRegion == null)
                                                     {
                                                         // Problem - No selectedRegion match => Undefined 
-                                                        adminReport += $"* ATTENTION * We couldn't identify a Region for ( { onspdRegionSubregion.Region } ) " + Environment.NewLine;
+                                                        adminReport += $"* ATTENTION * We couldn't identify a Region for ( { onspdRegionSubregion.Region } ) and Postcode ( { location.Postcode } ). " + Environment.NewLine;
                                                         apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
                                                     }
                                                     else
@@ -664,7 +664,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                         apprenticeshipLocation.LocationId = selectedRegion.ApiLocationId;
                                                         apprenticeshipLocation.LocationType = LocationType.Region;
                                                         apprenticeshipLocation.Radius = RegionBasedRadius;
-                                                        adminReport += $" We've identified a Region ( { selectedRegion.RegionName } ) with ID ( { selectedRegion.ApiLocationId } ) " + Environment.NewLine;
+                                                        adminReport += $" We've identified a Region ( { onspdRegionSubregion.Region } ) with ID ( { selectedRegion.ApiLocationId } ) " + Environment.NewLine;
                                                     }
                                                 }
                                                 else
@@ -678,7 +678,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                         if (selectedRegion == null)
                                                         {
                                                             // Problem - No selectedRegion and NO selectedSubRegion match => Undefined 
-                                                            adminReport += $"* ATTENTION * After NOT be able to identify SubRegion, we couldn't identify a Region for ( { onspdRegionSubregion.Region } ) " + Environment.NewLine;
+                                                            adminReport += $"* ATTENTION * After NOT be able to identify SubRegion, we couldn't identify a Region for ( { onspdRegionSubregion.Region } ) and Postcode ( { location.Postcode } ). " + Environment.NewLine;
                                                             apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
                                                         }
                                                         else
@@ -686,7 +686,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                             apprenticeshipLocation.LocationId = selectedRegion.ApiLocationId;
                                                             apprenticeshipLocation.LocationType = LocationType.Region;
                                                             apprenticeshipLocation.Radius = RegionBasedRadius;
-                                                            adminReport += $"After NOT be able to identify SubRegion, we've identified a Region ( { selectedRegion.RegionName } ) with ID ( { selectedRegion.ApiLocationId } ) " + Environment.NewLine;
+                                                            adminReport += $"After NOT be able to identify SubRegion, we've identified a Region ( { onspdRegionSubregion.Region } ) with ID ( { selectedRegion.ApiLocationId } ) " + Environment.NewLine;
                                                         }
                                                     }
                                                     else
@@ -694,7 +694,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                         apprenticeshipLocation.LocationId = selectedSubRegion.SubRegion.Where(x => x.SubRegionName == onspdRegionSubregion.SubRegion).SingleOrDefault().ApiLocationId;
                                                         apprenticeshipLocation.LocationType = LocationType.SubRegion;
                                                         apprenticeshipLocation.Radius = SubRegionBasedRadius;
-                                                        adminReport += $" We've identified a SubRegion ( { selectedSubRegion.RegionName } ) with ID ( { selectedSubRegion.ApiLocationId } ) " + Environment.NewLine;
+                                                        adminReport += $" We've identified a SubRegion ( { onspdRegionSubregion.SubRegion } ) with ID ( { selectedSubRegion.ApiLocationId } ) " + Environment.NewLine;
                                                     }
                                                 }
                                             }
