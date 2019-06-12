@@ -123,6 +123,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
             string connectionString = configuration.GetConnectionString("DefaultConnection");
             bool automatedMode = configuration.GetValue<bool>("AutomatedMode");
+            bool fileMode = configuration.GetValue<bool>("FiledMode");
             bool generateJsonFilesLocally = configuration.GetValue<bool>("GenerateJsonFilesLocally");
             bool generateReportFilesLocally = configuration.GetValue<bool>("GenerateReportFilesLocally");
             string jsonCourseFilesPath = configuration.GetValue<string>("JsonCourseFilesPath");
@@ -154,6 +155,22 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
                 string errorMessageGetCourses = string.Empty;
                 providerUKPRNList = DataHelper.GetProviderUKPRNs(connectionString, out errorMessageGetCourses);
+                if (!string.IsNullOrEmpty(errorMessageGetCourses))
+                {
+                    adminReport += errorMessageGetCourses + Environment.NewLine;
+                }
+                else
+                {
+                    goodToTransfer = true;
+                    transferMethod = TransferMethod.CourseMigrationTool;
+                }
+            }
+            else if (fileMode)
+            {
+                Console.WriteLine("The Migration Tool is running in File Mode." + Environment.NewLine + "Please, do not close this window until \"Migration completed\" message is displayed." + Environment.NewLine);
+
+                string errorMessageGetCourses = string.Empty;
+                providerUKPRNList = FileHelper.GetProviderUKPRNs("C:\\Users\\karl\\source\\repos\\SkillsFundingAgency\\dfc-providerportal-migrationconsole\\files", "migrationtoprovider.csv", out errorMessageGetCourses);
                 if (!string.IsNullOrEmpty(errorMessageGetCourses))
                 {
                     adminReport += errorMessageGetCourses + Environment.NewLine;
@@ -549,8 +566,28 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                 }
                                 else
                                 {
-                                    tribalCourseRun.RecordStatus = RecordStatus.MigrationPending;
-                                    courseReport += $"ATTENTION - NO Venue Id for CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' , although it's of  AttendanceType.Location" + Environment.NewLine;
+                                    //Since the Course Type is AttendanceType.Location check to see if only one venue. If so then we can reasonably be expected to 
+                                    //set the Venue ID for this course, to mitigate the mutliple migration issues we are getting for some provider types
+                                    var venueResult = Task.Run(async () => await venueService.SearchAsync(new VenueSearchCriteria(providerUKPRN.ToString(), string.Empty))).Result;
+
+                                    //Only one venue
+                                    if (venueResult.Value.Value.Count() == 1)
+                                    {
+                                        if((venueResult.Value.Value.FirstOrDefault()).Status.Equals(VenueStatus.Live)) 
+                                        {
+                                            tribalCourseRun.VenueGuidId = new Guid(venueResult.Value.Value.FirstOrDefault().ID);
+                                        }
+                                        else
+                                        {
+                                            tribalCourseRun.RecordStatus = RecordStatus.MigrationPending;
+                                            courseReport += $"ATTENTION - Venue is not LIVE (The status is { (venueResult.Value.Value.FirstOrDefault()).Status }) for CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }', VenueId '{ tribalCourseRun.VenueId }'" + Environment.NewLine;
+                                        }
+                                    }
+                                    else
+                                    { 
+                                        tribalCourseRun.RecordStatus = RecordStatus.MigrationPending;
+                                        courseReport += $"ATTENTION - NO Venue Id for CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' , although it's of  AttendanceType.Location" + Environment.NewLine;
+                                    }
                                 }
                             }
                         }
