@@ -13,6 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="BlobStorageService\BlobStorageService.cs" />
+    <Compile Remove="BlobStorageService\BlobStorageSettings.cs" />
     <Compile Remove="Interfaces\IProviderSearchResultItem.cs" />
     <Compile Remove="Interfaces\IVenueAddService.cs" />
     <Compile Remove="Interfaces\IVenueAddSettings.cs" />
@@ -49,6 +51,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Dfc.CourseDirectory.Common\Dfc.CourseDirectory.Common.csproj" />
     <ProjectReference Include="..\Dfc.CourseDirectory.Models\Dfc.CourseDirectory.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="BlobStorageService\" />
   </ItemGroup>
 
 </Project>
