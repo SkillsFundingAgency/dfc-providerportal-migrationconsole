@@ -1,7 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿
+using System;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Dfc.CourseDirectory.Services.BlobStorageService;
+using Dfc.CourseDirectory.Services.Interfaces.BlobStorageService;
+
 
 namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
 {
@@ -26,12 +31,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                 string line = null;
                 while (null != (line = reader.ReadLine()))
                 {
-                    try
-                    {
-
-
+                    try {
                         string[] linedate = line.Split(',');
-
 
                         var provider = linedate[0];
                         var migrationdate = linedate[1];
@@ -40,42 +41,36 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         DateTime.TryParse(migrationdate, out migDate);
                         int.TryParse(provider, out provID);
                         if (migDate > DateTime.MinValue && migDate == DateTime.Today && provID > 0)
-                        {
                             providerUKPRNList.Add(provID);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
+
+                    } catch (Exception ex) {
                         errors = errors + "Failed textract line: " + count.ToString() + "Ex: " + ex.Message;
-
                     }
-
                 }
             }
 
             errorMessageGetCourses = errors;
             return providerUKPRNList;
         }
-        public static List<int> GetProviderUKPRNsFromBlob(string filePath, string fileName, out string errorMessageGetCourses)
+
+        public static List<int> GetProviderUKPRNsFromBlob(IBlobStorageService blobService, string filePath, out string errorMessageGetCourses)
         {
             var providerUKPRNList = new List<int>();
             var count = 1;
             string errors = string.Empty;
-            string ProviderSelectionsPath = string.Format(@"{0}", filePath);
-            if (!Directory.Exists(ProviderSelectionsPath))
-                Directory.CreateDirectory(ProviderSelectionsPath);
-            string selectionOfProviderFile = string.Format(@"{0}\{1}", ProviderSelectionsPath, fileName);
-            using (StreamReader reader = new StreamReader(selectionOfProviderFile))
+
+            MemoryStream ms = new MemoryStream();
+            Task task = blobService.DownloadFileAsync(filePath, ms);
+            task.Wait();
+            ms.Position = 0;
+
+            using (StreamReader reader = new StreamReader(ms))
             {
                 string line = null;
                 while (null != (line = reader.ReadLine()))
                 {
-                    try
-                    {
-
-
+                    try {
                         string[] linedate = line.Split(',');
-
 
                         var provider = linedate[0];
                         var migrationdate = linedate[1];
@@ -84,16 +79,11 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
                         DateTime.TryParse(migrationdate, out migDate);
                         int.TryParse(provider, out provID);
                         if (migDate > DateTime.MinValue && migDate == DateTime.Today && provID > 0)
-                        {
                             providerUKPRNList.Add(provID);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
+
+                    } catch (Exception ex) {
                         errors = errors + "Failed textract line: " + count.ToString() + "Ex: " + ex.Message;
-
                     }
-
                 }
             }
 

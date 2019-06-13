@@ -1,25 +1,4 @@
-﻿using Dfc.CourseDirectory.Common.Settings;
-using Dfc.CourseDirectory.CourseMigrationTool.Helpers;
-using Dfc.CourseDirectory.CourseMigrationTool.Models;
-using Dfc.CourseDirectory.Models.Enums;
-using Dfc.CourseDirectory.Models.Helpers;
-using Dfc.CourseDirectory.Models.Models.Courses;
-using Dfc.CourseDirectory.Models.Models.Providers;
-using Dfc.CourseDirectory.Models.Models.Venues;
-using Dfc.CourseDirectory.Services;
-using Dfc.CourseDirectory.Services.CourseService;
-using Dfc.CourseDirectory.Services.CourseTextService;
-using Dfc.CourseDirectory.Services.Interfaces;
-using Dfc.CourseDirectory.Services.Interfaces.CourseService;
-using Dfc.CourseDirectory.Services.Interfaces.CourseTextService;
-using Dfc.CourseDirectory.Services.Interfaces.ProviderService;
-using Dfc.CourseDirectory.Services.Interfaces.VenueService;
-using Dfc.CourseDirectory.Services.ProviderService;
-using Dfc.CourseDirectory.Services.VenueService;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,6 +7,31 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Dfc.CourseDirectory.Common.Settings;
+using Dfc.CourseDirectory.CourseMigrationTool.Helpers;
+using Dfc.CourseDirectory.CourseMigrationTool.Models;
+using Dfc.CourseDirectory.Models.Enums;
+using Dfc.CourseDirectory.Models.Helpers;
+using Dfc.CourseDirectory.Models.Models.Courses;
+using Dfc.CourseDirectory.Models.Models.Providers;
+using Dfc.CourseDirectory.Models.Models.Venues;
+using Dfc.CourseDirectory.Services;
+using Dfc.CourseDirectory.Services.BlobStorageService;
+using Dfc.CourseDirectory.Services.CourseService;
+using Dfc.CourseDirectory.Services.CourseTextService;
+using Dfc.CourseDirectory.Services.Interfaces;
+using Dfc.CourseDirectory.Services.Interfaces.BlobStorageService;
+using Dfc.CourseDirectory.Services.Interfaces.CourseService;
+using Dfc.CourseDirectory.Services.Interfaces.CourseTextService;
+using Dfc.CourseDirectory.Services.Interfaces.ProviderService;
+using Dfc.CourseDirectory.Services.Interfaces.VenueService;
+using Dfc.CourseDirectory.Services.ProviderService;
+using Dfc.CourseDirectory.Services.VenueService;
+
 
 namespace Dfc.CourseDirectory.CourseMigrationTool
 {
@@ -47,30 +51,24 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             var serviceProvider = new ServiceCollection()
                 .AddLogging()
                 .AddTransient((provider) => new HttpClient())
-                .Configure<VenueServiceSettings>(venueServiceSettingsOptions =>
-                    {
+                .Configure<VenueServiceSettings>(venueServiceSettingsOptions => {
                         venueServiceSettingsOptions.ApiUrl = configuration.GetValue<string>("VenueServiceSettings:ApiUrl");
                         venueServiceSettingsOptions.ApiKey = configuration.GetValue<string>("VenueServiceSettings:ApiKey");
-                    }
-                )
+                })
                 .AddScoped<IVenueService, VenueService>()
-                .Configure<ProviderServiceSettings>(providerServiceSettingsOptions =>
-                {
+                .Configure<ProviderServiceSettings>(providerServiceSettingsOptions => {
                     providerServiceSettingsOptions.ApiUrl = configuration.GetValue<string>("ProviderServiceSettings:ApiUrl");
                     providerServiceSettingsOptions.ApiKey = configuration.GetValue<string>("ProviderServiceSettings:ApiKey");
-                }
-                )
+                })
                 .AddScoped<IProviderService, ProviderService>()
-                 .Configure<LarsSearchSettings>(larsSearchSettingsOptions =>
-                 {
+                 .Configure<LarsSearchSettings>(larsSearchSettingsOptions => {
                      larsSearchSettingsOptions.ApiUrl = configuration.GetValue<string>("LarsSearchSettings:ApiUrl");
                      larsSearchSettingsOptions.ApiKey = configuration.GetValue<string>("LarsSearchSettings:ApiKey");
                      larsSearchSettingsOptions.ApiVersion = configuration.GetValue<string>("LarsSearchSettings:ApiVersion");
                      larsSearchSettingsOptions.Indexes = configuration.GetValue<string>("LarsSearchSettings:Indexes");
                      larsSearchSettingsOptions.ItemsPerPage = Convert.ToInt32(configuration.GetValue<string>("LarsSearchSettings:ItemsPerPage"));
                      larsSearchSettingsOptions.PageParamName = configuration.GetValue<string>("LarsSearchSettings:PageParamName");
-                 }
-                )
+                 })
                 .AddScoped<ILarsSearchService, LarsSearchService>()
                 .Configure<CourseForComponentSettings>(CourseForComponentSettingsOptions =>
                 { CourseForComponentSettingsOptions.TextFieldMaxChars = configuration.GetValue<int>("AppUISettings:CourseForComponentSettings:TextFieldMaxChars"); })
@@ -86,20 +84,23 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 { HowAssessedComponentSettingsOptions.TextFieldMaxChars = configuration.GetValue<int>("AppUISettings:HowAssessedComponentSettings:TextFieldMaxChars"); })
                 .Configure<WhereNextComponentSettings>(WhereNextComponentSettingsOptions =>
                 { WhereNextComponentSettingsOptions.TextFieldMaxChars = configuration.GetValue<int>("AppUISettings:WhereNextComponentSettings:TextFieldMaxChars"); })
-                .Configure<CourseServiceSettings>(courseServiceSettingsOptions =>
-                {
+                .Configure<CourseServiceSettings>(courseServiceSettingsOptions => {
                     courseServiceSettingsOptions.ApiUrl = configuration.GetValue<string>("CourseServiceSettings:ApiUrl");
                     courseServiceSettingsOptions.ApiKey = configuration.GetValue<string>("CourseServiceSettings:ApiKey");
-                }
-                )
+                })
                 .AddScoped<ICourseService, CourseService>()
-                .Configure<CourseTextServiceSettings>(courseTextServiceSettingsOptions =>
-                {
+                .Configure<CourseTextServiceSettings>(courseTextServiceSettingsOptions => {
                     courseTextServiceSettingsOptions.ApiUrl = configuration.GetValue<string>("CourseTextServiceSettings:ApiUrl");
                     courseTextServiceSettingsOptions.ApiKey = configuration.GetValue<string>("CourseTextServiceSettings:ApiKey");
-                }
-                )
+                })
                 .AddScoped<ICourseTextService, CourseTextService>()
+                .Configure<BlobStorageSettings>(options => {
+                    options.AccountName = configuration.GetValue<string>("BlobStorageSettings:AccountName");
+                    options.AccountKey = configuration.GetValue<string>("BlobStorageSettings:AccountKey");
+                    options.Container = configuration.GetValue<string>("BlobStorageSettings:Container");
+                    options.TemplatePath = configuration.GetValue<string>("BlobStorageSettings:TemplatePath");
+                })
+                .AddScoped<IBlobStorageService, BlobStorageService>()
                 .BuildServiceProvider();
 
             // Configure console logging
@@ -117,13 +118,14 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             var courseService = serviceProvider.GetService<ICourseService>();
             var courseTextService = serviceProvider.GetService<ICourseTextService>();
             var providerService = serviceProvider.GetService<IProviderService>();
+            var blobService = serviceProvider.GetService<IBlobStorageService>();
 
             logger.LogDebug("Log test.");
-
 
             string connectionString = configuration.GetConnectionString("DefaultConnection");
             bool automatedMode = configuration.GetValue<bool>("AutomatedMode");
             bool fileMode = configuration.GetValue<bool>("FiledMode");
+            bool blobMode = configuration.GetValue<bool>("BlobMode");
             bool generateJsonFilesLocally = configuration.GetValue<bool>("GenerateJsonFilesLocally");
             bool generateReportFilesLocally = configuration.GetValue<bool>("GenerateReportFilesLocally");
             string jsonCourseFilesPath = configuration.GetValue<string>("JsonCourseFilesPath");
@@ -149,40 +151,43 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             int? singleProviderUKPRN = null;
             string bulkUploadFileName = string.Empty;
 
-            if (automatedMode)
-            {
+            if (automatedMode) {
                 Console.WriteLine("The Migration Tool is running in Automated Mode." + Environment.NewLine + "Please, do not close this window until \"Migration completed\" message is displayed." + Environment.NewLine);
 
                 string errorMessageGetCourses = string.Empty;
                 providerUKPRNList = DataHelper.GetProviderUKPRNs(connectionString, out errorMessageGetCourses);
-                if (!string.IsNullOrEmpty(errorMessageGetCourses))
-                {
+                if (!string.IsNullOrEmpty(errorMessageGetCourses)) {
                     adminReport += errorMessageGetCourses + Environment.NewLine;
-                }
-                else
-                {
+                } else {
                     goodToTransfer = true;
                     transferMethod = TransferMethod.CourseMigrationTool;
                 }
-            }
-            else if (fileMode)
-            {
+
+            } else if (fileMode) {
                 Console.WriteLine("The Migration Tool is running in File Mode." + Environment.NewLine + "Please, do not close this window until \"Migration completed\" message is displayed." + Environment.NewLine);
 
                 string errorMessageGetCourses = string.Empty;
                 providerUKPRNList = FileHelper.GetProviderUKPRNs("C:\\Users\\karl\\source\\repos\\SkillsFundingAgency\\dfc-providerportal-migrationconsole\\files", "migrationtoprovider.csv", out errorMessageGetCourses);
-                if (!string.IsNullOrEmpty(errorMessageGetCourses))
-                {
+                if (!string.IsNullOrEmpty(errorMessageGetCourses)) {
                     adminReport += errorMessageGetCourses + Environment.NewLine;
-                }
-                else
-                {
+                } else {
                     goodToTransfer = true;
                     transferMethod = TransferMethod.CourseMigrationTool;
                 }
-            }
-            else
-            {
+
+            } else if (blobMode) {
+                Console.WriteLine("The Migration Tool is running in Blob Mode." + Environment.NewLine + "Please, do not close this window until \"Migration completed\" message is displayed." + Environment.NewLine);
+
+                string errorMessageGetCourses = string.Empty;
+                providerUKPRNList = FileHelper.GetProviderUKPRNsFromBlob(blobService, "migrationtoprovider.csv", out errorMessageGetCourses);
+                if (!string.IsNullOrEmpty(errorMessageGetCourses)) {
+                    adminReport += errorMessageGetCourses + Environment.NewLine;
+                } else {
+                    goodToTransfer = true;
+                    transferMethod = TransferMethod.CourseMigrationTool;
+                }
+
+            } else {
                 Console.WriteLine("-------------------");
                 Console.WriteLine(" COURSES MIGRATION");
                 Console.WriteLine("-------------------");
@@ -190,12 +195,10 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                    Environment.NewLine + "(Ensure that you have created a folder named 'ProviderSelections' and placed your .csv file in it.)");
                 string providerInput = Console.ReadLine();
 
-                if (string.IsNullOrEmpty(providerInput))
-                {
+                if (string.IsNullOrEmpty(providerInput)) {
                     Console.WriteLine("Please next time enter a value.");
-                }
-                else if (providerInput.Equals("s", StringComparison.InvariantCultureIgnoreCase))
-                {
+                } else if (providerInput.Equals("s", StringComparison.InvariantCultureIgnoreCase)) {
+
                     // Migrate selection of Providers from .CSV file
                     string ProviderSelectionsPath = string.Format(@"{0}\ProviderSelections", jsonCourseFilesPath);
                     if (!Directory.Exists(ProviderSelectionsPath))
@@ -209,20 +212,15 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                             string[] providers = line.Split(',');
                             foreach (var provider in providers)
                             {
-                                if (CheckForValidUKPRN(provider))
-                                {
+                                if (CheckForValidUKPRN(provider)) {
                                     providerUKPRNList.Add(Convert.ToInt32(provider));
-
                                     goodToTransfer = true;
                                     bulkUploadFileName = selectionOfProvidersFileName;
                                     transferMethod = TransferMethod.CourseMigrationToolCsvFile;
-                                }
-                                else if (string.IsNullOrEmpty(provider))
-                                {
+
+                                } else if (string.IsNullOrEmpty(provider)) {
                                     // We don't want to know about the empty spaces on splitting
-                                }
-                                else
-                                {
+                                } else {
                                     // Log invalid providers
                                     adminReport += $">>> The following ( { provider } ) is not valid UKPRN." + Environment.NewLine + Environment.NewLine;
                                 }
@@ -230,18 +228,15 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                         }
                     }
 
+                } else if (CheckForValidUKPRN(providerInput)) {
 
-                }
-                else if (CheckForValidUKPRN(providerInput))
-                {
                     // Migrate single Provider
                     providerUKPRNList.Add(Convert.ToInt32(providerInput));
                     goodToTransfer = true;
                     transferMethod = TransferMethod.CourseMigrationToolSingleUkprn;
                     singleProviderUKPRN = Convert.ToInt32(providerInput);
-                }
-                else
-                {
+
+                } else {
                     Console.WriteLine("You have to enter either valid UKPRN (which must be 8 digit number starting with a 1 e.g. 10000364) or \"s\" for selection of Providers");
                 }
             }
