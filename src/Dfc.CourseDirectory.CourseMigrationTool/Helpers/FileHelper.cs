@@ -59,14 +59,12 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             var count = 1;
             string errors = string.Empty;
 
-            //BlobStorageService _blob = new BlobStorageService(null, null, null);
-
             MemoryStream ms = new MemoryStream();
             Task task = blobService.DownloadFileAsync(filePath, ms);
             task.Wait();
             ms.Position = 0;
 
-            using (StreamReader reader = new StreamReader(ms)) // selectionOfProviderFile))
+            using (StreamReader reader = new StreamReader(ms))
             {
                 string line = null;
                 while (null != (line = reader.ReadLine()))
