@@ -59,11 +59,6 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             var count = 1;
             string errors = string.Empty;
 
-            //string ProviderSelectionsPath = string.Format(@"{0}", filePath);
-            //if (!Directory.Exists(ProviderSelectionsPath))
-            //    Directory.CreateDirectory(ProviderSelectionsPath);
-            //string selectionOfProviderFile = string.Format(@"{0}\{1}", ProviderSelectionsPath, fileName);
-
             //BlobStorageService _blob = new BlobStorageService(null, null, null);
 
             MemoryStream ms = new MemoryStream();
