@@ -99,6 +99,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                     options.AccountKey = configuration.GetValue<string>("BlobStorageSettings:AccountKey");
                     options.Container = configuration.GetValue<string>("BlobStorageSettings:Container");
                     options.TemplatePath = configuration.GetValue<string>("BlobStorageSettings:TemplatePath");
+                    options.ProviderListPath = configuration.GetValue<string>("BlobStorageSettings:ProviderListPath");
                 })
                 .AddScoped<IBlobStorageService, BlobStorageService>()
                 .BuildServiceProvider();
@@ -179,7 +180,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 Console.WriteLine("The Migration Tool is running in Blob Mode." + Environment.NewLine + "Please, do not close this window until \"Migration completed\" message is displayed." + Environment.NewLine);
 
                 string errorMessageGetCourses = string.Empty;
-                providerUKPRNList = FileHelper.GetProviderUKPRNsFromBlob(blobService, "migrationtoprovider.csv", out errorMessageGetCourses);
+                providerUKPRNList = FileHelper.GetProviderUKPRNsFromBlob(blobService, out errorMessageGetCourses); //COUR-1012-blob-storage-settings
                 if (!string.IsNullOrEmpty(errorMessageGetCourses)) {
                     adminReport += errorMessageGetCourses + Environment.NewLine;
                 } else {
