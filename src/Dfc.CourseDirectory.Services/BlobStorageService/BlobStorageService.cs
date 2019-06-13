@@ -33,6 +33,7 @@ namespace Dfc.CourseDirectory.Services.BlobStorageService
         //private readonly string _containerName;
         //private readonly string _bulkUploadPathFormat;
         private readonly string _templatePath;
+        private readonly string _providerListPath;
 
         private readonly CloudStorageAccount _account;
         //private readonly CloudBlobClient _blobClient;
@@ -56,6 +57,7 @@ namespace Dfc.CourseDirectory.Services.BlobStorageService
             //_containerName = settings.Value.Container;
             //_bulkUploadPathFormat = settings.Value.BulkUploadPathFormat;
             _templatePath = settings.Value.TemplatePath;
+            _providerListPath = settings.Value.ProviderListPath;
 
             //Set up the client
             _account = new CloudStorageAccount(new StorageCredentials(_accountName, _accountKey), true);
@@ -154,6 +156,11 @@ namespace Dfc.CourseDirectory.Services.BlobStorageService
         public Task GetBulkUploadTemplateFileAsync(Stream stream)
         {
             return DownloadFileAsync(_templatePath, stream);
+        }
+
+        public Task GetBulkUploadProviderListFileAsync(Stream stream)
+        {
+            return DownloadFileAsync(_providerListPath, stream);
         }
 
     }
