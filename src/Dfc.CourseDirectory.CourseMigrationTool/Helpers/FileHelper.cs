@@ -53,14 +53,14 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             return providerUKPRNList;
         }
 
-        public static List<int> GetProviderUKPRNsFromBlob(IBlobStorageService blobService, string filePath, out string errorMessageGetCourses)
+        public static List<int> GetProviderUKPRNsFromBlob(IBlobStorageService blobService, out string errorMessageGetCourses)
         {
             var providerUKPRNList = new List<int>();
             var count = 1;
             string errors = string.Empty;
 
             MemoryStream ms = new MemoryStream();
-            Task task = blobService.DownloadFileAsync(filePath, ms);
+            Task task = blobService.GetBulkUploadProviderListFileAsync(ms);
             task.Wait();
             ms.Position = 0;
 
