@@ -571,7 +571,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                     var venueResult = Task.Run(async () => await venueService.SearchAsync(new VenueSearchCriteria(providerUKPRN.ToString(), string.Empty))).Result;
 
                                     //Only one venue
-                                    if (venueResult.Value.Value.Count() == 1)
+                                    if (null!= venueResult && null != venueResult.Value && null != venueResult.Value.Value && venueResult.Value.Value.Count() == 1)
                                     {
                                         if((venueResult.Value.Value.FirstOrDefault()).Status.Equals(VenueStatus.Live)) 
                                         {
