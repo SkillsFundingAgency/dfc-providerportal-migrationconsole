@@ -556,28 +556,32 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                     }
                                     else
                                     {
-                                        tribalCourseRun.RecordStatus = RecordStatus.MigrationPending;
-                                        courseReport += $"ATTENTION - CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' - Venue with VenueId -  '{ tribalCourseRun.VenueId }' could not obtain VenueIdGuid , Error:  { venueResult?.Error } for BAD " + Environment.NewLine;
+                                        //Since Venue not found lets check to see if there is only one
+                                        var venueGuid = CheckVenue(venueService, providerUKPRN.ToString());
+                                        if (null != venueGuid)
+                                        {
+                                            tribalCourseRun.VenueGuidId = venueGuid;
+                                        }
+                                        else
+                                        {
+                                            tribalCourseRun.RecordStatus = RecordStatus.MigrationPending;
+                                            courseReport += $"ATTENTION - CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' - Venue with VenueId -  '{ tribalCourseRun.VenueId }' could not obtain VenueIdGuid , Error:  { venueResult?.Error } for BAD " + Environment.NewLine;
+                                        }
                                     }
                                 }
                                 else
                                 {
                                     //Since the Course Type is AttendanceType.Location check to see if only one venue. If so then we can reasonably be expected to 
                                     //set the Venue ID for this course, to mitigate the mutliple migration issues we are getting for some provider types
-                                    var venueResult = Task.Run(async () => await venueService.SearchAsync(new VenueSearchCriteria(providerUKPRN.ToString(), string.Empty))).Result;
+                                    var venueGuid = CheckVenue(venueService, providerUKPRN.ToString());
 
                                     //Only one venue
-                                    if (null!= venueResult && null != venueResult.Value && null != venueResult.Value.Value && venueResult.Value.Value.Count() == 1)
+                                    if (null!= venueGuid)
                                     {
-                                        if((venueResult.Value.Value.FirstOrDefault()).Status.Equals(VenueStatus.Live)) 
-                                        {
-                                            tribalCourseRun.VenueGuidId = new Guid(venueResult.Value.Value.FirstOrDefault().ID);
-                                        }
-                                        else
-                                        {
-                                            tribalCourseRun.RecordStatus = RecordStatus.MigrationPending;
-                                            courseReport += $"ATTENTION - Venue is not LIVE (The status is { (venueResult.Value.Value.FirstOrDefault()).Status }) for CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }', VenueId '{ tribalCourseRun.VenueId }'" + Environment.NewLine;
-                                        }
+
+                                        tribalCourseRun.VenueGuidId = venueGuid;
+                                        
+                                        
                                     }
                                     else
                                     { 
@@ -918,7 +922,22 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
             return countCourseRuns;
         }
+        private static Guid? CheckVenue(IVenueService venueService, string ukrpn)
+        {
+            var venueResult = Task.Run(async () => await venueService.SearchAsync(new VenueSearchCriteria(ukrpn, string.Empty))).Result;
 
+            //Only one venue
+            if (null != venueResult 
+                && null != venueResult.Value 
+                    && null != venueResult.Value.Value 
+                        && venueResult.Value.Value.Count() == 1 
+                            && (venueResult.Value.Value.FirstOrDefault()).Status.Equals(VenueStatus.Live))
+            
+                return new Guid(venueResult.Value.Value.FirstOrDefault().ID);
+             
+            else 
+                return (Guid?)null;
+        }
 
     }
 }
