@@ -273,3 +273,4 @@ packages
 
 
 /src/Dfc.CourseDirectory.ApprenticeshipMigrationTool/appsettings.json
+/src/Dfc.CourseDirectory.CourseMigrationTool/Properties/launchSettings.json
