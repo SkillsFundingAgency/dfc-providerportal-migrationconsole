@@ -39,6 +39,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
     {
         static void Main(string[] args)
         {
+           
+
             #region Configuration 
 
             var builder = new ConfigurationBuilder()
@@ -124,9 +126,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             logger.LogDebug("Log test.");
 
             string connectionString = configuration.GetConnectionString("DefaultConnection");
-            bool automatedMode = configuration.GetValue<bool>("AutomatedMode");
-            bool fileMode = configuration.GetValue<bool>("FiledMode");
-            bool blobMode = configuration.GetValue<bool>("BlobMode");
+           
             bool generateJsonFilesLocally = configuration.GetValue<bool>("GenerateJsonFilesLocally");
             bool generateReportFilesLocally = configuration.GetValue<bool>("GenerateReportFilesLocally");
             string jsonCourseFilesPath = configuration.GetValue<string>("JsonCourseFilesPath");
@@ -138,7 +138,28 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             bool DeleteCoursesByUKPRN = configuration.GetValue<bool>("DeleteCoursesByUKPRN");
             bool EnableProviderOnboarding = configuration.GetValue<bool>("EnableProviderOnboarding");
 
-            #endregion 
+            #endregion
+
+            #region CommandLineArgs
+            //Overwrite settings if command line set
+            bool automatedMode = false;
+            bool fileMode = false;
+            bool blobMode = false;
+
+            if (null != args && null != args[0] && args[0].ToUpper() == "F")
+            {
+                automatedMode = false;
+                fileMode = false;
+                blobMode = true;
+            }
+            else
+            {
+                automatedMode = configuration.GetValue<bool>("AutomatedMode");
+                fileMode = configuration.GetValue<bool>("FiledMode");
+                blobMode = configuration.GetValue<bool>("BlobMode");
+            }
+
+            #endregion
 
             #region Get User Input and Set Variables
 
@@ -896,7 +917,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             if (!string.IsNullOrEmpty(errorMessageCourseTransferUpdate)) Console.WriteLine("Error on CourseTransferUpdate" + errorMessageCourseTransferUpdate);
 
             Console.WriteLine("Migration completed.");
-            string nextLine = Console.ReadLine();
+            if(!blobMode) //don't do this if running as a background task to updatefrom blob
+                Console.ReadLine();
         }
 
         internal static bool CheckForValidUKPRN(string ukprn)
