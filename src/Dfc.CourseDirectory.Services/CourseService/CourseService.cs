@@ -194,8 +194,9 @@ namespace Dfc.CourseDirectory.Services.CourseService
             {
                 if (!HasOnlyFollowingValidCharacters(course.CourseDescription))
                     validationMessages.Add("Course For decription contains invalid character");
-                if (course.CourseDescription.Length > _courseForTextFieldMaxChars)
-                    validationMessages.Add($"Course For decription must be { _courseForTextFieldMaxChars } characters or less");
+                //COUR-1076
+                //if (course.CourseDescription.Length > _courseForTextFieldMaxChars)
+                //    validationMessages.Add($"Course For decription must be { _courseForTextFieldMaxChars } characters or less");
             }
 
             // EntryRequirements
@@ -203,8 +204,9 @@ namespace Dfc.CourseDirectory.Services.CourseService
             {
                 if (!HasOnlyFollowingValidCharacters(course.EntryRequirements))
                     validationMessages.Add("Entry Requirements contains invalid character");
-                if (course.EntryRequirements.Length > _entryRequirementsTextFieldMaxChars)
-                    validationMessages.Add($"Entry Requirements must be { _entryRequirementsTextFieldMaxChars } characters or less");
+                //COUR-1076
+                //if (course.EntryRequirements.Length > _entryRequirementsTextFieldMaxChars)
+                //    validationMessages.Add($"Entry Requirements must be { _entryRequirementsTextFieldMaxChars } characters or less");
             }
 
             // WhatYoullLearn 
@@ -212,8 +214,9 @@ namespace Dfc.CourseDirectory.Services.CourseService
             {
                 if (!HasOnlyFollowingValidCharacters(course.WhatYoullLearn))
                     validationMessages.Add("What You'll Learn contains invalid character");
-                if (course.WhatYoullLearn.Length > _whatWillLearnTextFieldMaxChars)
-                    validationMessages.Add($"What You'll Learn must be { _whatWillLearnTextFieldMaxChars } characters or less");
+                //COUR-1076
+                //if (course.WhatYoullLearn.Length > _whatWillLearnTextFieldMaxChars)
+                //    validationMessages.Add($"What You'll Learn must be { _whatWillLearnTextFieldMaxChars } characters or less");
             }
 
             // HowYoullLearn 
@@ -221,8 +224,9 @@ namespace Dfc.CourseDirectory.Services.CourseService
             {
                 if (!HasOnlyFollowingValidCharacters(course.HowYoullLearn))
                     validationMessages.Add("How You'll Learn contains invalid character");
-                if (course.HowYoullLearn.Length > _howYouWillLearnTextFieldMaxChars)
-                    validationMessages.Add($"How You'll Learn must be { _howYouWillLearnTextFieldMaxChars } characters or less");
+                //COUR-1076
+                //if (course.HowYoullLearn.Length > _howYouWillLearnTextFieldMaxChars)
+                //    validationMessages.Add($"How You'll Learn must be { _howYouWillLearnTextFieldMaxChars } characters or less");
             }
 
             // WhatYoullNeed 
@@ -230,8 +234,9 @@ namespace Dfc.CourseDirectory.Services.CourseService
             {
                 if (!HasOnlyFollowingValidCharacters(course.WhatYoullNeed))
                     validationMessages.Add("What You'll Need contains invalid character");
-                if (course.WhatYoullNeed.Length > _whatYouNeedTextFieldMaxChars)
-                    validationMessages.Add($"What You'll Need must be { _whatYouNeedTextFieldMaxChars } characters or less");
+                //COUR-1076
+                //if (course.WhatYoullNeed.Length > _whatYouNeedTextFieldMaxChars)
+                //    validationMessages.Add($"What You'll Need must be { _whatYouNeedTextFieldMaxChars } characters or less");
             }
 
             // HowYoullBeAssessed 
@@ -239,8 +244,9 @@ namespace Dfc.CourseDirectory.Services.CourseService
             {
                 if (!HasOnlyFollowingValidCharacters(course.HowYoullBeAssessed))
                     validationMessages.Add("How You'll Be Assessed contains invalid character");
-                if (course.HowYoullBeAssessed.Length > _howAssessedTextFieldMaxChars)
-                    validationMessages.Add($"How You'll Be Assessed must be { _howAssessedTextFieldMaxChars } characters or less");
+                //COUR-1076
+                //if (course.HowYoullBeAssessed.Length > _howAssessedTextFieldMaxChars)
+                //    validationMessages.Add($"How You'll Be Assessed must be { _howAssessedTextFieldMaxChars } characters or less");
             }
 
             // WhereNext 
@@ -248,8 +254,9 @@ namespace Dfc.CourseDirectory.Services.CourseService
             {
                 if (!HasOnlyFollowingValidCharacters(course.WhereNext))
                     validationMessages.Add("Where Next contains invalid character");
-                if (course.WhereNext.Length > _whereNextTextFieldMaxChars)
-                    validationMessages.Add($"Where Next must be { _whereNextTextFieldMaxChars } characters or less");
+                //COUR-1076
+                //if (course.WhereNext.Length > _whereNextTextFieldMaxChars)
+                //    validationMessages.Add($"Where Next must be { _whereNextTextFieldMaxChars } characters or less");
             }
 
             return validationMessages;
