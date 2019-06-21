@@ -555,7 +555,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                             tribalCourseRun.CourseName = preserveCourseTitle; //tribalCourse.CourseTitle;
 
                             // Call VenueService and for each tribalCourseRun.VenueId get tribalCourseRun.VenueGuidId (Applicable only for type Location/Classroom)
-                            if (tribalCourseRun.AttendanceType.Equals(AttendanceType.Location))
+                            if (tribalCourseRun.AttendanceType.Equals(AttendanceType.Location) || tribalCourseRun.AttendanceType.Equals(AttendanceType.FaceToFaceNonCampus))
                             {
                                 if (tribalCourseRun.VenueId != null)
                                 {
