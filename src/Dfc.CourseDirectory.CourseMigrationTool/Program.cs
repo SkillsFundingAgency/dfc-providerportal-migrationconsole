@@ -146,7 +146,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
             bool fileMode = false;
             bool blobMode = false;
 
-            if (null != args && null != args[0] && args[0].ToUpper() == "F")
+            if (null != args && args.Count() > 0 && null != args[0] && args[0].ToUpper() == "F")
             {
                 automatedMode = false;
                 fileMode = false;
