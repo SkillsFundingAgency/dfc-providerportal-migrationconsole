@@ -428,7 +428,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                     }
                     else
                     {
-                        providerReport += $"Error on delteing courses -  { deleteCoursesByUKPRNResult.Error }  " + Environment.NewLine;
+                        Console.Write("ERROR: Failed to delete provider current courses for: " + providerUKPRN);
+                        providerReport += $"Error on deleteing courses -  { deleteCoursesByUKPRNResult.Error }  " + Environment.NewLine;
                     }
                 }
 
