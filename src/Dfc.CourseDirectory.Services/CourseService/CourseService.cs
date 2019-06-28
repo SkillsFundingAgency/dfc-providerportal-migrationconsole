@@ -26,6 +26,7 @@ namespace Dfc.CourseDirectory.Services.CourseService
         private readonly HttpClient _httpClient;
         private readonly Uri _addCourseUri;
         private readonly Uri _deleteCoursesByUKPRNUri;
+        private readonly Uri _addCourseMigrationReportsUri;
 
         private readonly int _courseForTextFieldMaxChars;
         private readonly int _entryRequirementsTextFieldMaxChars;
@@ -63,6 +64,7 @@ namespace Dfc.CourseDirectory.Services.CourseService
 
             _addCourseUri = settings.Value.ToAddCourseUri();
             _deleteCoursesByUKPRNUri = settings.Value.ToDeleteCoursesByUKPRNUri();
+            _addCourseMigrationReportsUri = settings.Value.ToAddCourseMigrationReport();
 
             _courseForTextFieldMaxChars = courseForComponentSettings.Value.TextFieldMaxChars;
             _entryRequirementsTextFieldMaxChars = entryRequirementsComponentSettings.Value.TextFieldMaxChars;
@@ -439,6 +441,57 @@ namespace Dfc.CourseDirectory.Services.CourseService
             return validUKPRN.Success;
         }
 
+        public async Task<IResult> AddMigrationReport(CourseMigrationReport courseMigrationReport)
+        {
+            _logger.LogMethodEnter();
+            Throw.IfNull(courseMigrationReport, nameof(CourseMigrationReport));
+
+            try
+            {
+                _logger.LogInformationObject("Course add object.", courseMigrationReport);
+                _logger.LogInformationObject("Course add URI", _addCourseMigrationReportsUri);
+
+                var courseJson = JsonConvert.SerializeObject(courseMigrationReport);
+
+                var content = new StringContent(courseJson, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync(_addCourseUri, content);
+
+                _logger.LogHttpResponseMessage("Course add migration report service http response", response);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+
+                    _logger.LogInformationObject("Course add migration report service json response", json);
+
+                    return Result.Ok();
+                }
+                else if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                {
+                    return Result.Fail("Course add migration report service unsuccessful http response - TooManyRequests");
+                }
+                else
+                {
+                    return Result.Fail("Course add migration report service unsuccessful http response - ResponseStatusCode: " + response.StatusCode);
+                }
+            }
+            catch (HttpRequestException hre)
+            {
+                _logger.LogException("Course add migration report service http request error", hre);
+                return Result.Fail("Course add migration report service http request error.");
+            }
+            catch (Exception e)
+            {
+                _logger.LogException("Course add migration report service unknown error.", e);
+
+                return Result.Fail("Course add migration report service unknown error.");
+            }
+            finally
+            {
+                _logger.LogMethodExit();
+            }
+
+        }
     }
 
     internal static class CourseServiceSettingsExtensions
@@ -450,6 +503,10 @@ namespace Dfc.CourseDirectory.Services.CourseService
         internal static Uri ToDeleteCoursesByUKPRNUri(this ICourseServiceSettings extendee)
         {
             return new Uri($"{extendee.ApiUrl + "DeleteCoursesByUKPRN?code=" + extendee.ApiKey}");
+        }
+        internal static Uri ToAddCourseMigrationReport(this ICourseServiceSettings extendee)
+        {
+            return new Uri($"{extendee.ApiUrl + "UpdateCourseMigrationReport?code=" + extendee.ApiKey}");
         }
     }
 }

@@ -340,7 +340,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 int CountProviderCourseRunsReadyToGoLive = 0;
                 int CountProviderCourseRunsLARSless = 0;
                 //InvalidCharCount = 0;
-
+               
 
                 string providerReport = "                         Migration Report " + Environment.NewLine;
 
@@ -431,6 +431,8 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                         providerReport += $"Error on delteing courses -  { deleteCoursesByUKPRNResult.Error }  " + Environment.NewLine;
                     }
                 }
+
+                var larslessCourses = new List<Course>();
 
                 foreach (var tribalCourse in tribalCourses)
                 {
@@ -695,6 +697,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                     if (!Directory.Exists(LARSlessCoursesPath))
                                         Directory.CreateDirectory(LARSlessCoursesPath);
                                     File.WriteAllText(string.Format(@"{0}\{1}", LARSlessCoursesPath, jsonFileName), courseJson);
+                                    larslessCourses.Add(course);
                                 }
                                 else
                                 {
@@ -716,6 +719,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                     if (!Directory.Exists(LARSlessCoursesPath))
                                         Directory.CreateDirectory(LARSlessCoursesPath);
                                     File.WriteAllText(string.Format(@"{0}\{1}", LARSlessCoursesPath, jsonFileName), courseJson);
+                                    larslessCourses.Add(course);
                                 }
                                 else
                                 {
@@ -862,7 +866,21 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                 CountAllCourseRunsPending = CountAllCourseRunsPending + CountProviderCourseRunsPending;
                 CountAllCourseRunsReadyToGoLive = CountAllCourseRunsReadyToGoLive + CountProviderCourseRunsReadyToGoLive;
                 CountAllCourseRunsLARSless = CountAllCourseRunsLARSless + CountProviderCourseRunsLARSless;
+                //todo call new migraiton report service 
+                var courseMigrationReport = new CourseMigrationReport
+                {
+                    ProviderUKPRN = providerUKPRN,
+                    Id = Guid.NewGuid(),
+                    PreviousLiveCourseCount = tribalCourses.SelectMany(x => x.TribalCourseRuns).Count(),
+                    LarslessCourses = larslessCourses
+                };
 
+                var courseMigrationReportResult = Task.Run(async () => await courseService.AddMigrationReport(courseMigrationReport)).Result;
+
+                if (courseMigrationReportResult.IsFailure)
+                {
+                    throw new Exception(courseMigrationReportResult.Error);
+                }
                 // For feedback to the user only
                 provStopWatch.Stop();
                 //string formatedStopWatchElapsedTime = string.Format("{0:D2}:{1:D2}:{2:D2}:{3:D2}:{4:D3}", stopWatch.Elapsed.Days, stopWatch.Elapsed.Hours, stopWatch.Elapsed.Minutes, stopWatch.Elapsed.Seconds, stopWatch.Elapsed.Milliseconds);

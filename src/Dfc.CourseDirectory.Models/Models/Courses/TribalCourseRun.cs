@@ -167,6 +167,7 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
         public TribalAttendancePattern AttendancePattern { get; set; }
 
         public RecordStatus RecordStatus { get; set; }
+        public TribalRecordStatus TribalRecordStatus { get; set; }
 
         //public DateTime CreatedDate { get; set; }
         //public string CreatedBy { get; set; }

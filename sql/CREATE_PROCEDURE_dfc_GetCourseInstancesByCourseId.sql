@@ -34,6 +34,7 @@ BEGIN
 			,[DurationUnit]
 			,[StudyModeId]
 			,[AttendancePatternId]
+			,ci.[RecordStatusId]
 	  FROM [CourseInstance] ci
 	  LEFT OUTER JOIN [CourseInstanceVenue] civ ON ci.CourseInstanceId = civ.CourseInstanceId
 	  LEFT OUTER JOIN [CourseInstanceStartDate] cisd ON ci.CourseInstanceId = cisd.CourseInstanceId  
