@@ -454,7 +454,7 @@ namespace Dfc.CourseDirectory.Services.CourseService
                 var courseJson = JsonConvert.SerializeObject(courseMigrationReport);
 
                 var content = new StringContent(courseJson, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(_addCourseUri, content);
+                var response = await _httpClient.PostAsync(_addCourseMigrationReportsUri, content);
 
                 _logger.LogHttpResponseMessage("Course add migration report service http response", response);
 
