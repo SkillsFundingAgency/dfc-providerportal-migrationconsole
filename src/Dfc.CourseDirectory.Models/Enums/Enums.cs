@@ -34,6 +34,14 @@ namespace Dfc.CourseDirectory.Models.Enums
         LARSless = 1024
     }
 
+    public enum TribalRecordStatus
+    {
+        Undefined = 0,
+        Pending = 1,
+        Live = 2,
+        Archived =3,
+        Deleted = 4
+    }
 
     public enum TransferMethod
     {
