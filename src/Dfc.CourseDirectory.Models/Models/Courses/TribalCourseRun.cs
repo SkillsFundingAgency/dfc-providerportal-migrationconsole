@@ -168,7 +168,7 @@ namespace Dfc.CourseDirectory.Models.Models.Courses
 
         public RecordStatus RecordStatus { get; set; }
         public TribalRecordStatus TribalRecordStatus { get; set; }
-
+        public string VenueName { get; set; } //=> CostDescription
         //public DateTime CreatedDate { get; set; }
         //public string CreatedBy { get; set; }
         //public DateTime UpdatedDate { get; set; }

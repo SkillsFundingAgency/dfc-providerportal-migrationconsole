@@ -580,16 +580,45 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
                                     }
                                     else
                                     {
-                                        //Since Venue not found lets check to see if there is only one
-                                        var venueGuid = CheckVenue(venueService, providerUKPRN.ToString());
-                                        if (null != venueGuid)
+                                        //Search by Name if found
+                                        if (!string.IsNullOrEmpty(tribalCourseRun.VenueName))
                                         {
-                                            tribalCourseRun.VenueGuidId = venueGuid;
+                                            GetVenuesByPRNAndNameCriteria venueCriteria = new GetVenuesByPRNAndNameCriteria(providerUKPRN.ToString(), tribalCourseRun.VenueName);
+                                            var venuesResult2 = Task.Run(async () => await venueService.GetVenuesByPRNAndNameAsync(venueCriteria)).Result;
+                                            if (venuesResult2.IsSuccess && venuesResult2.HasValue && null != venuesResult2.Value && null != venuesResult2.Value.Value && venuesResult2.Value.Value.Count() > 0)
+                                            {
+                                                tribalCourseRun.VenueGuidId = new Guid(((Venue)venuesResult2.Value.Value.FirstOrDefault()).ID);
+                                            }
+                                            else
+                                            {
+
+                                                //Since Venue not found lets check to see if there is only one
+                                                var venueGuid = CheckVenue(venueService, providerUKPRN.ToString());
+                                                if (null != venueGuid)
+                                                {
+                                                    tribalCourseRun.VenueGuidId = venueGuid;
+                                                }
+                                                else
+                                                {
+                                                    tribalCourseRun.RecordStatus = RecordStatus.MigrationPending;
+                                                    courseReport += $"ATTENTION - CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' - Venue with VenueId -  '{ tribalCourseRun.VenueId }' could not obtain VenueIdGuid , Error:  { venueResult?.Error } for BAD " + Environment.NewLine;
+                                                }
+                                            }
                                         }
                                         else
                                         {
-                                            tribalCourseRun.RecordStatus = RecordStatus.MigrationPending;
-                                            courseReport += $"ATTENTION - CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' - Venue with VenueId -  '{ tribalCourseRun.VenueId }' could not obtain VenueIdGuid , Error:  { venueResult?.Error } for BAD " + Environment.NewLine;
+
+                                            //Since Venue not found lets check to see if there is only one
+                                            var venueGuid = CheckVenue(venueService, providerUKPRN.ToString());
+                                            if (null != venueGuid)
+                                            {
+                                                tribalCourseRun.VenueGuidId = venueGuid;
+                                            }
+                                            else
+                                            {
+                                                tribalCourseRun.RecordStatus = RecordStatus.MigrationPending;
+                                                courseReport += $"ATTENTION - CourseRun - { tribalCourseRun.CourseInstanceId } - Ref: '{ tribalCourseRun.ProviderOwnCourseInstanceRef }' - Venue with VenueId -  '{ tribalCourseRun.VenueId }' could not obtain VenueIdGuid , Error:  { venueResult?.Error } for BAD " + Environment.NewLine;
+                                            }
                                         }
                                     }
                                 }
