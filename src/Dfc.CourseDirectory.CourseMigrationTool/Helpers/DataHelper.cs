@@ -524,7 +524,7 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
             tribalCourseRun.DurationValue = (int)CheckForDbNull(reader["DurationUnit"], 0);
             tribalCourseRun.StudyMode = (TribalStudyMode)CheckForDbNull(reader["StudyModeId"], TribalStudyMode.Undefined);
             tribalCourseRun.AttendancePattern = (TribalAttendancePattern)CheckForDbNull(reader["AttendancePatternId"], TribalAttendancePattern.Undefined);
-
+            tribalCourseRun.VenueName = (string)CheckForDbNull(reader["VenueName"], string.Empty);
             return tribalCourseRun;
         }
 
