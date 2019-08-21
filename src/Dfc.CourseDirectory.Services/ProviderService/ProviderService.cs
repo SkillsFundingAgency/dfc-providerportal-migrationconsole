@@ -33,7 +33,7 @@ namespace Dfc.CourseDirectory.Services.ProviderService
 
             _logger = logger;
             _httpClient = httpClient;
-
+            _httpClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", settings.Value.ApiKey);
             _getProviderByPRNUri = settings.Value.ToGetProviderByPRNUri();
             _updateProviderByIdUri = settings.Value.ToUpdateProviderByIdUri();
             _updateProviderDetailsUri = settings.Value.ToUpdateProviderDetailsUri();
@@ -50,7 +50,7 @@ namespace Dfc.CourseDirectory.Services.ProviderService
                 _logger.LogInformationObject("Provider search URI", _getProviderByPRNUri);
 
                 var content = new StringContent(criteria.ToJson(), Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(_getProviderByPRNUri, content);
+                var response = await _httpClient.GetAsync(_getProviderByPRNUri + criteria.Search);
 
                 _logger.LogHttpResponseMessage("Provider search service http response", response);
 
@@ -201,17 +201,17 @@ namespace Dfc.CourseDirectory.Services.ProviderService
     {
         internal static Uri ToGetProviderByPRNUri(this IProviderServiceSettings extendee)
         {
-            return new Uri($"{extendee.ApiUrl + "GetProviderByPRN?code=" + extendee.ApiKey}");
+            return new Uri($"{extendee.ApiUrl + "GetProviderByPRN?PRN="}");
         }
 
         internal static Uri ToUpdateProviderByIdUri(this IProviderServiceSettings extendee)
         {
-            return new Uri($"{extendee.ApiUrl + "UpdateProviderById?code=" + extendee.ApiKey}");
+            return new Uri($"{extendee.ApiUrl + "UpdateProviderById"}");
         }
 
         internal static Uri ToUpdateProviderDetailsUri(this IProviderServiceSettings extendee)
         {
-            return new Uri($"{extendee.ApiUrl + "UpdateProviderDetails?code=" + extendee.ApiKey}");
+            return new Uri($"{extendee.ApiUrl + "UpdateProviderDetails"}");
         }
     }
 

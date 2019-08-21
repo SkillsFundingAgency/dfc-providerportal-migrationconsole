@@ -39,7 +39,7 @@ namespace Dfc.CourseDirectory.Services.VenueService
 
             _logger = logger;
             _httpClient = httpClient;
-
+            _httpClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", settings.Value.ApiKey);
             _getVenueByIdUri = settings.Value.ToGetVenueByIdUri();
             _getVenueByVenueIdUri = settings.Value.ToGetVenueByVenueIdUri();
             _getVenueByPRNAndNameUri = settings.Value.ToGetVenuesByPRNAndNameUri();
@@ -220,7 +220,7 @@ namespace Dfc.CourseDirectory.Services.VenueService
                 _logger.LogInformationObject("Get Venue By PRN & Name URI", _getVenueByPRNAndNameUri);
 
                 var content = new StringContent(criteria.ToJson(), Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(_getVenueByPRNAndNameUri, content);
+                var response = await _httpClient.GetAsync(_getVenueByPRNAndNameUri + $"?PRN={criteria.PRN}&NAME={criteria.Name}");
 
                 _logger.LogHttpResponseMessage("Get Venue By PRN and Name service http response", response);
                 if (response.IsSuccessStatusCode)
@@ -392,32 +392,32 @@ namespace Dfc.CourseDirectory.Services.VenueService
     {
         internal static Uri ToUpdateVenueUrl(this VenueServiceSettings extendee)
         {
-            return new Uri($"{extendee.ApiUrl + "UpdateVenueById?code=" + extendee.ApiKey}");
+            return new Uri(extendee.ApiUrl + "UpdateVenueById");
         }
 
         internal static Uri ToGetVenueByIdUri(this VenueServiceSettings extendee)
         {
-            return new Uri($"{extendee.ApiUrl + "getvenuebyid?code=" + extendee.ApiKey}");
+            return new Uri(extendee.ApiUrl + "getvenuebyid");
         }
 
         internal static Uri ToGetVenueByVenueIdUri(this VenueServiceSettings extendee)
         {
-            return new Uri($"{extendee.ApiUrl + "GetVenueByVenueId?code=" + extendee.ApiKey}");
+            return new Uri(extendee.ApiUrl + "GetVenueByVenueId");
         }
 
         internal static Uri ToGetVenuesByPRNAndNameUri(this VenueServiceSettings extendee)
         {
-            return new Uri($"{extendee.ApiUrl + "GetVenuesByPRNAndName?code=" + extendee.ApiKey}");
+            return new Uri(extendee.ApiUrl + "GetVenuesByPRNAndName");
         }
 
         internal static Uri ToSearchVenueUri(this VenueServiceSettings extendee)
         {
-            return new Uri($"{extendee.ApiUrl + "GetVenuesByPRN?code=" + extendee.ApiKey}");
+            return new Uri(extendee.ApiUrl + "GetVenuesByPRN");
         }
 
         internal static Uri ToAddVenueUri(this VenueServiceSettings extendee)
         {
-            return new Uri($"{extendee.ApiUrl + "addvenue?code=" + extendee.ApiKey}");
+            return new Uri(extendee.ApiUrl + "addvenue");
         }
     }
 

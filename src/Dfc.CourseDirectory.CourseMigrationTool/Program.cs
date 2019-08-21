@@ -1,21 +1,7 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Dfc.CourseDirectory.Common.Settings;
+﻿using Dfc.CourseDirectory.Common.Settings;
 using Dfc.CourseDirectory.CourseMigrationTool.Helpers;
 using Dfc.CourseDirectory.CourseMigrationTool.Models;
 using Dfc.CourseDirectory.Models.Enums;
-using Dfc.CourseDirectory.Models.Helpers;
 using Dfc.CourseDirectory.Models.Models.Courses;
 using Dfc.CourseDirectory.Models.Models.Providers;
 using Dfc.CourseDirectory.Models.Models.Venues;
@@ -31,6 +17,18 @@ using Dfc.CourseDirectory.Services.Interfaces.ProviderService;
 using Dfc.CourseDirectory.Services.Interfaces.VenueService;
 using Dfc.CourseDirectory.Services.ProviderService;
 using Dfc.CourseDirectory.Services.VenueService;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 
 namespace Dfc.CourseDirectory.CourseMigrationTool
@@ -142,23 +140,24 @@ namespace Dfc.CourseDirectory.CourseMigrationTool
 
             #region CommandLineArgs
             //Overwrite settings if command line set
-            bool automatedMode = false;
+            bool automatedMode = true;
             bool fileMode = false;
             bool blobMode = false;
 
-            if (null != args && args.Count() > 0 && null != args[0] && args[0].ToUpper() == "F")
-            {
-                automatedMode = false;
-                fileMode = false;
-                blobMode = true;
-            }
-            else
-            {
-                automatedMode = configuration.GetValue<bool>("AutomatedMode");
-                fileMode = configuration.GetValue<bool>("FiledMode");
-                blobMode = configuration.GetValue<bool>("BlobMode");
-            }
+            //if (null != args && args.Count() > 0 && null != args[0] && args[0].ToUpper() == "F")
+            //{
+            //    automatedMode = false;
+            //    fileMode = false;
+            //    blobMode = true;
+            //}
+            //else
+            //{
+            //    automatedMode = configuration.GetValue<bool>("AutomatedMode");
+            //    fileMode = configuration.GetValue<bool>("FiledMode");
+            //    blobMode = configuration.GetValue<bool>("BlobMode");
+            //}
 
+            
             #endregion
 
             #region Get User Input and Set Variables

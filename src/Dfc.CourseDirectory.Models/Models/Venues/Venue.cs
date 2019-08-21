@@ -60,7 +60,7 @@ namespace Dfc.CourseDirectory.Models.Models.Venues
         public string EMAIL { get; set; }
         public string WEBSITE { get; set; }
 
-        public int? LocationId { get; set; }
+        public long? LocationId { get; set; }
         public int? TribalLocationId { get; set; }
         public string Telephone { get { return PHONE; } set { PHONE = value; } }
         public string Email { get { return EMAIL; } set { EMAIL = value; } }
