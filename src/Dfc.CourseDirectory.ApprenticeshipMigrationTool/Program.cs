@@ -1,10 +1,13 @@
 ﻿using Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers;
-using Dfc.CourseDirectory.ApprenticeshipMigrationTool.Models;
 using Dfc.CourseDirectory.Models.Enums;
 using Dfc.CourseDirectory.Models.Interfaces.Providers;
 using Dfc.CourseDirectory.Models.Models.Apprenticeships;
 using Dfc.CourseDirectory.Models.Models.Regions;
 using Dfc.CourseDirectory.Models.Models.Venues;
+using Dfc.CourseDirectory.Services.ApprenticeshipService;
+using Dfc.CourseDirectory.Services.BlobStorageService;
+using Dfc.CourseDirectory.Services.Interfaces.ApprenticeshipService;
+using Dfc.CourseDirectory.Services.Interfaces.BlobStorageService;
 using Dfc.CourseDirectory.Services.Interfaces.ProviderService;
 using Dfc.CourseDirectory.Services.Interfaces.VenueService;
 using Dfc.CourseDirectory.Services.ProviderService;
@@ -16,11 +19,13 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Providercontact = Dfc.CourseDirectory.ApprenticeshipMigrationTool.Models.Providercontact;
 
 namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
 {
@@ -53,7 +58,19 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                     providerServiceSettingsOptions.ApiKey = configuration.GetValue<string>("ProviderServiceSettings:ApiKey");
                 }
                 )
+                .Configure<ApprenticeshipServiceSettings>(configuration.GetSection(nameof(ApprenticeshipServiceSettings)))
+                .Configure<ApprenticeReferenceDataSettings>(configuration.GetSection(nameof(ApprenticeReferenceDataSettings)))
+                .Configure<BlobStorageSettings>(options => {
+                    options.AccountName = configuration.GetValue<string>("BlobStorageSettings:AccountName");
+                    options.AccountKey = configuration.GetValue<string>("BlobStorageSettings:AccountKey");
+                    options.Container = configuration.GetValue<string>("BlobStorageSettings:Container");
+                    options.TemplatePath = configuration.GetValue<string>("BlobStorageSettings:TemplatePath");
+                    options.ProviderListPath = configuration.GetValue<string>("BlobStorageSettings:ProviderListPath");
+                })
+                .AddScoped<IApprenticeshipService, ApprenticeshipService>()
                 .AddScoped<IProviderService, ProviderService>()
+                .AddScoped<IApprenticeReferenceDataService, ApprenticeReferenceDataService>()
+                .AddScoped<IBlobStorageService, BlobStorageService>()
                 .BuildServiceProvider();
 
             // Configure console logging
@@ -68,17 +85,23 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
             // Initialise the services
             var venueService = serviceProvider.GetService<IVenueService>();
             var providerService = serviceProvider.GetService<IProviderService>();
+            var apprenticeshipReferenceDataService = serviceProvider.GetService<IApprenticeReferenceDataService>();
+            var apprenticeshipService = serviceProvider.GetService<IApprenticeshipService>();
+            var blobService = serviceProvider.GetService<IBlobStorageService>();
 
             logger.LogDebug("Log test.");
 
 
             string connectionString = configuration.GetConnectionString("DefaultConnection");
             bool AutomatedMode = configuration.GetValue<bool>("AutomatedMode");
+            bool fileMode = configuration.GetValue<bool>("FiledMode");
+            bool blobMode = configuration.GetValue<bool>("BlobMode");
             bool GenerateJsonFilesLocally = configuration.GetValue<bool>("GenerateJsonFilesLocally");
             bool GenerateReportFilesLocally = configuration.GetValue<bool>("GenerateReportFilesLocally");
             string JsonApprenticeshipFilesPath = configuration.GetValue<string>("JsonApprenticeshipFilesPath");
             string selectionOfProvidersFileName = configuration.GetValue<string>("SelectionOfProvidersFileName");
             DeploymentEnvironment deploymentEnvironment = configuration.GetValue<DeploymentEnvironment>("DeploymentEnvironment");
+            bool DeleteCoursesByUKPRN = configuration.GetValue<bool>("DeleteCoursesByUKPRN");
             //TransferMethod transferMethod = configuration.GetValue<TransferMethod>("TransferMethod");
 
             bool UpdateProvider = configuration.GetValue<bool>("UpdateProvider");
@@ -86,6 +109,15 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
             int RegionBasedRadius = configuration.GetValue<int>("RegionBasedRadius");
             int SubRegionBasedRadius = configuration.GetValue<int>("SubRegionBasedRadius");
             int RegionSubRegionRangeRadius = configuration.GetValue<int>("RegionSubRegionRangeRadius");
+
+            //Overwrite settings if command line set
+
+            if (null != args && args.Count() > 0 && null != args[0] && args[0].ToUpper() == "F")
+            {
+                AutomatedMode = false;
+                fileMode = false;
+                blobMode = true;
+            }
 
             #endregion
 
@@ -116,6 +148,40 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                     goodToTransfer = true;
                     transferMethod = TransferMethod.CourseMigrationTool;
                 }
+            }
+            else if (fileMode)
+            {
+                Console.WriteLine("The Migration Tool is running in File Mode." + Environment.NewLine + "Please, do not close this window until \"Migration completed\" message is displayed." + Environment.NewLine);
+
+                string errorMessageGetCourses = string.Empty;
+                providerUKPRNList = FileHelper.GetProviderUKPRNs("C:\\Users\\karl\\source\\repos\\SkillsFundingAgency\\dfc-providerportal-migrationconsole\\files", "migrationtoprovider.csv", out errorMessageGetCourses);
+                if (!string.IsNullOrEmpty(errorMessageGetCourses))
+                {
+                    adminReport += errorMessageGetCourses + Environment.NewLine;
+                }
+                else
+                {
+                    goodToTransfer = true;
+                    transferMethod = TransferMethod.CourseMigrationTool;
+                }
+
+            }
+            else if (blobMode)
+            {
+                Console.WriteLine("The Migration Tool is running in Blob Mode." + Environment.NewLine + "Please, do not close this window until \"Migration completed\" message is displayed." + Environment.NewLine);
+
+                string errorMessageGetCourses = string.Empty;
+                providerUKPRNList = FileHelper.GetProviderUKPRNsFromBlob(blobService, out errorMessageGetCourses); //COUR-1012-blob-storage-settings
+                if (!string.IsNullOrEmpty(errorMessageGetCourses))
+                {
+                    adminReport += errorMessageGetCourses + Environment.NewLine;
+                }
+                else
+                {
+                    goodToTransfer = true;
+                    transferMethod = TransferMethod.CourseMigrationTool;
+                }
+
             }
             else
             {
@@ -236,6 +302,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                 int CountApprenticeshipLocations = 0;
                 int CountApprenticeshipLocationsPending = 0;
                 int CountApprenticeshipLocationsLive = 0;
+                int CountAppreticeshipFailedToMigrate = 0;
 
                 string providerReport = "                         Migration Report " + Environment.NewLine;
 
@@ -243,6 +310,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                 string errorMessageGetProviderDetailsByUKPRN = string.Empty;
                 var provider = DataHelper.GetProviderDetailsByUKPRN(providerUKPRN, connectionString, out errorMessageGetProviderDetailsByUKPRN);
                 var ProviderGuidId = new Guid();
+                var TribalProviderId = provider.ProviderId;
                 string providerUkprnLine = "Provider - " + providerUKPRN + " - " + provider.ProviderName;
                 Console.WriteLine(providerUkprnLine);
                 adminReport += "_________________________________________________________________________________________________________" + Environment.NewLine;
@@ -339,6 +407,29 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                         providerReport += $"ERROR on GETTING the Provider - { providerResult.Error }" + Environment.NewLine + Environment.NewLine;
                     }
 
+                    if (DeleteCoursesByUKPRN)
+                    {
+                        providerReport += $"ATTENTION - Existing Courses for Provider '{ provider.ProviderName }' with UKPRN  ( { providerUKPRN } ) to be deleted." + Environment.NewLine;
+
+                        // Call the service 
+                        var deleteCoursesByUKPRNResult = Task.Run(async () => await apprenticeshipService.DeleteApprenticeshipsByUKPRNAsync(providerUKPRN)).Result;
+
+                        if (deleteCoursesByUKPRNResult.IsSuccess && deleteCoursesByUKPRNResult.HasValue)
+                        {
+                            providerReport += $"The deleted courses:  " + Environment.NewLine;
+                            // StatusCode => NoContent = 204 is good 
+                            foreach (var deleteMessage in deleteCoursesByUKPRNResult.Value)
+                            {
+                                providerReport += deleteMessage + Environment.NewLine;
+                            }
+                        }
+                        else
+                        {
+                            Console.Write("ERROR: Failed to delete provider current courses for: " + providerUKPRN);
+                            providerReport += $"Error on deleteing courses -  { deleteCoursesByUKPRNResult.Error }  " + Environment.NewLine;
+                        }
+                    }
+
                     // Get Apprenticeships by ProviderId                    
                     string errorMessageGetApprenticeshipsByProviderId = string.Empty;
                     var apprenticeships = DataHelper.GetApprenticeshipsByProviderId(provider.ProviderId ?? 0, connectionString, out errorMessageGetApprenticeshipsByProviderId);
@@ -350,6 +441,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                     {
                         CountApprenticeships = apprenticeships.Count;
 
+
                         foreach (var apprenticeship in apprenticeships)
                         {
                             int CountApprenticeshipLocationsPerAppr = 0;
@@ -360,6 +452,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                             apprenticeship.id = Guid.NewGuid();
                             apprenticeship.ProviderId = ProviderGuidId;
                             apprenticeship.ProviderUKPRN = providerUKPRN;
+                            apprenticeship.TribalProviderId = TribalProviderId;
 
                             apprenticeship.RecordStatus = RecordStatus.Live;
 
@@ -367,17 +460,44 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                             apprenticeship.CreatedBy = "DFC – Apprenticeship Migration Tool";
                             adminReport += "____________________________________________________________________" + Environment.NewLine;
                             // Get Framework/Standard GUID id => ???? Call ReferenceData Service
-                            if (apprenticeship.FrameworkCode != null && apprenticeship.ProgType != null && apprenticeship.PathwayCode != null)
+                            if (apprenticeship.FrameworkCode.HasValue && apprenticeship.ProgType.HasValue && apprenticeship.PathwayCode.HasValue)
                             {
                                 apprenticeship.ApprenticeshipType = ApprenticeshipType.FrameworkCode;
-                                // apprenticeship.FrameworkId = // Call ReferenceData Framework Service / API to obtain FrameworkId (GUID) by FrameworkCode, ProgType, PathwayCode
-                                adminReport += $"> Framework Apprenticeship - FrameworkCode ( { apprenticeship.FrameworkCode } ), ProgType ( { apprenticeship.ProgType } ), PathwayCode ( { apprenticeship.PathwayCode } )" + Environment.NewLine;
+                                var framework = Task.Run(async () => await apprenticeshipReferenceDataService.GetFrameworkByCode(apprenticeship.FrameworkCode.Value,
+                                    apprenticeship.ProgType.Value,apprenticeship.PathwayCode.Value)).Result;
+                                if (framework.HasValue)
+                                {
+                                    apprenticeship.ApprenticeshipType = ApprenticeshipType.FrameworkCode;
+                                    adminReport += $"> Framework Apprenticeship - FrameworkCode ( { apprenticeship.FrameworkCode } ), ProgType ( { apprenticeship.ProgType } ), PathwayCode ( { apprenticeship.PathwayCode } )" + Environment.NewLine;
+                                    apprenticeship.ApprenticeshipTitle = framework.Value.Value.NasTitle;
+                                    apprenticeship.FrameworkId = framework.Value.Value.Id;
+                                }
+                                else
+                                {
+                                    apprenticeship.ApprenticeshipType = ApprenticeshipType.Undefined;
+                                    apprenticeship.RecordStatus = RecordStatus.MigrationPending;
+                                    adminReport += $"> * ATTENTION * Apprenticeship NOT Defined - FrameworkCode ( { apprenticeship.FrameworkCode } ), ProgType ( { apprenticeship.ProgType } ), PathwayCode ( { apprenticeship.PathwayCode } ), StandardCode ( { apprenticeship.StandardCode } ), Version ( { apprenticeship.Version } )" + Environment.NewLine;
+                                }
+
                             }
-                            else if (apprenticeship.StandardCode != null && apprenticeship.Version != null)
+                            else if (apprenticeship.StandardCode.HasValue && apprenticeship.Version.HasValue)
                             {
                                 apprenticeship.ApprenticeshipType = ApprenticeshipType.StandardCode;
-                                // apprenticeship.StandardId = // Call ReferenceData Standard Service / API to obtain StandardId (GUID) by StandardCode and Version
-                                adminReport += $"> Standard Apprenticeship - StandardCode ( { apprenticeship.StandardCode } ), Version ( { apprenticeship.Version } )" + Environment.NewLine;
+                                var standard = Task.Run(async () => await apprenticeshipReferenceDataService.GetStandardById(apprenticeship.StandardCode.Value, apprenticeship.Version.Value)).Result;
+                                if (standard.HasValue)
+                                {
+                                    apprenticeship.ApprenticeshipType = ApprenticeshipType.StandardCode;
+                                    apprenticeship.ApprenticeshipTitle = standard.Value.Value.StandardName;
+                                    apprenticeship.StandardId = standard.Value.Value.id;
+                                    adminReport += $"> Standard Apprenticeship - StandardCode ( { apprenticeship.StandardCode } ), Version ( { apprenticeship.Version } )" + Environment.NewLine;
+
+                                }
+                                else
+                                {
+                                    apprenticeship.ApprenticeshipType = ApprenticeshipType.Undefined;
+                                    apprenticeship.RecordStatus = RecordStatus.MigrationPending;
+                                    adminReport += $"> * ATTENTION * Apprenticeship NOT Defined - FrameworkCode ( { apprenticeship.FrameworkCode } ), ProgType ( { apprenticeship.ProgType } ), PathwayCode ( { apprenticeship.PathwayCode } ), StandardCode ( { apprenticeship.StandardCode } ), Version ( { apprenticeship.Version } )" + Environment.NewLine;
+                                }
                             }
                             else
                             {
@@ -389,7 +509,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
 
                             // Get ApprenticeshipLocations                          
                             string errorMessageGetApprenticeshipLocations = string.Empty;
-                            var apprenticeshipLocations = DataHelper.GetApprenticeshipLocationsByApprenticeshipId(apprenticeship.ApprenticeshipId ?? 0, connectionString, out errorMessageGetApprenticeshipLocations);
+                             var apprenticeshipLocations = DataHelper.GetApprenticeshipLocationsByApprenticeshipId(apprenticeship.ApprenticeshipId ?? 0, connectionString, out errorMessageGetApprenticeshipLocations);
                             if (!string.IsNullOrEmpty(errorMessageGetApprenticeshipLocations))
                             {
                                 adminReport += $"* ATTENTION * { errorMessageGetApprenticeshipLocations }" + Environment.NewLine;
@@ -398,10 +518,13 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                             {
                                 foreach (var apprenticeshipLocation in apprenticeshipLocations)
                                 {
-                                    apprenticeshipLocation.id = Guid.NewGuid();
+                                    apprenticeshipLocation.Id = Guid.NewGuid();
                                     apprenticeshipLocation.RecordStatus = RecordStatus.Live;
                                     apprenticeshipLocation.CreatedDate = DateTime.Now;
                                     apprenticeshipLocation.CreatedBy = "DFC – Apprenticeship Migration Tool";
+                                    apprenticeshipLocation.ProviderUKPRN = apprenticeship.ProviderUKPRN;
+                                    apprenticeshipLocation.ProviderId = apprenticeship.TribalProviderId;
+                                    
                                     adminReport += "__________________________" + Environment.NewLine;
                                     adminReport += $">>> ApprenticeshipLocation with TribalLocationId ( { apprenticeshipLocation.LocationId } )";
 
@@ -463,7 +586,24 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                             {
                                                 apprenticeshipLocation.RecordStatus = RecordStatus.MigrationPending;
                                                 adminReport += $"We couldn't get location for LocationId ({ apprenticeshipLocation.LocationId }) " + Environment.NewLine;
-                                            } 
+                                            }
+                                            else
+                                            {
+                                                apprenticeshipLocation.Name = location.LocationName;
+                                                    apprenticeshipLocation.Address = new Address
+                                                    {
+                                                        Address1 = location.AddressLine1,
+                                                        Address2 = location.AddressLine2,
+                                                        County = location.County,
+                                                        Email = location.Email,
+                                                        Latitude = double.Parse(location.Longitude.ToString()),
+                                                        Longitude = double.Parse(location.Longitude.ToString()),
+                                                        Phone = location.Telephone,
+                                                        Postcode = location.Postcode,
+                                                        Town = location.Town,
+                                                        Website = location.Website
+                                                    };
+                                            }
                                         }
 
 
@@ -496,6 +636,19 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                     {
                                                         apprenticeshipLocation.LocationId = venue.LocationId;
                                                         apprenticeshipLocation.LocationGuidId = new Guid(venue.ID);
+                                                        apprenticeshipLocation.Address = new Address()
+                                                        {
+                                                            Address1 = venue.Address1,
+                                                            Address2 = venue.Address2,
+                                                            County = venue.County,
+                                                            Email = venue.Email,
+                                                            Latitude = double.Parse(venue.Latitude.ToString(CultureInfo.InvariantCulture)),
+                                                            Longitude = double.Parse(venue.Longitude.ToString(CultureInfo.InvariantCulture)),
+                                                            Phone = venue.PHONE,
+                                                            Postcode = venue.PostCode,
+                                                            Town = venue.Town,
+                                                            Website = venue.Website
+                                                        };
 
 
                                                         if (venue.Status.Equals(VenueStatus.Live))
@@ -522,6 +675,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                                     venue.PHONE = location.Telephone;
                                                                     venue.EMAIL = location.Email;
                                                                     venue.WEBSITE = location.Website;
+                                                                    venue.TribalLocationId = location.LocationId;
                                                                 }
                                                             }
                                                         }
@@ -538,6 +692,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                             venue.PHONE = location.Telephone;
                                                             venue.EMAIL = location.Email;
                                                             venue.WEBSITE = location.Website;
+                                                            venue.TribalLocationId = location.LocationId;
                                                         }
                                                     }
 
@@ -570,8 +725,9 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                 }
                                                 else if (venues.Count().Equals(0))
                                                 {
+                                                    var venueID = Guid.NewGuid();
                                                     // There is no such Venue - Add it
-                                                    var addVenue = new Venue(Guid.NewGuid().ToString(),
+                                                    var addVenue = new Venue(venueID.ToString(),
                                                                                location.ProviderUKPRN,
                                                                                location.LocationName,
                                                                                location.AddressLine1,
@@ -589,6 +745,22 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                     addVenue.EMAIL = location.Email;
                                                     addVenue.WEBSITE = location.Website;
                                                     addVenue.TribalLocationId = location.LocationId;
+
+                                                    apprenticeshipLocation.LocationId = location.LocationId;
+                                                    apprenticeshipLocation.LocationGuidId = venueID;
+                                                    apprenticeshipLocation.Address = new Address()
+                                                    {
+                                                        Address1 = location.AddressLine1,
+                                                        Address2 = location.AddressLine2,
+                                                        County = location.County,
+                                                        Email = location.Email,
+                                                        Latitude = double.Parse(location.Latitude.ToString(CultureInfo.InvariantCulture)),
+                                                        Longitude = double.Parse(location.Longitude.ToString(CultureInfo.InvariantCulture)),
+                                                        Phone = location.Telephone,
+                                                        Postcode = location.Postcode,
+                                                        Town = location.Town,
+                                                        Website = location.Website
+                                                    };
 
                                                     adminReport += $"Adds Venue for LocationName ({ location.LocationName })" + Environment.NewLine;
 
@@ -664,6 +836,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                                                         apprenticeshipLocation.LocationId = selectedRegion.ApiLocationId;
                                                         apprenticeshipLocation.LocationType = LocationType.Region;
                                                         apprenticeshipLocation.Radius = RegionBasedRadius;
+                                                        apprenticeshipLocation.Regions = selectedRegion.SubRegion.Select(x=>x.Id).ToArray();
                                                         adminReport += $" We've identified a Region ( { onspdRegionSubregion.Region } ) with ID ( { selectedRegion.ApiLocationId } ) " + Environment.NewLine;
                                                     }
                                                 }
@@ -741,7 +914,17 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool
                             }
                             else
                             {
-                                // Call ApprenticeshipService to Add a Apprenticeship
+                                var apprenticeshipResult = Task.Run(async () => await apprenticeshipService.AddApprenticeshipAsync(apprenticeship)).Result;
+                                if (apprenticeshipResult.IsSuccess && apprenticeshipResult.HasValue)
+                                {
+
+                                    adminReport += Environment.NewLine + $"The course is migrated  " + Environment.NewLine;
+                                }
+                                else
+                                {
+                                    CountAppreticeshipFailedToMigrate++;
+                                    adminReport += Environment.NewLine + $"The course is NOT migrated. Error -  { apprenticeshipResult.Error }  " + Environment.NewLine;
+                                }
                             }
                         }
                     }

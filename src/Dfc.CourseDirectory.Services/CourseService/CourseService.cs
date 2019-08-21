@@ -61,6 +61,7 @@ namespace Dfc.CourseDirectory.Services.CourseService
 
             _logger = logger;
             _httpClient = httpClient;
+            _httpClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", settings.Value.ApiKey);
 
             _addCourseUri = settings.Value.ToAddCourseUri();
             _deleteCoursesByUKPRNUri = settings.Value.ToDeleteCoursesByUKPRNUri();
@@ -144,7 +145,7 @@ namespace Dfc.CourseDirectory.Services.CourseService
                 if (!criteria.UKPRN.HasValue)
                     return Result.Fail<List<string>>("Delete Courses By UKPRN - unknown UKRLP");
 
-                var response = await _httpClient.GetAsync(new Uri(_deleteCoursesByUKPRNUri.AbsoluteUri + "&UKPRN=" + criteria.UKPRN));
+                var response = await _httpClient.GetAsync(new Uri(_deleteCoursesByUKPRNUri.AbsoluteUri + "UKPRN=" + criteria.UKPRN));
                 _logger.LogHttpResponseMessage("Delete Courses By UKPRN service http response", response);
 
                 if (response.IsSuccessStatusCode)
@@ -499,15 +500,15 @@ namespace Dfc.CourseDirectory.Services.CourseService
     {
         internal static Uri ToAddCourseUri(this ICourseServiceSettings extendee)
         {
-            return new Uri($"{extendee.ApiUrl + "AddCourse?code=" + extendee.ApiKey}");
+            return new Uri($"{extendee.ApiUrl + "AddCourse?"}");
         }
         internal static Uri ToDeleteCoursesByUKPRNUri(this ICourseServiceSettings extendee)
         {
-            return new Uri($"{extendee.ApiUrl + "DeleteCoursesByUKPRN?code=" + extendee.ApiKey}");
+            return new Uri($"{extendee.ApiUrl + "DeleteCoursesByUKPRN?"}");
         }
         internal static Uri ToAddCourseMigrationReport(this ICourseServiceSettings extendee)
         {
-            return new Uri($"{extendee.ApiUrl + "UpdateCourseMigrationReport?code=" + extendee.ApiKey}");
+            return new Uri($"{extendee.ApiUrl + "UpdateCourseMigrationReport"}");
         }
     }
 }

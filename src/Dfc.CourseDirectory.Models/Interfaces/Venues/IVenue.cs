@@ -27,7 +27,7 @@ namespace Dfc.CourseDirectory.Models.Interfaces.Venues
         string UpdatedBy { get; }
 
         // Apprenticeship related
-        int? LocationId { get; set; }
+        long? LocationId { get; set; }
         string Telephone { get; set; }
         string Email { get; set; }
         string Website { get; set; }

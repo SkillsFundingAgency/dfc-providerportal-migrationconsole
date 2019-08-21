@@ -34,7 +34,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
                         {
                             while (dataReader.Read())
                             {
-                                int ukprn = (int)CheckForDbNull(dataReader["Ukprn"], 0); 
+                                int ukprn = (int)CheckForDbNull(dataReader["Ukprn"], 0);
                                 if (ukprn != 0)
                                     ukprnList.Add(ukprn);
                             }
@@ -105,7 +105,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
 
             provider.ProviderId = (int)CheckForDbNull(reader["ProviderId"], 0);
             provider.ProviderName = (string)CheckForDbNull(reader["ProviderName"], string.Empty);
-            provider.ProviderNameAlias = (string)CheckForDbNull(reader["ProviderNameAlias"], string.Empty);          
+            provider.ProviderNameAlias = (string)CheckForDbNull(reader["ProviderNameAlias"], string.Empty);
             provider.TradingName = (string)CheckForDbNull(reader["TradingName"], string.Empty);
             provider.UnitedKingdomProviderReferenceNumber = ((int)CheckForDbNull(reader["Ukprn"], 0)).ToString();
             provider.UPIN = (int)CheckForDbNull(reader["UPIN"], 0);
@@ -234,7 +234,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
         {
             ApprenticeshipLocation apprenticeshipLocation = new ApprenticeshipLocation();
 
-            apprenticeshipLocation.ApprenticeshipLocationId = (int)CheckForDbNull(reader["ApprenticeshipLocationId"], 0);           
+            apprenticeshipLocation.ApprenticeshipLocationId = (int)CheckForDbNull(reader["ApprenticeshipLocationId"], 0);
             apprenticeshipLocation.LocationId = (int)CheckForDbNull(reader["LocationId"], 0);
             apprenticeshipLocation.Radius = (int)CheckForDbNull(reader["Radius"], 0);
 
@@ -265,7 +265,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
                         {
                             while (dataReader.Read())
                             {
-                                    deliveryModes.Add(ExtractDeliveryModeFromDbReader(dataReader));
+                                deliveryModes.Add(ExtractDeliveryModeFromDbReader(dataReader));
                             }
                             // Close the SqlDataReader.
                             dataReader.Close();
@@ -290,7 +290,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
             return (int)CheckForDbNull(reader["DeliveryModeId"], 0);
         }
 
-        public static Location GetLocationByLocationIdPerProvider(int LocationId, int ProviderId, string connectionString, out string errorMessageGetTribalLocation)
+        public static Location GetLocationByLocationIdPerProvider(long LocationId, int ProviderId, string connectionString, out string errorMessageGetTribalLocation)
         {
             var location = new Location();
             errorMessageGetTribalLocation = string.Empty;
@@ -363,41 +363,54 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
 
             using (var sqlConnection = new SqlConnection(connectionString))
             {
-                using (var command = sqlConnection.CreateCommand())
+                try
                 {
-                    command.CommandType = CommandType.StoredProcedure;
-                    command.CommandText = "dfc_GetRegionSubRegionByPostcode";
-
-                    command.Parameters.Add(new SqlParameter("@Postcode", SqlDbType.NVarChar, 50));
-                    command.Parameters["@Postcode"].Value = Postcode;
-
-                    try
+                    onspdRegionSubregion = GetRegionSubRegionByPostcodeSql(Postcode, sqlConnection);
+                    if (string.IsNullOrEmpty(onspdRegionSubregion.Region))
                     {
-                        //Open connection.
-                        sqlConnection.Open();
-
-                        using (SqlDataReader dataReader = command.ExecuteReader())
-                        {
-                            while (dataReader.Read())
-                            {
-                                onspdRegionSubregion = ExtractONSPDRegionSubregionFromDbReader(dataReader);
-                            }
-                            // Close the SqlDataReader.
-                            dataReader.Close();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        errorMessageGetRegionSubRegion = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
-                    }
-                    finally
-                    {
-                        sqlConnection.Close();
+                        onspdRegionSubregion = GetRegionSubRegionByPostcodeSql(Postcode.Replace(" ", ""), sqlConnection);
                     }
                 }
+                catch (Exception ex)
+                {
+                    errorMessageGetRegionSubRegion = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
+                    sqlConnection.Close();
+                }
+
             }
 
             onspdRegionSubregion.Postcode = Postcode;
+
+            return onspdRegionSubregion;
+        }
+
+        private static ONSPDRegionSubregion GetRegionSubRegionByPostcodeSql(string Postcode, SqlConnection sqlConnection)
+        {
+
+            var onspdRegionSubregion = new ONSPDRegionSubregion();
+
+            using (var command = sqlConnection.CreateCommand())
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.CommandText = "dfc_GetRegionSubRegionByPostcode";
+
+                command.Parameters.Add(new SqlParameter("@Postcode", SqlDbType.NVarChar, 50));
+                command.Parameters["@Postcode"].Value = Postcode;
+
+                //Open connection.
+                sqlConnection.Open();
+
+                using (SqlDataReader dataReader = command.ExecuteReader())
+                {
+                    while (dataReader.Read())
+                    {
+                        onspdRegionSubregion = ExtractONSPDRegionSubregionFromDbReader(dataReader);
+                    }
+                    // Close the SqlDataReader.
+                    dataReader.Close();
+                }
+            }
+            sqlConnection.Close();
 
             return onspdRegionSubregion;
         }
@@ -420,8 +433,8 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
                                                 int deploymentEnvironment,
                                                 string createdById,
                                                 string createdByName,
-                                                int? ukprn, 
-                                                out string errorMessageCourseTransferAdd, 
+                                                int? ukprn,
+                                                out string errorMessageCourseTransferAdd,
                                                 out int courseTransferId)
         {
             var ukprnList = new List<int>();
@@ -583,7 +596,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
                                                            int courseTransferId,
                                                            int ukprn,
                                                            int courseId,
-                                                           string  lars,
+                                                           string lars,
                                                            int courseRecordStatus,
                                                            int courseRuns,
                                                            int courseRunsLive,
@@ -764,7 +777,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
 
                     command.Parameters.Add(new SqlParameter("@AdvancedLearnerLoan", SqlDbType.Bit));
                     command.Parameters["@AdvancedLearnerLoan"].Direction = ParameterDirection.Output;
-                  
+
                     try
                     {
                         //Open connection.
@@ -789,7 +802,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
 
 
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         errorMessageGetCourses = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
                     }
@@ -837,7 +850,7 @@ namespace Dfc.CourseDirectory.ApprenticeshipMigrationTool.Helpers
 
                     command.Parameters.Add(new SqlParameter("@CourseId", SqlDbType.Int));
                     command.Parameters["@CourseId"].Value = CourseId;
-                    
+
                     try
                     {
                         //Open connection.

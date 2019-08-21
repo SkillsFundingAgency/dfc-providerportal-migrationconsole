@@ -33,7 +33,7 @@ namespace Dfc.CourseDirectory.Services.CourseTextService
 
             _logger = logger;
             _httpClient = httpClient;
-
+            httpClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", settings.Value.ApiKey);
             _getYourCourseTextUri = settings.Value.GetCourseTextUri();
 
         }
@@ -93,7 +93,7 @@ namespace Dfc.CourseDirectory.Services.CourseTextService
     {
         internal static Uri GetCourseTextUri(this ICourseTextServiceSettings extendee)
         {
-            return new Uri($"{extendee.ApiUrl + "GetCourseTextByLARS?code=" + extendee.ApiKey}");
+            return new Uri(extendee.ApiUrl + "GetCourseTextByLARS}");
         }
     }
 }
