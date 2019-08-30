@@ -11,47 +11,43 @@ namespace Dfc.CourseDirectory.CourseMigrationTool.Helpers
     {
         public static List<int> GetProviderUKPRNs(string connectionString, out string errorMessageGetCourses)
         {
-            var ukprnList = new List<int>()
-            {
-                10004175,
-                10041945
-            };
+            var ukprnList = new List<int>();
             errorMessageGetCourses = string.Empty;
 
-            //using (var sqlConnection = new SqlConnection(connectionString))
-            //{
-            //    using (var command = sqlConnection.CreateCommand())
-            //    {
-            //        command.CommandType = CommandType.StoredProcedure;
-            //        command.CommandText = "dfc_GetProviderUKPRNs";
+            using (var sqlConnection = new SqlConnection(connectionString))
+            {
+                using (var command = sqlConnection.CreateCommand())
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "dfc_GetProviderUKPRNs";
 
-            //        try
-            //        {
-            //            //Open connection.
-            //            sqlConnection.Open();
+                    try
+                    {
+                        //Open connection.
+                        sqlConnection.Open();
 
-            //            using (SqlDataReader dataReader = command.ExecuteReader())
-            //            {
-            //                while (dataReader.Read())
-            //                {
-            //                    int ukprn = (int)CheckForDbNull(dataReader["Ukprn"], 0); 
-            //                    if (ukprn != 0)
-            //                        ukprnList.Add(ukprn);
-            //                }
-            //                // Close the SqlDataReader.
-            //                dataReader.Close();
-            //            }
-            //        }
-            //        catch (Exception ex)
-            //        {
-            //            errorMessageGetCourses = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
-            //        }
-            //        finally
-            //        {
-            //            sqlConnection.Close();
-            //        }
-            //    }
-            //}
+                        using (SqlDataReader dataReader = command.ExecuteReader())
+                        {
+                            while (dataReader.Read())
+                            {
+                                int ukprn = (int)CheckForDbNull(dataReader["Ukprn"], 0);
+                                if (ukprn != 0)
+                                    ukprnList.Add(ukprn);
+                            }
+                            // Close the SqlDataReader.
+                            dataReader.Close();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMessageGetCourses = string.Format("Error Message: {0}" + Environment.NewLine + "Stack Trace: {1}", ex.Message, ex.StackTrace);
+                    }
+                    finally
+                    {
+                        sqlConnection.Close();
+                    }
+                }
+            }
             return ukprnList;
         }
 
